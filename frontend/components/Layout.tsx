@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { PropsWithChildren } from 'react';
 import { ConnectKitButton } from 'connectkit';
+import Compound from "../pages/compound";
 
 export default function Layout({children}: PropsWithChildren) {
   return (
@@ -26,7 +27,7 @@ export default function Layout({children}: PropsWithChildren) {
           <ul className="flex items-center py-3 mt-10 border-b-2 border-b-gray-500">
             <li className="px-5"><Link href='/'>Home</Link></li>
             <li className="px-5"><Link href='/performance'>Performance</Link></li>
-            <li className="px-5"><Link href='/maintenance'>Farms</Link></li>
+            <li className="px-5"><Link href='/compound'>Farms</Link></li>
           </ul>
         </nav>
 

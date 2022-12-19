@@ -43,6 +43,14 @@ async function main() {
   await strategy.deployed();
   await vault.initialize(strategy.address, "CAP_ETH_COMP", "CAP_ETH_COMP")
   await ethToken.mintFor(capRewardsMock.address, ONE_THOUSAND_ETH);
+  await ethToken.mintFor(deployer.address, ONE_THOUSAND_ETH);
+  
+  console.log("Vault address:", vault.address);
+  console.log("Strategy address:", strategy.address);
+  console.log("CapPoolMock address:", capPoolMock.address);
+  console.log("CapRewardsMock address:", capRewardsMock.address);
+  console.log("ETH address:", ethToken.address);
+  
 
   fs.writeFileSync(
     "./resources/deploy_cap-output.json",

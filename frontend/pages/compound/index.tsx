@@ -9,7 +9,7 @@ export default function Compound() {
 
   return <>
     <div>
-      {availableStrategies.map(strategy => <StrategyItem key={strategy.id} strategy={strategy}/>)}
+      {availableStrategies.map(strategy => <StrategyItem key={strategy.vaultAddress} strategy={strategy}/>)}
     </div>
   </>
 }

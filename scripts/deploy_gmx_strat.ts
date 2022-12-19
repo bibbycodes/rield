@@ -46,6 +46,9 @@ async function main() {
   
   await ethToken.mintFor(gmxRouterMock.address, ethers.utils.parseEther("1000000000"));
   await ethToken.mintFor(strategy.address, ethers.utils.parseEther("1000000000"));
+
+  await ethToken.mintFor(deployer.address, ethers.utils.parseEther("1000000000"));
+  await gmxToken.mintFor(deployer.address, ethers.utils.parseEther("1000000000"));
   
   console.log("Vault Deployed to:", vault.address);
   console.log("GMX Deployed to:", gmxToken.address);
