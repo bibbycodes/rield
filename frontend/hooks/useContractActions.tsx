@@ -1,5 +1,6 @@
-import {useContractWrite, usePrepareContractWrite, useWaitForTransaction} from 'wagmi'
-import {AbiItem} from "web3-utils";
+import { useContractWrite, usePrepareContractWrite, useWaitForTransaction } from 'wagmi'
+import { AbiItem } from "web3-utils";
+import { ethers } from 'ethers';
 
 export interface useContractActionsProps {
   vaultAddress: string,
@@ -7,23 +8,15 @@ export interface useContractActionsProps {
   abi: AbiItem[]
 }
 
-export interface useContractActionsReturn {
-  [action: string]: {
-    isLoading: boolean,
-    isSuccess: boolean,
-    write: () => void
-  }
-}
-
-
-export const useContractActions = ({vaultAddress, amount, abi}: useContractActionsProps): useContractActionsReturn => {
+export const useContractActions = ({vaultAddress, amount, abi}: useContractActionsProps) => {
+  const amountBN = ethers.utils.parseEther(String(amount))
   const {config: depositConfig} = usePrepareContractWrite({
     address: vaultAddress,
-    args: [amount],
+    args: [amountBN],
     functionName: "deposit",
     abi
   })
-  
+
   const {data: depositData, write: depositIntoVault} = useContractWrite(depositConfig)
   const {isLoading: isDepositLoading, isSuccess: isDepositSuccess} = useWaitForTransaction({
     hash: depositData?.hash,
@@ -31,7 +24,7 @@ export const useContractActions = ({vaultAddress, amount, abi}: useContractActio
 
   const {config: withdrawConfig} = usePrepareContractWrite({
     address: vaultAddress,
-    args: [amount],
+    args: [amountBN],
     functionName: "withdraw",
     abi
   })
