@@ -12,30 +12,39 @@ export function useApproveToken(tokenAddress: string, contractAddress: string, u
     functionName: "approve",
     abi
   })
-  const {data: depositData, writeAsync} = useContractWrite(config)
+  const {data: approveRes, writeAsync} = useContractWrite(config)
   const {isSuccess} = useWaitForTransaction({
-    hash: depositData?.hash,
+    hash: approveRes?.hash,
   })
-  const {data}: any = useContractRead({
+  const {data, refetch}: any = useContractRead({
     abi,
     address: tokenAddress,
     functionName: 'allowance',
     args: [userAddress, contractAddress]
   });
-
+  
+  const fetchAllowance = async () => {
+    const {data} = await refetch()
+    setIsApproved(data?.gt(0))
+  }
+  
   useEffect(() => {
-    setIsApproved(data && data.eq(maxInt));
+    const fetch = async () => {
+      await fetchAllowance()
+    }
+    fetch()
   }, [data])
 
   async function handleApprove() {
     const tx = await writeAsync?.()
     await tx?.wait()
-    setIsApproved(true)
+    setIsApproved(data?.gt(0))
   }
 
   return {
     isApproved,
     approve: handleApprove,
-    isSuccess
+    isSuccess,
+    fetchAllowance
   }
 }

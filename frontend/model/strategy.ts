@@ -1,12 +1,14 @@
 import * as cap from "../../resources/deploy_cap-output.json";
 import * as gmx from '../../resources/deploy_gmx-output.json';
 import {abi} from '../../artifacts/contracts/vaults/BeefyVaultV7.sol/BeefyVaultV7.json';
+import {Address} from "wagmi";
 
 export interface Strategy {
   id: number;
   name: string;
-  tokenAddress: string;
-  vaultAddress: string;
+  tokenAddress: Address;
+  vaultAddress: Address;
+  strategyAddress: Address;
   iconUrl: string;
   decimals: number;
   description: string;
@@ -16,7 +18,6 @@ export interface Strategy {
   tokenUrl: string;
   abi: any;
 }
-
 
 export const availableStrategies: Strategy[] = [
   {
