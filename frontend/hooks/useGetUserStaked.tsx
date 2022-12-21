@@ -11,18 +11,15 @@ interface useGetUserStakedProps {
 export const useGetUserStaked = ({vaultAddress}: useGetUserStakedProps) => {
   const [userStaked, setUserStaked] = useState<string>('0');
   const {address: userAddress} = useAccount();
-  
+
   const calculateUserStaked = (balance: BigNumber, pricePerShare: BigNumber) => {
     return convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(18))) ?? '0'
   }
-  
+
   const fetchUserStaked = async () => {
     console.log("FETCHING")
-    console.log(userStaked)
     await refetchFullPricePerShare()
     await refetchUserBalance()
-    setUserStaked(calculateUserStaked(userBalance as BigNumber, fullPricePerShare as BigNumber))
-    console.log(userStaked)
   }
 
   const {data: fullPricePerShare, refetch: refetchFullPricePerShare} = useContractRead({
@@ -39,11 +36,10 @@ export const useGetUserStaked = ({vaultAddress}: useGetUserStakedProps) => {
     args: [userAddress]
   })
 
-  
   useEffect(() => {
-    fetchUserStaked()
-  }, [])
-  
+    setUserStaked(calculateUserStaked(userBalance as BigNumber, fullPricePerShare as BigNumber))
+  }, [fullPricePerShare, userBalance])
+
   return {
     fetchUserStaked,
     userStaked
