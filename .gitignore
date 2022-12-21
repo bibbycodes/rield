@@ -2,3 +2,5 @@ node_modules
 /resources
 artifacts
 .env
+.idea
+cache

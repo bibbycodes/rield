@@ -1,7 +1,7 @@
 import {Button, TextField} from '@mui/material';
 import {useEffect, useState} from 'react';
-import {useContractActions} from "../hooks/useContractActions";
-import {useAccount, useBalance, } from "wagmi";
+import { useContractActions, useWithdrawFromVault } from "../hooks/useContractActions";
+import { useAccount, useBalance, useContractWrite, usePrepareContractWrite, useWaitForTransaction, } from "wagmi";
 import {useApproveToken} from "../hooks/useApproveToken";
 import {ethers} from 'ethers';
 
@@ -10,10 +10,9 @@ export default function StrategyActionsContainer({vaultAddress, tokenAddress, to
   const {address} = useAccount();
   const {data: balance, isError, isLoading} = useBalance({token: tokenAddress, address})
   const {approve, isApproved, fetchAllowance} = useApproveToken(tokenAddress, vaultAddress, address);
-  const {deposit, withdraw, withdrawAll} = useContractActions({vaultAddress, amount, abi})
-  
-  console.log(withdraw)
-  
+  const {deposit, withdraw} = useContractActions({vaultAddress, amount, abi})
+  // const withdrawFromVault = useWithdrawFromVault(vaultAddress, amount, abi);
+
   const performAction = async (action: any) => {
     console.log("PERFORMING ACTION", action)
     const tx = await action?.()
@@ -44,7 +43,7 @@ export default function StrategyActionsContainer({vaultAddress, tokenAddress, to
         }}
         value={amount}
       />
-      
+
       {isApproved && (
         <>
           <Button disabled={amount <= 0} onClick={() => performAction(deposit.write)}>Deposit</Button>
