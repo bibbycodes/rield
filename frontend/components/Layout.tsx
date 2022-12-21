@@ -2,7 +2,9 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { PropsWithChildren } from 'react';
 import { ConnectKitButton } from 'connectkit';
-import Compound from "../pages/compound";
+import NonSSRWrapper from './NonSSRWrapper';
+
+const isSSR = () => typeof window === 'undefined';
 
 export default function Layout({children}: PropsWithChildren) {
   return (
@@ -20,7 +22,9 @@ export default function Layout({children}: PropsWithChildren) {
           <div className="flex">
             <img src="logo.png" alt="Logo" className="w-40"/>
             <span className="flex-grow"></span>
-            <ConnectKitButton/>
+            <NonSSRWrapper>
+              <ConnectKitButton/>
+            </NonSSRWrapper>
           </div>
 
           {/* Navigation links */}

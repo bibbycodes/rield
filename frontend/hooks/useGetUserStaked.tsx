@@ -1,8 +1,8 @@
-import {Address, useAccount, useContractRead} from "wagmi";
-import {abi} from "../../artifacts/contracts/vaults/BeefyVaultV7.sol/BeefyVaultV7.json";
-import {BigNumber} from "ethers";
-import {convertToEther} from "../lib/utils";
-import {useEffect, useState} from "react";
+import { Address, useAccount, useContractRead } from "wagmi";
+import { abi } from "../../artifacts/contracts/vaults/BeefyVaultV7.sol/BeefyVaultV7.json";
+import { BigNumber } from "ethers";
+import { convertToEther } from "../lib/utils";
+import { useEffect, useState } from "react";
 
 interface useGetUserStakedProps {
   vaultAddress: Address,
@@ -37,7 +37,9 @@ export const useGetUserStaked = ({vaultAddress}: useGetUserStakedProps) => {
   })
 
   useEffect(() => {
-    setUserStaked(calculateUserStaked(userBalance as BigNumber, fullPricePerShare as BigNumber))
+    if (userBalance && fullPricePerShare) {
+      setUserStaked(calculateUserStaked(userBalance as BigNumber, fullPricePerShare as BigNumber))
+    }
   }, [fullPricePerShare, userBalance])
 
   return {
