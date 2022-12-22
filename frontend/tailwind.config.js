@@ -1,11 +1,26 @@
 /** @type {import('tailwindcss').Config} */
+
+const theme = {
+  tPrimary: '#FFFFFF',
+  tSecondary: '#9597A0',
+  backgroundPrimary: '#1F2027',
+  backgroundSecondary: '#282930',
+  accentPrimary: '#4A77F6',
+  accentSecondary: '#3459C5',
+}
+
 module.exports = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: theme,
+      fontFamily: {
+        'sans': ['ProximaNova', 'Arial', 'sans-serif']
+      }
+    },
   },
   plugins: [],
 }

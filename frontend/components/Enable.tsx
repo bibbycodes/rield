@@ -1,23 +1,37 @@
-import { Button } from '@mui/material';
-import { useState } from 'react';
-import { useApproveToken } from '../hooks/useApproveToken';
-import { Address, useAccount, useBalance } from 'wagmi';
+import {Button} from '@mui/material';
+import {useContext} from 'react';
+import {useApproveToken} from '../hooks/useApproveToken';
+import {Address, useAccount, useBalance} from 'wagmi';
+import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 
-export default function Enable({tokenAddress, vaultAddress}: { tokenAddress: Address, vaultAddress: Address }) {
+export default function Enable({
+                                 tokenAddress,
+                                 vaultAddress,
+                                 openModal
+                               }: { tokenAddress: Address, vaultAddress: Address, openModal: () => void }) {
   const {address} = useAccount();
-  const {approve, isApproved, fetchAllowance} = useApproveToken(tokenAddress, vaultAddress, address);
-  const {data: balance, isError, isLoading} = useBalance({token: tokenAddress, address})
-  const [amount, setAmount] = useState<number>(0)
+  const {approve, isApproved} = useApproveToken(tokenAddress, vaultAddress, address);
+  const {data: balance} = useBalance({token: tokenAddress, address})
+  const {setAction} = useContext(SelectedStrategyContext)
 
-  function openModal(type: 'deposit' | 'withdraw') {
-
+  const handleClick = (action: TransactionAction) => {
+    setAction(action)
+    openModal()
   }
 
   return <div>
     {isApproved && (
       <>
-        <Button onClick={() => openModal('deposit')}>Deposit</Button>
-        <Button disabled={balance?.value?.lte(0)} onClick={() => openModal('withdraw')}>Withdraw</Button>
+        <Button
+          onClick={() => handleClick("deposit")}
+          className={'bg-backgroundPrimary mx-2 text-tPrimary'}
+
+        >Deposit</Button>
+        <Button
+          disabled={balance?.value?.lte(0)}
+          className={'bg-backgroundPrimary text-tPrimary'}
+          onClick={() => handleClick('withdraw')}
+        >Withdraw</Button>
       </>
     )}
 
