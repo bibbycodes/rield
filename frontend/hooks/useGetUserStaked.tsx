@@ -39,6 +39,7 @@ export const useGetUserStaked = ({vaultAddress}: useGetUserStakedProps) => {
   useEffect(() => {
     if (userBalance && fullPricePerShare) {
       setUserStaked(calculateUserStaked(userBalance as BigNumber, fullPricePerShare as BigNumber))
+      console.log('balance', userBalance.toString(), 'pricepershare', fullPricePerShare.toString())
     }
   }, [fullPricePerShare, userBalance])
 
