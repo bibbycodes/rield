@@ -16,23 +16,23 @@ export default function StrategyItem({strategy, openModal}: { strategy: Strategy
   const handleOpenModal = () => {
     openModal(true)
   }
-  
+
   return (
-    <Card className={`bg-backgroundSecondary rounded-lg p-2 h-40 w-1/2`}>
-        <div className="flex flex-col justify-between w-full items-center">
-          <span className="w-52 mr-auto">
-            <img width={50} height={50} src={strategy.iconUrl} className="inline mr-3"/>
+    <Card className={`bg-backgroundSecondary rounded-lg p-2`}>
+        <div className="p-4">
+          <div>
+            <img width={50} height={50} src={strategy.iconUrl} className="inline mr-3 h-12 w-12"/>
             <a href={strategy.protocolUrl}>
               <Typography className="inline text-tPrimary hover:text-blue-700 hover:underline">{strategy.name}</Typography>
             </a>
-          </span>
-          <div className="flex flex-col items-center">
+          </div>
+          <div className="flex flex-col my-6">
+            <Typography className="text-xs text-tSecondary">Staked</Typography>
+            <Typography className={`text-2xl text-tPrimary`}>${getUserStakedInDollars(userStaked)}</Typography>
+          </div>
+          <div className="flex flex-col mb-6">
             <Typography className="text-xs text-tSecondary">APY</Typography>
             <Typography className={`text-tPrimary`}>{strategy.apy}%</Typography>
-          </div>
-          <div className="flex flex-col items-center">
-            <Typography className="text-xs text-tSecondary">Staked</Typography>
-            <Typography className={`text-tPrimary`}>${getUserStakedInDollars(userStaked)}</Typography>
           </div>
           {/*<StrategyActionsContainer*/}
           {/*  vaultAddress={strategy.vaultAddress}*/}

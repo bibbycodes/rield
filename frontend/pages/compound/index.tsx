@@ -6,12 +6,12 @@ import StrategyDetailsModal from '../../components/StrategyDetailsModal';
 export default function Compound() {
   const [isStrategyDetailsModalOpen, setIsStrategyDetailsModalOpen] = useState<boolean>(false);
 
-  
+
   return <>
-    <div className={`flex flex-row items-center`}>
+    <div className={`grid md:grid-cols-2 grid-cols-1 gap-4`}>
       {availableStrategies.map(strategy => <StrategyItem key={strategy.vaultAddress} strategy={strategy} openModal={setIsStrategyDetailsModalOpen}/>)}
-      <StrategyDetailsModal 
-        isOpen={isStrategyDetailsModalOpen} 
+      <StrategyDetailsModal
+        isOpen={isStrategyDetailsModalOpen}
         setIsOpen={setIsStrategyDetailsModalOpen}
       ></StrategyDetailsModal>
     </div>

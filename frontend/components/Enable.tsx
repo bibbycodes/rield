@@ -21,22 +21,23 @@ export default function Enable({
 
   return <div>
     {isApproved && (
-      <>
+      <div className="grid grid-cols-2 gap-3">
         <Button
           onClick={() => handleClick("deposit")}
-          className={'bg-backgroundPrimary mx-2 text-tPrimary'}
-
+          variant="contained"
+          className={'text-tPrimary bg-accentPrimary p-3'}
         >Deposit</Button>
         <Button
           disabled={balance?.value?.lte(0)}
-          className={'bg-backgroundPrimary text-tPrimary'}
+          variant="outlined"
+          className={'disabled:text-tSecondary disabled:border-tSecondary p-3'}
           onClick={() => handleClick('withdraw')}
         >Withdraw</Button>
-      </>
+      </div>
     )}
 
     {!isApproved && (
-      <Button onClick={() => address && approve?.()}>Approve</Button>
+      <Button className="w-full bg-accentPrimary" variant="contained" onClick={() => address && approve?.()}>Approve</Button>
     )}
   </div>
 }
