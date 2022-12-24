@@ -1,17 +1,17 @@
 import * as React from 'react';
-import {useContext, useState} from 'react';
+import { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import {Link, TextField} from '@mui/material';
-import {useAccount, useBalance} from 'wagmi';
-import {useContractActions} from '../hooks/useContractActions';
-import {formatEther} from "ethers/lib/utils";
-import {capitalize} from "../utils/formatters";
-import {useGetUserStaked} from "../hooks/useGetUserStaked";
-import {ethers} from "ethers";
-import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
+import { Link, TextField } from '@mui/material';
+import { useAccount, useBalance } from 'wagmi';
+import { useContractActions } from '../hooks/useContractActions';
+import { formatEther } from "ethers/lib/utils";
+import { capitalize } from "../utils/formatters";
+import { useGetUserStaked } from "../hooks/useGetUserStaked";
+import { ethers } from "ethers";
+import { SelectedStrategyContext, TransactionAction } from "../contexts/SelectedStrategyContext";
 import theme from "tailwindcss/defaultTheme";
 
 const style = {
@@ -65,12 +65,12 @@ export default function StrategyDetailsModal({isOpen, setIsOpen}: StrategyDetail
         >
           <div>
             <Typography id="modal-modal-title" variant="h6" component="h2">
-              {capitalize(action)} ${selectedStrategy.tokenSymbol}
+              {capitalize(action)} {selectedStrategy.tokenSymbol}
             </Typography>
           </div>
-          <Box className={`bg-backgroundSecondary rounded-lg flex flex-row items-center `}>
+          <Box className={`bg-backgroundSecondary rounded-lg flex flex-row items-center items-stretch`}>
             <TextField
-              sx={{border: 'none', bg: theme.bgPrimary, color: 'tPrimary'}}
+              sx={{border: 'none', bg: theme.bgPrimary, '& .MuiInputBase-input': {color: 'white'}}}
               id="tokenId"
               onChange={(e) => {
                 const newAmount = +e.target.value
@@ -81,15 +81,12 @@ export default function StrategyDetailsModal({isOpen, setIsOpen}: StrategyDetail
                 }
               }}
               value={amount}
-              InputLabelProps={{
-                style: { color: 'white' },
-              }}
-              className={`bg-backgroundPrimary text-tPrimary placeholder-tPrimary`}
+              className={`bg-backgroundPrimary text-tPrimary placeholder-tPrimary flex-grow`}
             >
-              
+
             </TextField>
             <Button
-              className={`bg-accentPrimary text-tPrimary ml-auto`}
+              className={`text-tSecondary w-1/3 bg-none`}
               onClick={() => setAmount(+formattedBalance)}
             >MAX
             </Button>
@@ -101,24 +98,25 @@ export default function StrategyDetailsModal({isOpen, setIsOpen}: StrategyDetail
               {/*<Typography id="modal-modal-description">*/}
               {/*  Bal: {shortenString(formattedBalance) ?? 0}*/}
               {/*</Typography>*/}
-              
+
             </Box>
           </Box>
 
           <Box className={`ml-auto`}>
             APY: {selectedStrategy.apy}%
           </Box>
-          
+
           <Box className={`flex flex-row justify-between`}>
             <Button
               variant="outlined"
-              className={'disabled:text-tSecondary disabled:border-tSecondary h-12 w-5/12'}  
+              className={'disabled:text-tSecondary disabled:border-tSecondary h-12 w-5/12'}
               onClick={() => handleClose()}>Cancel</Button>
-            <Button className={`bg-accentPrimary text-white h-12 w-5/12`} onClick={() => performAction(action)}>Confirm</Button>
+            <Button className={`bg-accentPrimary text-white h-12 w-5/12`}
+                    onClick={() => performAction(action)}>Confirm</Button>
           </Box>
-          
+
           <Box className={`flex flex-col items-center`}>
-            <Link href={tokenUrl} underline="hover" className={`text-blue-500 mt-4`}>Get Token</Link> 
+            <Link href={tokenUrl} underline="hover" className={`text-blue-500 mt-4`}>Get Token</Link>
           </Box>
         </Box>
       </Modal>
