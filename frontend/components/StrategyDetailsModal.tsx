@@ -1,19 +1,18 @@
 import * as React from 'react';
+import {useContext, useState} from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import {Divider, Link, TextField} from '@mui/material';
-import { Strategy } from '../model/strategy';
-import {useAccount, useBalance } from 'wagmi';
-import { useContractActions } from '../hooks/useContractActions';
-import {useContext, useState} from 'react';
-import { parseEther } from 'ethers/lib/utils.js';
+import {Link, TextField} from '@mui/material';
+import {useAccount, useBalance} from 'wagmi';
+import {useContractActions} from '../hooks/useContractActions';
 import {formatEther} from "ethers/lib/utils";
-import {shortenString} from "../utils/formatters";
+import {capitalize} from "../utils/formatters";
 import {useGetUserStaked} from "../hooks/useGetUserStaked";
 import {ethers} from "ethers";
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
+import theme from "tailwindcss/defaultTheme";
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -62,17 +61,17 @@ export default function StrategyDetailsModal({isOpen, setIsOpen}: StrategyDetail
       >
         <Box
           sx={style}
-          className={`bg-black text-white flex flex-col rounded-lg`}
+          className={`bg-backgroundPrimary border-none text-tPrimary flex flex-col rounded-lg`}
         >
           <div>
             <Typography id="modal-modal-title" variant="h6" component="h2">
-              {action}
+              {capitalize(action)} ${selectedStrategy.tokenSymbol}
             </Typography>
           </div>
-          <Box className={`border-solid border-2 h-18 flex flex-row items-center p-2`}>
+          <Box className={`bg-backgroundSecondary rounded-lg flex flex-row items-center `}>
             <TextField
+              sx={{border: 'none', bg: theme.bgPrimary, color: 'tPrimary'}}
               id="tokenId"
-              color={"primary"}
               onChange={(e) => {
                 const newAmount = +e.target.value
                 if (isNaN(newAmount) || data?.value.lt(ethers.utils.parseEther(e.target.value))) {
@@ -82,30 +81,44 @@ export default function StrategyDetailsModal({isOpen, setIsOpen}: StrategyDetail
                 }
               }}
               value={amount}
-            />
-            <Divider/>
-            <Box className={`ml-auto border-solid border-2 flex flex-col items-center`}>
-              <Typography id="modal-modal-description" sx={{mt: 2}}>
-                {symbol}
-              </Typography>
-              <Typography id="modal-modal-description" sx={{mt: 2}}>
-                Available: {shortenString(formattedBalance) ?? 0}
-              </Typography>
-              <Button className={`bg-blue-500 text-white ml-auto`}>MAX</Button>
+              InputLabelProps={{
+                style: { color: 'white' },
+              }}
+              className={`bg-backgroundPrimary text-tPrimary placeholder-tPrimary`}
+            >
+              
+            </TextField>
+            <Button
+              className={`bg-accentPrimary text-tPrimary ml-auto`}
+              onClick={() => setAmount(+formattedBalance)}
+            >MAX
+            </Button>
+            {/*<Divider/>*/}
+            <Box className={`ml-auto rounded-lg flex flex-col items-center`}>
+              {/*<Typography id="modal-modal-description" >*/}
+              {/*  {selectedStrategy.tokenSymbol}*/}
+              {/*</Typography>*/}
+              {/*<Typography id="modal-modal-description">*/}
+              {/*  Bal: {shortenString(formattedBalance) ?? 0}*/}
+              {/*</Typography>*/}
+              
             </Box>
           </Box>
 
           <Box className={`ml-auto`}>
-            APY: 10%
+            APY: {selectedStrategy.apy}%
           </Box>
           
           <Box className={`flex flex-row justify-between`}>
-            <Button className={`bg-blue-500 text-white w-5/12`} onClick={() => handleClose()}>Cancel</Button>
-            <Button className={`bg-blue-500 text-white w-5/12`} onClick={() => performAction(action)}>Confirm</Button>
+            <Button
+              variant="outlined"
+              className={'disabled:text-tSecondary disabled:border-tSecondary h-12 w-5/12'}  
+              onClick={() => handleClose()}>Cancel</Button>
+            <Button className={`bg-accentPrimary text-white h-12 w-5/12`} onClick={() => performAction(action)}>Confirm</Button>
           </Box>
           
           <Box className={`flex flex-col items-center`}>
-            <Link href={tokenUrl} underline="hover" className={`text-blue-500 mt-4`}>Get Token!</Link> 
+            <Link href={tokenUrl} underline="hover" className={`text-blue-500 mt-4`}>Get Token</Link> 
           </Box>
         </Box>
       </Modal>

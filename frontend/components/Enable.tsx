@@ -3,19 +3,24 @@ import {useContext} from 'react';
 import {useApproveToken} from '../hooks/useApproveToken';
 import {Address, useAccount, useBalance} from 'wagmi';
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
+import {Strategy} from "../model/strategy";
 
-export default function Enable({
-                                 tokenAddress,
-                                 vaultAddress,
-                                 openModal
-                               }: { tokenAddress: Address, vaultAddress: Address, openModal: () => void }) {
+interface StrategyDetailsModalProps {
+  tokenAddress: Address, 
+  vaultAddress: Address, 
+  openModal: () => void, 
+  strategy: Strategy
+}
+
+export default function Enable({ tokenAddress, vaultAddress, openModal, strategy}: StrategyDetailsModalProps) {
   const {address} = useAccount();
   const {approve, isApproved} = useApproveToken(tokenAddress, vaultAddress, address);
   const {data: balance} = useBalance({token: tokenAddress, address})
-  const {setAction} = useContext(SelectedStrategyContext)
+  const {setAction, setSelectedStrategy} = useContext(SelectedStrategyContext)
 
   const handleClick = (action: TransactionAction) => {
     setAction(action)
+    setSelectedStrategy(strategy)
     openModal()
   }
 
@@ -37,7 +42,8 @@ export default function Enable({
     )}
 
     {!isApproved && (
-      <Button className="w-full bg-accentPrimary" variant="contained" onClick={() => address && approve?.()}>Approve</Button>
+      <Button className="w-full bg-accentPrimary" variant="contained"
+              onClick={() => address && approve?.()}>Approve</Button>
     )}
   </div>
 }

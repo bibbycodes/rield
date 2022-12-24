@@ -59,12 +59,6 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
     hash: depositAllData?.hash,
   })
 
-  console.log('hm', {
-    isLoading: isWithdrawLoading,
-    isSuccess: isWithdrawSuccess,
-    write: withdrawFromVault,
-  })
-
   return {
     withdraw: {
       isLoading: isWithdrawLoading,

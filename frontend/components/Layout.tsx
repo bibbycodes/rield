@@ -21,8 +21,7 @@ export default function Layout({children}: PropsWithChildren) {
             <ul className="flex items-center py-3 px-20 w-full">
               <img src="logo.png" alt="Logo" className="w-12"/>
               <li className="px-5"><Link href='/'>Home</Link></li>
-              <li className="px-5"><Link href='/performance'>Performance</Link></li>
-              <li className="px-5"><Link href='/compound'>Farms</Link></li>
+              <li className="px-5"><Link href='/compound'>Strategies</Link></li>
               <li className="ml-auto">
                 <NonSSRWrapper>
                   <ConnectKitButton/>

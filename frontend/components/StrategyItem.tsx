@@ -3,6 +3,7 @@ import {Strategy} from '../model/strategy';
 import {useGetUserStaked} from "../hooks/useGetUserStaked";
 import Enable from './Enable';
 import {useFetch} from 'usehooks-ts';
+import { shortenString } from '../utils/formatters';
 
 export default function StrategyItem({strategy, openModal}: { strategy: Strategy, openModal: (isOpen: boolean) => void }) {
   const {userStaked} = useGetUserStaked({vaultAddress: strategy.vaultAddress})
@@ -29,22 +30,17 @@ export default function StrategyItem({strategy, openModal}: { strategy: Strategy
           <div className="flex flex-col my-6">
             <Typography className="text-xs text-tSecondary">Staked</Typography>
             <Typography className={`text-2xl text-tPrimary`}>${getUserStakedInDollars(userStaked)}</Typography>
+            <Typography className={`text-xs text-tSecondary`}>{shortenString(userStaked)} {(strategy.tokenSymbol)}</Typography>
           </div>
           <div className="flex flex-col mb-6">
             <Typography className="text-xs text-tSecondary">APY</Typography>
             <Typography className={`text-tPrimary`}>{strategy.apy}%</Typography>
           </div>
-          {/*<StrategyActionsContainer*/}
-          {/*  vaultAddress={strategy.vaultAddress}*/}
-          {/*  tokenUrl={strategy.tokenUrl}*/}
-          {/*  tokenAddress={strategy.tokenAddress}*/}
-          {/*  abi={strategy.abi}*/}
-          {/*  fetchUserStaked={fetchUserStaked}*/}
-          {/*/>*/}
           <Enable
             vaultAddress={strategy.vaultAddress}
             tokenAddress={strategy.tokenAddress}
             openModal={handleOpenModal}
+            strategy={strategy}
           ></Enable>
         </div>
     </Card>

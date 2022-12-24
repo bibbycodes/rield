@@ -18,12 +18,15 @@ export interface Strategy {
   tokenUrl: string;
   abi: any;
   coinGeckoId: string;
+  tokenSymbol: string;
+  type: string;
 }
 
 export const availableStrategies: Strategy[] = [
   {
     id: 0,
     name: "GMX",
+    tokenSymbol: "GMX",
     tokenAddress: gmx.gmxTokenAddress as Address,
     vaultAddress: gmx.vaultAddress as Address,
     strategyAddress: gmx.strategyAddress as Address,
@@ -36,10 +39,12 @@ export const availableStrategies: Strategy[] = [
     isActive: true,
     abi: abi,
     coinGeckoId: "gmx",
+    type: "Autocompound"
   },
   {
     id: 0,
     name: "Cap ETH",
+    tokenSymbol: "ETH",
     tokenAddress: cap.ethToken as Address,
     vaultAddress: cap.vaultAddress as Address,
     strategyAddress: cap.strategyAddress as Address,
@@ -51,6 +56,7 @@ export const availableStrategies: Strategy[] = [
     decimals: 18,
     isActive: true,
     abi: abi,
-    coinGeckoId: "ethereum"
+    coinGeckoId: "ethereum",
+    type: "Autocompound"
   },
 ]

@@ -5,3 +5,7 @@ export const shortenString = (str: string | number, maxLength: number = 6): stri
   }
   return str;
 }
+
+export const capitalize = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
