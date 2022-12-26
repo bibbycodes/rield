@@ -9,3 +9,7 @@ export const shortenString = (str: string | number, maxLength: number = 6): stri
 export const capitalize = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+export const formatDollarAmount = (num: number, decimals: number = 2): string => {
+  return num.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}

@@ -16,12 +16,12 @@ export default function Layout({children}: PropsWithChildren) {
       </Head>
 
       <main>
-        <nav className="text-white py-2 w-full bg-backgroundSecondary">
+        <nav className="text-white w-full bg-backgroundSecondary">
           <div className="flex flex-row w-full">
-            <ul className="flex items-center py-3 px-20 w-full">
+            <ul className="flex items-center px-20 w-full">
               <img src="logo.png" alt="Logo" className="w-12"/>
               <li className="px-5"><Link href='/'>Home</Link></li>
-              <li className="px-5"><Link href='/compound'>Strategies</Link></li>
+              <li className="px-5"><Link href='/strategies'>Strategies</Link></li>
               <li className="ml-auto">
                 <NonSSRWrapper>
                   <ConnectKitButton/>
@@ -32,7 +32,7 @@ export default function Layout({children}: PropsWithChildren) {
         </nav>
 
         {/* Dynamic content */}
-        <div className="pt-20 px-20">
+        <div className="pt-5 px-20">
           <main>{children}</main>
         </div>
       </main>

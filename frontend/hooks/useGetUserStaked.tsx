@@ -1,50 +1,60 @@
-import { Address, useAccount, useContractRead } from "wagmi";
-import { abi } from "../../artifacts/contracts/vaults/BeefyVaultV7.sol/BeefyVaultV7.json";
-import { BigNumber } from "ethers";
-import { convertToEther } from "../lib/utils";
-import { useEffect, useState } from "react";
+import {useAccount} from "wagmi";
+import {abi} from "../../artifacts/contracts/vaults/BeefyVaultV7.sol/BeefyVaultV7.json";
+import {BigNumber} from "ethers";
+import {convertToEther} from "../lib/utils";
+import {useContext, useEffect, useState} from "react";
+import {multicall} from "@wagmi/core";
+import {availableStrategies} from "../model/strategy";
+import {TokenPricesContext} from "../contexts/TokenPricesContext";
+import {formatDollarAmount} from "../utils/formatters";
 
-interface useGetUserStakedProps {
-  vaultAddress: Address,
-}
 
-export const useGetUserStaked = ({vaultAddress}: useGetUserStakedProps) => {
-  const [userStaked, setUserStaked] = useState<string>('0');
+export const useGetUserStaked = () => {
+  const [userStaked, setUserStaked] = useState<string>();
   const {address: userAddress} = useAccount();
+  const {prices} = useContext(TokenPricesContext)
 
-  const calculateUserStaked = (balance: BigNumber, pricePerShare: BigNumber) => {
-    return convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(18))) ?? '0'
+  const balanceCalls = {
+    contracts: availableStrategies.map(strategy => {
+      return {
+        abi,
+        address: strategy.vaultAddress,
+        functionName: 'balanceOf',
+        args: [userAddress]
+      }
+    })
   }
-
-  const fetchUserStaked = async () => {
-    console.log("FETCHING")
-    await refetchFullPricePerShare()
-    await refetchUserBalance()
+  
+  const pricePerShareCalls = {
+    contracts: availableStrategies.map(strategy => {
+      return {
+        abi,
+        address: strategy.vaultAddress,
+        functionName: 'getPricePerFullShare',
+        args: []
+      }
+    })
   }
-
-  const {data: fullPricePerShare, refetch: refetchFullPricePerShare} = useContractRead({
-    abi,
-    address: vaultAddress,
-    functionName: 'getPricePerFullShare',
-    args: []
-  });
-
-  const {data: userBalance, refetch: refetchUserBalance} = useContractRead({
-    abi,
-    address: vaultAddress,
-    functionName: 'balanceOf',
-    args: [userAddress]
-  })
-
+  
+  
+  async function getTotalStakedInDollars() {
+    const balanceData = await multicall(balanceCalls)
+    const pricePerShareData = await multicall(pricePerShareCalls)
+    const userStaked: number = balanceData.reduce((acc: any, balance: any, index: number) => {
+      const pricePerShare = pricePerShareData[index]
+      const userStaked = convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(18))) ?? '0'
+      const dollarAmount = parseFloat(userStaked) * prices[availableStrategies[index].coinGeckoId]
+      return acc + dollarAmount
+    }, 0) as number
+    setUserStaked(formatDollarAmount(userStaked) ?? 0)
+  }
+  
+  
   useEffect(() => {
-    if (userBalance && fullPricePerShare) {
-      setUserStaked(calculateUserStaked(userBalance as BigNumber, fullPricePerShare as BigNumber))
-      console.log('balance', userBalance.toString(), 'pricepershare', fullPricePerShare.toString())
-    }
-  }, [fullPricePerShare, userBalance])
-
+    getTotalStakedInDollars()
+  }, [userAddress])
+  
   return {
-    fetchUserStaked,
     userStaked
   }
 }
