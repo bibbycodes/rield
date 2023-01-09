@@ -15,19 +15,19 @@ async function main() {
 
   console.log("Deploying contracts with the account:", deployer.address);
 
-  const Token = await ethers.getContractFactory("TokenMock");
-  const ethToken = await Token.deploy("WETH", "WETH", 18);
-  await ethToken.deployed();
-
-  const CapRewardsMock = await ethers.getContractFactory("CapRewardsMock");
-  const capRewardsMock: CapRewardsMock = (await CapRewardsMock.deploy(ethToken.address)) as CapRewardsMock;
-  await capRewardsMock.deployed();
-
-  const CapPoolMock = await ethers.getContractFactory("CapPoolMock");
-  const capPoolMock: CapPoolMock = (await CapPoolMock.deploy(ethToken.address, capRewardsMock.address)) as CapPoolMock;
-  await capPoolMock.deployed();
-  await capRewardsMock.init(capPoolMock.address);
-  
+  // const Token = await ethers.getContractFactory("TokenMock");
+  // const ethToken = await Token.deploy("WETH", "WETH", 18);
+  // await ethToken.deployed();
+  //
+  // const CapRewardsMock = await ethers.getContractFactory("CapRewardsMock");
+  // const capRewardsMock: CapRewardsMock = (await CapRewardsMock.deploy(ethToken.address)) as CapRewardsMock;
+  // await capRewardsMock.deployed();
+  //
+  // const CapPoolMock = await ethers.getContractFactory("CapPoolMock");
+  // const capPoolMock: CapPoolMock = (await CapPoolMock.deploy(ethToken.address, capRewardsMock.address)) as CapPoolMock;
+  // await capPoolMock.deployed();
+  // await capRewardsMock.init(capPoolMock.address);
+  //
   const Vault = await ethers.getContractFactory("BeefyVaultV7");
   const vault: BeefyVaultV7 = (await Vault.deploy()) as BeefyVaultV7;
   await vault.deployed();
@@ -35,30 +35,30 @@ async function main() {
   const SingleStakeStrategy = await ethers.getContractFactory("CapSingleStakeStrategy");
   const strategy = await SingleStakeStrategy.deploy(
     vault.address,
-    capPoolMock.address,
-    capRewardsMock.address,
-    ethToken.address,
+    '0xE0cCd451BB57851c1B2172c07d8b4A7c6952a54e',
+    '0x29163356bBAF0a3bfeE9BA5a52a5C6463114Cb5f',
+    '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
   );
 
   await strategy.deployed();
   await vault.initialize(strategy.address, "CAP_ETH_COMP", "CAP_ETH_COMP")
-  await ethToken.mintFor(capRewardsMock.address, ONE_THOUSAND_ETH);
-  await ethToken.mintFor(deployer.address, ONE_THOUSAND_ETH);
-  
+  // await ethToken.mintFor(capRewardsMock.address, ONE_THOUSAND_ETH);
+  // await ethToken.mintFor(deployer.address, ONE_THOUSAND_ETH);
+
   console.log("Vault address:", vault.address);
   console.log("Strategy address:", strategy.address);
-  console.log("CapPoolMock address:", capPoolMock.address);
-  console.log("CapRewardsMock address:", capRewardsMock.address);
-  console.log("ETH address:", ethToken.address);
-  
+  // console.log("CapPoolMock address:", capPoolMock.address);
+  // console.log("CapRewardsMock address:", capRewardsMock.address);
+  // console.log("ETH address:", ethToken.address);
+
 
   fs.writeFileSync(
     "./resources/deploy_cap-output.json",
     JSON.stringify({
       vaultAddress: vault.address,
-      ethToken: ethToken.address,
-      capPoolMock: capPoolMock.address,
-      capRewardsMock: capPoolMock.address,
+      // ethToken: ethToken.address,
+      // capPoolMock: capPoolMock.address,
+      // capRewardsMock: capPoolMock.address,
       deployerAddress: deployer.address,
       strategyAddress: strategy.address,
     })

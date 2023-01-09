@@ -101,6 +101,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IStrategyV7__factory>;
     getContractFactory(
+      name: "ICapETHPool",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ICapETHPool__factory>;
+    getContractFactory(
       name: "ICapPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ICapPool__factory>;
@@ -181,6 +185,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.GMDstaking__factory>;
     getContractFactory(
+      name: "CapETHPoolMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CapETHPoolMock__factory>;
+    getContractFactory(
+      name: "CapETHRewardsMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CapETHRewardsMock__factory>;
+    getContractFactory(
       name: "CapPoolMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.CapPoolMock__factory>;
@@ -208,6 +220,10 @@ declare module "hardhat/types/runtime" {
       name: "CapSingleStakeStrategy",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.CapSingleStakeStrategy__factory>;
+    getContractFactory(
+      name: "CapSingleStakeStrategyETH",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CapSingleStakeStrategyETH__factory>;
     getContractFactory(
       name: "StrategyManager",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -244,6 +260,10 @@ declare module "hardhat/types/runtime" {
       name: "IGasPrice",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IGasPrice__factory>;
+    getContractFactory(
+      name: "BeefyETHVault",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.BeefyETHVault__factory>;
     getContractFactory(
       name: "BeefyVaultV7",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -360,6 +380,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IStrategyV7>;
     getContractAt(
+      name: "ICapETHPool",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ICapETHPool>;
+    getContractAt(
       name: "ICapPool",
       address: string,
       signer?: ethers.Signer
@@ -460,6 +485,16 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.GMDstaking>;
     getContractAt(
+      name: "CapETHPoolMock",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CapETHPoolMock>;
+    getContractAt(
+      name: "CapETHRewardsMock",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CapETHRewardsMock>;
+    getContractAt(
       name: "CapPoolMock",
       address: string,
       signer?: ethers.Signer
@@ -494,6 +529,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.CapSingleStakeStrategy>;
+    getContractAt(
+      name: "CapSingleStakeStrategyETH",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CapSingleStakeStrategyETH>;
     getContractAt(
       name: "StrategyManager",
       address: string,
@@ -539,6 +579,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IGasPrice>;
+    getContractAt(
+      name: "BeefyETHVault",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.BeefyETHVault>;
     getContractAt(
       name: "BeefyVaultV7",
       address: string,

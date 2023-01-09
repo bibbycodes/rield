@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export { CapSingleStakeStrategy__factory } from "./CapSingleStakeStrategy__factory";
+export { CapSingleStakeStrategyETH__factory } from "./CapSingleStakeStrategyETH__factory";
