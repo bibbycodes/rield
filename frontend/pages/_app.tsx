@@ -2,13 +2,13 @@ import '../styles/globals.css'
 import type {AppProps} from 'next/app'
 import {ConnectKitProvider, getDefaultClient} from 'connectkit';
 import {createClient, WagmiConfig} from 'wagmi';
-import {arbitrum, goerli, mainnet, hardhat} from "wagmi/chains";
+import {arbitrum, hardhat} from "wagmi/chains";
 import Layout from '../components/Layout';
 import {Providers} from "../lib/Providers";
 
 const alchemyId = process.env.ALCHEMY_ID;
 
-const chains = [mainnet, goerli, arbitrum, hardhat];
+const chains = [arbitrum, hardhat];
 
 const client = createClient(
   getDefaultClient({
