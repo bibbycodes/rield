@@ -1,4 +1,4 @@
-import { useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from "wagmi";
+import {Address, useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction} from "wagmi";
 import { BigNumber } from "ethers";
 import { useEffect, useState } from "react";
 import { abi } from '../../artifacts/contracts/token/GMD.sol/GMD.json';
@@ -7,7 +7,7 @@ export function useApproveToken(tokenAddress: string, contractAddress: string, u
   const maxInt = BigNumber.from(2).pow(BigNumber.from(255))
   const [isApproved, setIsApproved] = useState(false);
   const {config} = usePrepareContractWrite({
-    address: tokenAddress,
+    address: tokenAddress as Address,
     args: [contractAddress, maxInt],
     functionName: "approve",
     abi
@@ -18,7 +18,7 @@ export function useApproveToken(tokenAddress: string, contractAddress: string, u
   })
   const {data, refetch}: any = useContractRead({
     abi,
-    address: tokenAddress,
+    address: tokenAddress as Address,
     functionName: 'allowance',
     args: [userAddress, contractAddress]
   });

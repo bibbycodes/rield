@@ -6,6 +6,7 @@ import ERC20Abi from '../resources/abis/erc20.json';
 import {formatUnits} from "ethers/lib/utils";
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
+/* eslint-disable */
 
 // Router: 0x5ABFF8F8D5b13253dCAB1e427Fdb3305cA620119
 // Trading: 0xbEd32937D8A5D1421241F52809908f1a17D75bDb
@@ -114,52 +115,50 @@ export function formatToDisplay(amount: number, maxPrecision?: number, fixPrecis
   }
 }
 
-export async function getCapAPY(token: capTokens, signer: any): Promise<number> {
+export async function getCapAPY(token: capTokens, provider: any): Promise<number> {
   let {cumulativeFees, cumulativePnl} = await fetchCapPoolStats(chainData.currencies[token]);
   [cumulativeFees, cumulativePnl] = [capFormatUnits(cumulativeFees), capFormatUnits(cumulativePnl)];
   const poolInception = chainData.poolInception[token];
   const currency = chainData.currencies[token] as Address;
-  const poolShare = await getPoolShare(currency, signer);
+  const poolShare = await getPoolShare(currency, provider);
   const timeSinceInception = Date.now() - poolInception;
   const timeInAYear = 365 * 24 * 3600 * 1000;
   const timeScaler = timeInAYear / timeSinceInception;
-  const tvl = await getPoolTVL(token, signer);
-  console.log({cumulativeFees, cumulativePnl, poolInception, currency, poolShare, timeSinceInception, tvl})
+  const tvl = await getPoolTVL(token, provider);
   let apy = timeScaler * 100 * (cumulativeFees * poolShare / 100 - 1 * cumulativePnl) / tvl;
   return formatToDisplay(apy)
 }
 
-export const getRouterContract = (signer: any): ethers.Contract => {
+export const getRouterContract = (provider: any): ethers.Contract => {
   const contractAddress = chainData.router;
-  return new ethers.Contract(contractAddress, capRouterAbi, signer);
+  return new ethers.Contract(contractAddress, capRouterAbi, provider);
 }
 
-export const getContract = (address: string, abi: any, signer: any) => {
-  return new ethers.Contract(address, abi, signer);
+export const getContract = (address: string, abi: any, provider: any) => {
+  return new ethers.Contract(address, abi, provider);
 }
 
-export const getPoolShare = async (address: Address, signer: any) => {
-  const contract = getRouterContract(signer);
+export const getPoolShare = async (address: Address, provider: any) => {
+  const contract = getRouterContract(provider);
   const poolShare = await contract.getPoolShare(address);
   return capFormatUnits(poolShare, 2);
 }
 
-export const getBalance = async (currency: capTokens, signer: any, poolAddress: Address) => {
+export const getBalance = async (currency: capTokens, provider: any, poolAddress: Address) => {
   if (currency === 'weth') {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    return await signer.getBalance(poolAddress)
+    return await provider.getBalance(poolAddress)
   }
   else {
-    const contract = getContract(chainData.currencies[currency], ERC20Abi, signer);
+    const contract = getContract(chainData.currencies[currency], ERC20Abi, provider);
     return contract.balanceOf(poolAddress);
   }
 }
 
-export const getPoolTVL = async (currency: capTokens, signer: any): Promise<number> => {
+export const getPoolTVL = async (currency: capTokens, provider: any): Promise<number> => {
   const tokenAddress = chainData.currencies[currency];
-  const token = getContract(tokenAddress, ERC20Abi, signer);
+  const token = getContract(tokenAddress, ERC20Abi, provider);
   const poolAddress = chainData.pools[currency] as Address;
   const decimals = currency === 'weth' ? 18 : await token.decimals();
-  const balance = await getBalance(currency, signer, poolAddress);
+  const balance = await getBalance(currency, provider, poolAddress);
   return capFormatUnits(balance, decimals);
 }

@@ -1,7 +1,7 @@
 import {availableStrategies} from '../../model/strategy';
 import StrategyCard from '../../components/StrategyCard';
 import {useState} from 'react';
-import StrategyDetailsModal from '../../components/StrategyDetailsModal';
+import DepositAndWithdrawModal from '../../components/DepositAndWithdrawModal';
 import {useGetUserStaked} from "../../hooks/useGetUserStaked";
 import {Typography} from "@mui/material";
 
@@ -15,10 +15,10 @@ export default function Compound() {
     </div>
     <div className={`grid md:grid-cols-2 grid-cols-1 gap-4`}>
       {availableStrategies.map(strategy => <StrategyCard key={strategy.vaultAddress} strategy={strategy} openModal={setIsStrategyDetailsModalOpen}/>)}
-      <StrategyDetailsModal
+      <DepositAndWithdrawModal
         isOpen={isStrategyDetailsModalOpen}
         setIsOpen={setIsStrategyDetailsModalOpen}
-      ></StrategyDetailsModal>
+      ></DepositAndWithdrawModal>
     </div>
   </>
 }

@@ -1,28 +1,36 @@
 import {createContext, ReactNode, useEffect, useState} from "react";
-import {useSigner} from "wagmi";
-import {getCapAPY} from "../lib/cap";
+import {Address, useNetwork, useProvider} from "wagmi";
 import {calculateApyWithFee} from "../utils/calculator";
+import {ApyGetter} from "../lib/apy-getter/apy-getter";
+import {availableStrategies} from "../model/strategy";
 
-const APYsContext = createContext<{
-  apys: {[strategy: string]: number},
-}>({apys: {}})
+const APYsContext = createContext<{ [strategy: Address]: number }>({})
 
 const APYsContextProvider = ({children}: {
   children: ReactNode;
 }) => {
-  const {data: signer} = useSigner()
-  const [APYs, setAPYs] = useState<{[strategy: string]: number}>({});
+  const provider = useProvider()
+  const apyGetter = new ApyGetter(provider)
+  const {chain} = useNetwork()
+  const [APYs, setAPYs] = useState<{ [strategy: Address]: number }>({});
   useEffect(() => {
-    getCapAPY('weth', signer).then(
-      (apy) => {
-        const apyWithFee = calculateApyWithFee(apy, 5, 365)
-        setAPYs({...APYs, 'weth': apyWithFee})
-      }
-    )
-  }, [signer])
-  
+    chain?.id === 42161 ?
+      apyGetter.getApyForAllStrategies().then(
+        (APYs) => {
+          const apysWithFees = Object.keys(APYs).reduce((acc, strategyAddress) => {
+            return {...acc, [strategyAddress]: calculateApyWithFee(APYs[strategyAddress] as number, 1, 365)}
+          }, {})
+          setAPYs(apysWithFees)
+        }
+      )
+      : setAPYs(availableStrategies.reduce((acc, strategy) => {
+        return {...acc, [strategy.strategyAddress]: 10}
+      }, {}))
+
+  }, [chain?.id])
+
   return (
-    <APYsContext.Provider value={{APYs}}>
+    <APYsContext.Provider value={APYs}>
       {children}
     </APYsContext.Provider>
   )

@@ -10,10 +10,9 @@ import {useContractActions} from '../hooks/useContractActions';
 import {formatEther} from "ethers/lib/utils";
 import {capitalize} from "../utils/formatters";
 import {useGetUserStakedInVault} from "../hooks/useGetUserStakedInVault";
-import {ethers} from "ethers";
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
-import {TokenPricesContext} from "../contexts/TokenPricesContext";
+import {APYsContext} from "../contexts/ApyContext";
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -30,23 +29,46 @@ export interface StrategyDetailsModalProps {
   setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function StrategyDetailsModal({isOpen, setIsOpen}: StrategyDetailsModalProps) {
+export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDetailsModalProps) {
   const {action, selectedStrategy} = useContext(SelectedStrategyContext)
   const [amount, setAmount] = useState<number>(0)
   const {address: userAddress} = useAccount();
-  const {vaultAddress, tokenAddress, tokenUrl, abi, protocolLogoUrl} = selectedStrategy;
-  const {data} = useBalance({token: tokenAddress, address: userAddress})
+  const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress} = selectedStrategy;
+  const {data: balanceData} = useBalance({token: tokenAddress, address: userAddress})
   const actions = useContractActions({vaultAddress, amount, abi})
-  const formattedBalance = data?.value ? formatEther(data.value) : "0";
-  const {fetchUserStaked} = useGetUserStakedInVault({vaultAddress})
+  const formattedBalance = balanceData?.value ? formatEther(balanceData.value) : "0";
+  const {fetchUserStaked, userStaked} = useGetUserStakedInVault({vaultAddress})
+  const {[strategyAddress]: apy} = useContext(APYsContext)
   const handleClose = () => setIsOpen(false);
 
   const performAction = async (action: TransactionAction) => {
-    console.log("PERFORMING ACTION", action)
     const fn = actions[action]?.write
     const tx = await fn?.()
     await tx?.wait()
     await fetchUserStaked()
+    handleClose()
+  }
+  
+  const handleSetMax = () => {
+    const amountToSet = (action === 'deposit' || action === 'depositAll') ? +formattedBalance : +userStaked
+    setAmount(amountToSet)
+  }
+  
+  const isBalanceLessThanAmount = (value: number) => {
+    const balanceToCheck = (action === 'deposit' || action === 'depositAll') ? +formattedBalance : +userStaked
+    return !isNaN(value) && balanceToCheck < value
+  }
+  
+  const handleAmountChange = (e:   React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const newAmount = +e.target.value
+    const isNullOrUndefined = e.target.value == null || e.target.value === '';
+    if (isNullOrUndefined) {
+      setAmount(0)
+    } else if (isNaN(newAmount)) {
+      setAmount(amount)
+    } else {
+      setAmount(newAmount)
+    }
   }
 
   return (
@@ -74,47 +96,38 @@ export default function StrategyDetailsModal({isOpen, setIsOpen}: StrategyDetail
           </div>
           <Box className={`bg-backgroundSecondary rounded-lg`}>
             <div className="pt-5 p-4 text-3xl flex items-center">
-              <img height={45} width={45} src={protocolLogoUrl} alt=""/>
+              <img height={45} width={45} src={tokenLogoUrl} alt=""/>
               <span className="ml-3">{selectedStrategy.tokenSymbol}</span>
             </div>
             <div className={'flex p-4 flex-row items-center h-20'}>
               <TextField
-                sx={{  "& fieldset": { border: 'none' }, '& .MuiInputBase-input': {color: 'white', fontSize: '2rem', padding: 0} }}
+                sx={{  "& fieldset": { border: 'none' }, '& .MuiInputBase-input': {color: isBalanceLessThanAmount(amount) ? 'red' : 'white', fontSize: '2rem', padding: 0} }}
                 id="tokenId"
                 margin="normal"
-                onChange={(e) => {
-                  const newAmount = +e.target.value
-                  console.log(amount, newAmount)
-                  // if (isNaN(newAmount) || data?.value.lt(ethers.utils.parseEther(e.target.value))) {
-                  //   setAmount(amount)
-                  // } else {
-                    setAmount(newAmount)
-                  // }
-                }}
+                onChange={handleAmountChange}
                 value={amount}
-                className={`text-tPrimary rounded-lg flex-grow`}
+                placeholder={balanceData?.value.toString()}
+                className={`rounded-lg flex-grow`}
               >
               </TextField>
               <div
                 className={`text-tSecondary w-1/3 bg-none ml-auto`}
-                onClick={() => setAmount(+formattedBalance)}
+                onClick={handleSetMax}
               >
                 <Typography className={`w-4 ml-auto mr-8`}>
                   MAX
                 </Typography>
               </div>
             </div>
-            <Box className={`float-right flex flex-col items-center`}>
-            </Box>
           </Box>
-
+          
           <Box className={`flex flex-row justify-between`}>
-            <Button className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6`}
+            <Button className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary`}
                     onClick={() => performAction(action)}>{action}</Button>
           </Box>
 
           <Box className={`ml-auto mt-4`}>
-            APY: {selectedStrategy.apy}%
+            APY: {apy ?? selectedStrategy.apy}%
           </Box>
 
           <Box className={`flex flex-col items-center mt-auto`}>
