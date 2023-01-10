@@ -42,9 +42,13 @@ export const useGetUserStaked = () => {
     const pricePerShareData = await multicall(pricePerShareCalls)
     const userStaked: number = balanceData.reduce((acc: any, balance: any, index: number) => {
       const pricePerShare = pricePerShareData[index]
-      const userStaked = convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(18))) ?? '0'
-      const dollarAmount = parseFloat(userStaked) * prices[availableStrategies[index].coinGeckoId]
-      return acc + dollarAmount
+      console.log({pricePerShare, balance})
+      if (pricePerShare && balance) {
+        const userStaked = convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(18))) ?? '0'
+        const dollarAmount = parseFloat(userStaked) * prices[availableStrategies[index].coinGeckoId]
+        return acc + dollarAmount
+      }
+      return acc
     }, 0) as number
     setUserStaked(formatDollarAmount(userStaked) ?? 0)
   }

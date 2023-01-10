@@ -1,5 +1,5 @@
 import {createContext, Dispatch, ReactNode, SetStateAction, useEffect, useState,} from "react";
-import {availableStrategies, Strategy} from "../model/strategy";
+import {availableStrategies} from "../model/strategy";
 import axios from "axios";
 
 export type SetFunction<T> = Dispatch<SetStateAction<T>>
@@ -33,7 +33,6 @@ const TokenPricesContextProvider = ({children}: {
         acc[id] = data[id].usd
         return acc
       }, {} as any)
-      console.log(transformedData)
       setPrices(transformedData)
       setLastUpdated(Date.now())
     }

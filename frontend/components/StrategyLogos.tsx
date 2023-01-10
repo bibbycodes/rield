@@ -1,7 +1,7 @@
 import {Typography} from "@mui/material";
 import {Strategy} from "../model/strategy";
 
-export const TokenInfo = ({strategy}: { strategy: Strategy }) => {
+export const StrategyLogos = ({strategy}: { strategy: Strategy }) => {
   const {tokenLogoUrl, tokenSymbol} = strategy
   return (
     <div className={`flex`}>

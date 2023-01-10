@@ -13,7 +13,7 @@ export const useGetUserStakedInVault = ({vaultAddress}: useGetUserStakedProps) =
   const {address: userAddress} = useAccount();
 
   const calculateUserStaked = (balance: BigNumber, pricePerShare: BigNumber) => {
-    return convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(18))) ?? '0'
+    return balance && pricePerShare ? convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(18))) : '0'
   }
 
   const fetchUserStaked = async () => {

@@ -30,7 +30,7 @@ export default function Enable({ tokenAddress, vaultAddress, openModal, strategy
         <Button
           onClick={() => handleClick("deposit")}
           variant="contained"
-          className={'text-tPrimary bg-accentPrimary p-3'}
+          className={'text-tPrimary bg-accentPrimary hover:bg-accentSecondary p-3'}
         >Deposit</Button>
         <Button
           disabled={balance?.value?.lte(0)}
@@ -42,7 +42,7 @@ export default function Enable({ tokenAddress, vaultAddress, openModal, strategy
     )}
 
     {!isApproved && (
-      <Button className="w-full bg-accentPrimary" variant="contained"
+        <Button className="w-full bg-accentPrimary hover:bg-accentSecondary" variant="contained"
               onClick={() => address && approve?.()}>Approve</Button>
     )}
   </div>
