@@ -45,11 +45,15 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
     "pause()": FunctionFragment;
     "paused()": FunctionFragment;
     "pool()": FunctionFragment;
+    "protocolTokenAddress()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "retireStrat()": FunctionFragment;
     "rewards()": FunctionFragment;
     "rewardsAvailable()": FunctionFragment;
+    "setDevFee(uint256)": FunctionFragment;
     "setHarvestOnDeposit(bool)": FunctionFragment;
+    "setProtocolTokenAddress(address)": FunctionFragment;
+    "setProtocolTokenFee(uint256)": FunctionFragment;
     "setShouldGasThrottle(bool)": FunctionFragment;
     "shouldGasThrottle()": FunctionFragment;
     "token()": FunctionFragment;
@@ -78,11 +82,15 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
       | "pause"
       | "paused"
       | "pool"
+      | "protocolTokenAddress"
       | "renounceOwnership"
       | "retireStrat"
       | "rewards"
       | "rewardsAvailable"
+      | "setDevFee"
       | "setHarvestOnDeposit"
+      | "setProtocolTokenAddress"
+      | "setProtocolTokenFee"
       | "setShouldGasThrottle"
       | "shouldGasThrottle"
       | "token"
@@ -131,6 +139,10 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
   encodeFunctionData(functionFragment: "pool", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "protocolTokenAddress",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
   ): string;
@@ -144,8 +156,20 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "setDevFee",
+    values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setHarvestOnDeposit",
     values: [PromiseOrValue<boolean>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setProtocolTokenAddress",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setProtocolTokenFee",
+    values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "setShouldGasThrottle",
@@ -203,6 +227,10 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pool", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "protocolTokenAddress",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
   ): Result;
@@ -215,8 +243,17 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
     functionFragment: "rewardsAvailable",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "setDevFee", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setHarvestOnDeposit",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setProtocolTokenAddress",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setProtocolTokenFee",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -388,6 +425,8 @@ export interface CapSingleStakeStrategy extends BaseContract {
 
     pool(overrides?: CallOverrides): Promise<[string]>;
 
+    protocolTokenAddress(overrides?: CallOverrides): Promise<[string]>;
+
     renounceOwnership(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
@@ -400,8 +439,23 @@ export interface CapSingleStakeStrategy extends BaseContract {
 
     rewardsAvailable(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    setDevFee(
+      fee: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     setHarvestOnDeposit(
       _harvestOnDeposit: PromiseOrValue<boolean>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setProtocolTokenAddress(
+      _protocolTokenAddress: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setProtocolTokenFee(
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -475,6 +529,8 @@ export interface CapSingleStakeStrategy extends BaseContract {
 
   pool(overrides?: CallOverrides): Promise<string>;
 
+  protocolTokenAddress(overrides?: CallOverrides): Promise<string>;
+
   renounceOwnership(
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
@@ -487,8 +543,23 @@ export interface CapSingleStakeStrategy extends BaseContract {
 
   rewardsAvailable(overrides?: CallOverrides): Promise<BigNumber>;
 
+  setDevFee(
+    fee: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   setHarvestOnDeposit(
     _harvestOnDeposit: PromiseOrValue<boolean>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setProtocolTokenAddress(
+    _protocolTokenAddress: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setProtocolTokenFee(
+    fee: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -552,6 +623,8 @@ export interface CapSingleStakeStrategy extends BaseContract {
 
     pool(overrides?: CallOverrides): Promise<string>;
 
+    protocolTokenAddress(overrides?: CallOverrides): Promise<string>;
+
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
     retireStrat(overrides?: CallOverrides): Promise<void>;
@@ -560,8 +633,23 @@ export interface CapSingleStakeStrategy extends BaseContract {
 
     rewardsAvailable(overrides?: CallOverrides): Promise<BigNumber>;
 
+    setDevFee(
+      fee: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setHarvestOnDeposit(
       _harvestOnDeposit: PromiseOrValue<boolean>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setProtocolTokenAddress(
+      _protocolTokenAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setProtocolTokenFee(
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -674,6 +762,8 @@ export interface CapSingleStakeStrategy extends BaseContract {
 
     pool(overrides?: CallOverrides): Promise<BigNumber>;
 
+    protocolTokenAddress(overrides?: CallOverrides): Promise<BigNumber>;
+
     renounceOwnership(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
@@ -686,8 +776,23 @@ export interface CapSingleStakeStrategy extends BaseContract {
 
     rewardsAvailable(overrides?: CallOverrides): Promise<BigNumber>;
 
+    setDevFee(
+      fee: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     setHarvestOnDeposit(
       _harvestOnDeposit: PromiseOrValue<boolean>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setProtocolTokenAddress(
+      _protocolTokenAddress: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setProtocolTokenFee(
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -762,6 +867,10 @@ export interface CapSingleStakeStrategy extends BaseContract {
 
     pool(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    protocolTokenAddress(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     renounceOwnership(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
@@ -774,8 +883,23 @@ export interface CapSingleStakeStrategy extends BaseContract {
 
     rewardsAvailable(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    setDevFee(
+      fee: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
     setHarvestOnDeposit(
       _harvestOnDeposit: PromiseOrValue<boolean>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setProtocolTokenAddress(
+      _protocolTokenAddress: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setProtocolTokenFee(
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

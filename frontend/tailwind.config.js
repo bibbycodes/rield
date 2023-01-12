@@ -1,4 +1,4 @@
-const theme = require('./styles/theme')
+const themes = require('./styles/theme')
 /** @type {import('tailwindcss').Config} */
 
 module.exports = {
@@ -8,12 +8,12 @@ module.exports = {
   ],
   theme: {
     extend: {
-      colors: theme,
+      colors: themes.theme,
       fontFamily: {
         'sans': ['ProximaNova', 'Arial', 'sans-serif']
       }
     },
   },
   plugins: [],
-  colors: theme
+  colors: themes.theme
 }

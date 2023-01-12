@@ -15,7 +15,6 @@ import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/common/IUniswapRouterV3.sol";
 import "../../interfaces/cap/ICapPool.sol";
 import "../../interfaces/cap/ICapRewards.sol";
-import 'hardhat/console.sol';
 
 contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
     using SafeERC20 for IERC20;
@@ -114,7 +113,10 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         uint256 devFeeAmount = IERC20(token).balanceOf(address(this)) * DEV_FEE / DIVISOR;
         uint256 protocolTokenFeeAmount = IERC20(token).balanceOf(address(this)) * PROTOCOL_TOKEN_FEE / DIVISOR;
         IERC20(token).safeTransfer(owner(), devFeeAmount);
-        IERC20(token).safeTransfer(protocolTokenAddress, protocolTokenFeeAmount);
+        
+        if (protocolTokenFeeAmount > 0) {
+            IERC20(token).safeTransfer(protocolTokenAddress, protocolTokenFeeAmount);
+        }
         emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
     }
 

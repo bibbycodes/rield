@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
 import "../strategies/Cap/CapSingleStakeStrategyETH.sol";
 
 /**
@@ -58,7 +57,7 @@ contract BeefyETHVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardU
      *  and the balance deployed in other contracts as part of the strategy.
      */
     function balance() public view returns (uint) {
-        return address(this).balance + address(strategy).balance;
+        return address(this).balance + CapSingleStakeStrategyETH(strategy).balanceOf();
     }
 
     /**
@@ -78,31 +77,28 @@ contract BeefyETHVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardU
     function getPricePerFullShare() public view returns (uint256) {
         return totalSupply() == 0 ? 1e18 : balance() * 1e18 / totalSupply();
     }
-
-    /**
-     * @dev A helper function to call deposit() with all the sender's funds.
-     */
-    function depositAll() external {
-        deposit(msg.sender.balance);
-    }
+    
+    receive() external payable {}
+    
+    fallback() external payable {}
 
     /**
      * @dev The entrypoint of funds into the system. People deposit with this function
      * into the vault. The vault is then in charge of sending funds into the strategy.
      */
-    function deposit(uint _amount) public payable nonReentrant {
+    function deposit() public payable nonReentrant {
         strategy.beforeDeposit();
-
-        uint256 _pool = balance();
+        // the amount before deposit         
+        uint256 _before = balance() - msg.value;
         earn();
         uint256 _after = balance();
-        _amount = _after - _pool;
+        uint _amount = _after - _before;
         // Additional check for deflationary tokens
         uint256 shares = 0;
         if (totalSupply() == 0) {
             shares = _amount;
         } else {
-            shares = (_amount * totalSupply()) / _pool;
+            shares = (_amount * totalSupply()) / _before;
         }
         _mint(msg.sender, shares);
     }
@@ -148,14 +144,15 @@ contract BeefyETHVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardU
             }
         }
 
-        msg.sender.call{value : userOwedWant}('');
+        (bool success,) = msg.sender.call{value: userOwedWant}('');
+        require(success, 'ETH_TRANSFER_FAILED');
     }
 
     /**
      * @dev Sets the candidate for the new strat to use with this vault.
      * @param _implementation The address of the candidate strategy.
      */
-    function proposeStrat(address _implementation) public onlyOwner {
+    function proposeStrat(address payable _implementation) public onlyOwner {
         require(address(this) == CapSingleStakeStrategyETH(_implementation).vault(), "Proposal not valid for this Vault");
         //        require(want() == IStrategyV7(_implementation).want(), "Different want");
         stratCandidate = StratCandidate({

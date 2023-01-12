@@ -9,6 +9,7 @@ import type {
   CallOverrides,
   ContractTransaction,
   Overrides,
+  PayableOverrides,
   PopulatedTransaction,
   Signer,
   utils,
@@ -276,7 +277,7 @@ export interface CapPoolMock extends BaseContract {
 
     deposit(
       amount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
+      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
     deposits(
@@ -340,7 +341,7 @@ export interface CapPoolMock extends BaseContract {
 
     withdraw(
       currencyAmount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
+      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
     withdrawFee(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -358,7 +359,7 @@ export interface CapPoolMock extends BaseContract {
 
   deposit(
     amount: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
+    overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
   deposits(
@@ -422,7 +423,7 @@ export interface CapPoolMock extends BaseContract {
 
   withdraw(
     currencyAmount: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
+    overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
   withdrawFee(overrides?: CallOverrides): Promise<BigNumber>;
@@ -543,7 +544,7 @@ export interface CapPoolMock extends BaseContract {
 
     deposit(
       amount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
+      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     deposits(
@@ -607,7 +608,7 @@ export interface CapPoolMock extends BaseContract {
 
     withdraw(
       currencyAmount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
+      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     withdrawFee(overrides?: CallOverrides): Promise<BigNumber>;
@@ -626,7 +627,7 @@ export interface CapPoolMock extends BaseContract {
 
     deposit(
       amount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
+      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     deposits(
@@ -692,7 +693,7 @@ export interface CapPoolMock extends BaseContract {
 
     withdraw(
       currencyAmount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
+      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     withdrawFee(overrides?: CallOverrides): Promise<PopulatedTransaction>;

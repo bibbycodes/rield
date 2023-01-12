@@ -2,5 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as capUsdcPoolStrategySol from "./CapUsdcPoolStrategy.sol";
-export { CapSingleStakeStrategy__factory } from "./CapSingleStakeStrategy__factory";
 export { CapSingleStakeStrategyETH__factory } from "./CapSingleStakeStrategyETH__factory";

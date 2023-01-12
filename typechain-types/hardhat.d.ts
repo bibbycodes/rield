@@ -217,10 +217,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.UniswapV3RouterMock__factory>;
     getContractFactory(
-      name: "CapSingleStakeStrategy",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.CapSingleStakeStrategy__factory>;
-    getContractFactory(
       name: "CapSingleStakeStrategyETH",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.CapSingleStakeStrategyETH__factory>;
@@ -529,20 +525,15 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.UniswapV3RouterMock>;
     getContractAt(
-      name: "CapSingleStakeStrategy",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.CapSingleStakeStrategy>;
-    getContractAt(
-      name: "CapSingleStakeStrategy",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.CapSingleStakeStrategy>;
-    getContractAt(
       name: "CapSingleStakeStrategyETH",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.CapSingleStakeStrategyETH>;
+    getContractAt(
+      name: "CapSingleStakeStrategy",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CapSingleStakeStrategy>;
     getContractAt(
       name: "StrategyManager",
       address: string,

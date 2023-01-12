@@ -100,10 +100,10 @@ export type { UniswapV2RouterMock } from "./contracts/mocks/UniswapV2RouterMock"
 export { UniswapV2RouterMock__factory } from "./factories/contracts/mocks/UniswapV2RouterMock__factory";
 export type { UniswapV3RouterMock } from "./contracts/mocks/UniswapV3RouterMock";
 export { UniswapV3RouterMock__factory } from "./factories/contracts/mocks/UniswapV3RouterMock__factory";
-export type { CapSingleStakeStrategy } from "./contracts/strategies/Cap/CapSingleStakeStrategy";
-export { CapSingleStakeStrategy__factory } from "./factories/contracts/strategies/Cap/CapSingleStakeStrategy__factory";
 export type { CapSingleStakeStrategyETH } from "./contracts/strategies/Cap/CapSingleStakeStrategyETH";
 export { CapSingleStakeStrategyETH__factory } from "./factories/contracts/strategies/Cap/CapSingleStakeStrategyETH__factory";
+export type { CapSingleStakeStrategy } from "./contracts/strategies/Cap/CapUsdcPoolStrategy.sol/CapSingleStakeStrategy";
+export { CapSingleStakeStrategy__factory } from "./factories/contracts/strategies/Cap/CapUsdcPoolStrategy.sol/CapSingleStakeStrategy__factory";
 export type { StrategyManager } from "./contracts/strategies/Common/StratFeeManager.sol/StrategyManager";
 export { StrategyManager__factory } from "./factories/contracts/strategies/Common/StratFeeManager.sol/StrategyManager__factory";
 export type { StratFeeManagerInitializable } from "./contracts/strategies/Common/StratFeeManagerInitializable";

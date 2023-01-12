@@ -3,9 +3,8 @@ import {ethers} from "hardhat";
 import {BigNumber, BigNumberish} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import type {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
-import {BeefyVaultV7, ICapRewards, TokenMock, CapPoolMock, CapRewardsMock} from "../typechain-types";
+import {BeefyVaultV7, CapPoolMock, CapRewardsMock, TokenMock} from "../typechain-types";
 import {parseEther} from "ethers/lib/utils";
-import {deploy} from "@openzeppelin/hardhat-upgrades/dist/utils";
 
 const closeTo = async (
   a: BigNumberish,
@@ -19,7 +18,7 @@ const ONE_ETHER: BigNumber = parseEther("1");
 const TEN_ETHER: BigNumber = parseEther("10");
 const ONE_THOUSAND_ETH: BigNumber = parseEther("1000");
 
-describe("Cap Strategies", () => {
+describe("Cap ERC20 Strategy", () => {
   async function setupFixture() {
     const [deployer, alice, bob]: SignerWithAddress[] =
       await ethers.getSigners();
@@ -36,7 +35,6 @@ describe("Cap Strategies", () => {
     const capPoolMock: CapPoolMock = (await CapPoolMock.deploy(ethToken.address, capRewardsMock.address)) as CapPoolMock;
     await capPoolMock.deployed();
     await capRewardsMock.init(capPoolMock.address);
-
 
     const Vault = await ethers.getContractFactory("BeefyVaultV7");
     const vault: BeefyVaultV7 = (await Vault.deploy()) as BeefyVaultV7;

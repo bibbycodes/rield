@@ -8,7 +8,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "../interfaces/beefy/IStrategyV7.sol";
-import "hardhat/console.sol";
 
 /**
  * @dev Implementation of a vault to deposit funds for yield optimizing.
@@ -97,17 +96,17 @@ contract BeefyVaultV7 is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUp
      */
     function deposit(uint _amount) public nonReentrant {
         strategy.beforeDeposit();
-
-        uint256 _pool = balance();
+        uint256 _before = balance();
         want().safeTransferFrom(msg.sender, address(this), _amount);
         earn();
         uint256 _after = balance();
-        _amount = _after - _pool; // Additional check for deflationary tokens
+        _amount = _after - _before;
+        // Additional check for deflationary tokens
         uint256 shares = 0;
         if (totalSupply() == 0) {
             shares = _amount;
         } else {
-            shares = (_amount * totalSupply()) / _pool;
+            shares = (_amount * totalSupply()) / _before;
         }
         _mint(msg.sender, shares);
     }

@@ -3,5 +3,4 @@
 /* eslint-disable */
 import type * as capUsdcPoolStrategySol from "./CapUsdcPoolStrategy.sol";
 export type { capUsdcPoolStrategySol };
-export type { CapSingleStakeStrategy } from "./CapSingleStakeStrategy";
 export type { CapSingleStakeStrategyETH } from "./CapSingleStakeStrategyETH";

@@ -1,13 +1,7 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers } from "hardhat";
-import { BeefyETHVault, CapETHPoolMock, CapETHRewardsMock, TokenMock } from "../../typechain-types";
-import { BigNumber } from "ethers";
-import { parseEther } from "ethers/lib/utils";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
+import {ethers} from "hardhat";
+import {BeefyETHVault, CapETHPoolMock, CapETHRewardsMock} from "../../typechain-types";
 import fs from "fs";
-
-const ONE_ETHER: BigNumber = parseEther("1");
-const TEN_ETHER: BigNumber = parseEther("10");
-const ONE_THOUSAND_ETH: BigNumber = parseEther("1000");
 
 async function main() {
   const [deployer]: SignerWithAddress[] =
@@ -24,6 +18,11 @@ async function main() {
   await capPoolMock.deployed();
   await capRewardsMock.init(capPoolMock.address);
 
+  await deployer.sendTransaction({
+    to: capRewardsMock.address,
+    value: ethers.utils.parseEther("5.0"), // Sends exactly 1.0 ether
+  });
+
   const Vault = await ethers.getContractFactory("BeefyETHVault");
   const vault: BeefyETHVault = (await Vault.deploy()) as BeefyETHVault;
   await vault.deployed();
@@ -36,18 +35,15 @@ async function main() {
   );
 
   await strategy.deployed();
-  await vault.initialize(strategy.address, "CAP_ETH_COMP", "CAP_ETH_COMP")
-  // await ethToken.mintFor(capRewardsMock.address, ONE_THOUSAND_ETH);
-  // await ethToken.mintFor(deployer.address, ONE_THOUSAND_ETH);
+  await vault.initialize(strategy.address, "RLD_CAP_ETH", "RLD_CAP_ETH")
 
   console.log("Vault address:", vault.address);
   console.log("Strategy address:", strategy.address);
   console.log("CapPoolMock address:", capPoolMock.address);
   console.log("CapRewardsMock address:", capRewardsMock.address);
 
-
   fs.writeFileSync(
-    "./resources/deploy_cap-output.json",
+    "./resources/deploy_cap_eth-output.json",
     JSON.stringify({
       vaultAddress: vault.address,
       capPoolMock: capPoolMock.address,

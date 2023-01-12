@@ -1,4 +1,4 @@
-
+const {createTheme} = require("@mui/material");
 const theme = {
   tPrimary: '#FFFFFF',
   tSecondary: '#9597A0',
@@ -8,4 +8,16 @@ const theme = {
   accentSecondary: '#3459C5',
 }
 
-module.exports = theme
+const muiTheme = createTheme(
+  {
+    typography: {
+      fontFamily: [
+        'rld',
+      ].join(','),
+    },
+  },
+);
+
+
+module.exports = {theme, muiTheme}
+

@@ -1,4 +1,4 @@
-import * as capEth from "../../resources/deploy_cap-output.json";
+import * as capEth from "../../resources/deploy_cap_eth-output.json";
 import * as capUSDC from "../../resources/deploy_cap_usdc-output.json";
 import {abi} from '../../artifacts/contracts/vaults/BeefyVaultV7.sol/BeefyVaultV7.json';
 // import * as gmx from "../../resources/deploy_gmx-output.json";
@@ -53,20 +53,20 @@ export const availableStrategies: Strategy[] = [
     name: "Cap ETH",
     protocol: "Cap.finance",
     tokenSymbol: "ETH",
-    tokenAddress: capEth.ethToken as Address,
+    tokenAddress: "0x0000000000000000000000000000000000000000" as Address,
     vaultAddress: capEth.vaultAddress as Address,
     strategyAddress: capEth.strategyAddress as Address,
-    protocolLogoUrl: "https://www.cap.finance/logos/CAP.svg",
-    tokenLogoUrl: "https://www.cap.finance/logos/ETH.svg",
+    protocolLogoUrl: "https://v3.cap.finance/logos/CAP.svg",
+    tokenLogoUrl: "https://v3.cap.finance/logos/ETH.svg",
     description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
     protocolUrl: "https://www.cap.finance",
     apy: 13,
-    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=${capEth.ethToken}`,
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=eth`,
     decimals: 18,
     isActive: true,
     abi: abi,
     coinGeckoId: "ethereum",
-    type: "Autocompound",
+    type: "Auto Compound",
     performanceFee: 5
   },
   {
@@ -77,8 +77,8 @@ export const availableStrategies: Strategy[] = [
     tokenAddress: capUSDC.ethToken as Address,
     vaultAddress: capUSDC.vaultAddress as Address,
     strategyAddress: capUSDC.strategyAddress as Address,
-    protocolLogoUrl: "https://www.cap.finance/logos/CAP.svg",
-    tokenLogoUrl: "https://www.cap.finance/logos/USDC.svg",
+    protocolLogoUrl: "https://v3.cap.finance/logos/CAP.svg",
+    tokenLogoUrl: "https://v3.cap.finance/logos/USDC.svg",
     description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
     protocolUrl: "https://www.cap.finance",
     apy: 13,
@@ -87,7 +87,7 @@ export const availableStrategies: Strategy[] = [
     isActive: true,
     abi: abi,
     coinGeckoId: "usd-coin",
-    type: "Autocompound",
+    type: "Auto Compound",
     performanceFee: 5
   },
 ]

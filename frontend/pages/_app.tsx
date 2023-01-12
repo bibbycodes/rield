@@ -12,7 +12,7 @@ const chains = [arbitrum, hardhat];
 
 const client = createClient(
   getDefaultClient({
-    appName: "Your App Name",
+    appName: "RLD",
     alchemyId,
     chains
   }),

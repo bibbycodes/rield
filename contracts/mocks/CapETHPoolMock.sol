@@ -73,7 +73,8 @@ contract CapETHPoolMock is ICapETHPool {
 
     function withdraw ( uint256 currencyAmount ) external override {
         deposits[msg.sender] -= currencyAmount;
-        msg.sender.call{value: currencyAmount}('');
+        (bool success,) = msg.sender.call{value: currencyAmount}('');
+        require(success, "Transfer failed.");
         emit Withdraw(msg.sender, currencyAmount);
     }
     function withdrawFee (  ) external view override returns ( uint256 ) {

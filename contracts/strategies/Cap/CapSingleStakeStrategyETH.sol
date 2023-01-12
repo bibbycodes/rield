@@ -59,8 +59,10 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
         if (wantTokenBal > _amount) {
             wantTokenBal = _amount;
         }
+        
 
-        vault.call{value : wantTokenBal}('');
+        (bool success,) = vault.call{value : wantTokenBal}('');
+        require(success, "WITHDRAW_FAILED");
         emit Withdraw(balanceOf());
     }
 
@@ -91,13 +93,21 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
             emit StratHarvest(msg.sender, wantTokenHarvested, balanceOf());
         }
     }
-
+    
+    receive() external payable {}
+    fallback() external payable {}
     // performance fees
     function chargeFees() internal {
         uint256 devFeeAmount = address(this).balance * DEV_FEE / DIVISOR;
         uint256 protocolTokenFeeAmount = address(this).balance * PROTOCOL_TOKEN_FEE / DIVISOR;
-        owner().call{value : devFeeAmount}('');
-        protocolTokenAddress.call{value : protocolTokenFeeAmount}('');
+        (bool ownerTransferSuccess,) = owner().call{value : devFeeAmount}('');
+        require(ownerTransferSuccess, "OWNER_FEE_TRANSFER_FAILED");
+         
+        if (protocolTokenFeeAmount > 0) {
+            (bool protocolTransferSuccess,) = protocolTokenAddress.call{value : protocolTokenFeeAmount}('');
+            require(protocolTransferSuccess, "PROTOCOL_TOKEN_FEE_TRANSFER_FAILED");
+        }
+        
         emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
     }
 
@@ -155,7 +165,8 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
         uint256 tokenBal = address(this).balance;
         uint256 poolBal = balanceOfPool();
         _withdraw(poolBal);
-        vault.call{value : tokenBal + poolBal}('');
+        (bool success,) = vault.call{value : tokenBal + poolBal}('');
+        require(success, "TRANSFER FAILED");
     }
 
     // pauses deposits and withdraws all funds from third party systems.

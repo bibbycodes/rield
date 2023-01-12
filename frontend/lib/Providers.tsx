@@ -2,15 +2,19 @@ import {SelectedStrategyContextProvider} from "../contexts/SelectedStrategyConte
 import {TokenPricesContextProvider} from "../contexts/TokenPricesContext";
 import {ReactNode} from "react";
 import {APYsContextProvider} from "../contexts/ApyContext";
+import {ThemeProvider} from "@mui/material";
+import {muiTheme} from "../styles/theme";
 
 export const Providers = ({children}: { children: ReactNode }) => {
   return (
-    <APYsContextProvider>
-      <TokenPricesContextProvider>
-        <SelectedStrategyContextProvider>
-          {children}
-        </SelectedStrategyContextProvider>
-      </TokenPricesContextProvider>
-    </APYsContextProvider>
+    <ThemeProvider theme={muiTheme}>
+      <APYsContextProvider>
+        <TokenPricesContextProvider>
+          <SelectedStrategyContextProvider>
+            {children}
+          </SelectedStrategyContextProvider>
+        </TokenPricesContextProvider>
+      </APYsContextProvider>
+     </ThemeProvider>
   );
 }

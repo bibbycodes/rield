@@ -15,13 +15,17 @@ contract CapETHRewardsMock is ICapRewards {
     function init ( address _pool ) external {
         poolContract = _pool;
     }
+    
+    receive() external payable {}
+    fallback() external payable {}
 
     function UNIT (  ) external view returns ( uint256 ) {
         return 1;
     }
 
     function collectReward (  ) external {
-        msg.sender.call{value: 1 ether}('');
+        (bool success,) = msg.sender.call{value: 1 ether}('');
+        require(success, "Transfer failed.");
         emit CollectRewards(msg.sender, 1 ether);
     }
     function cumulativeRewardPerTokenStored (  ) external view returns ( uint256 ) {

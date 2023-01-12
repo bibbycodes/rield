@@ -19,7 +19,7 @@ export default function Layout({children}: PropsWithChildren) {
             
             <ul className="flex items-center px-10 w-full">
               <a href='/'>
-                <div className={`flex items-center mr-16`}>
+                <div className={`flex items-center mr-16 w-full`}>
                   <img src="logo.png" alt="Logo" className="w-14 mr-1 my-2 mr-0 ml-0 rounded-lg p-2 font-bold"></img>
                   <p className={`ml-0 text-4xl`}>RLD</p>
                 </div>

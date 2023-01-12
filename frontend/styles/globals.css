@@ -4,10 +4,6 @@
 :root {
   --max-width: 1100px;
   --border-radius: 12px;
-  --font-mono: ui-monospace, Menlo, Monaco, 'Cascadia Mono', 'Segoe UI Mono',
-    'Roboto Mono', 'Oxygen Mono', 'Ubuntu Monospace', 'Source Code Pro',
-    'Fira Mono', 'Droid Sans Mono', 'Courier New', monospace;
-
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
@@ -111,8 +107,7 @@ a {
 }
 
 
-
-* {
+ html {
   box-sizing: border-box;
   font-family: 'rld', sans-serif;
   font-weight: normal;
@@ -120,7 +115,7 @@ a {
 
 @font-face {
   font-family: "rld";
-  src: url('../fonts/proxima_nova.otf');
+  src: url('../fonts/Changa_One/ChangaOne-Regular.ttf');
   font-weight: normal;
   font-style: normal;
 }
