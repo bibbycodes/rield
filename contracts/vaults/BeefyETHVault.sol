@@ -31,6 +31,10 @@ contract BeefyETHVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardU
     event NewStratCandidate(address implementation);
     event UpgradeStrat(address implementation);
 
+    receive() external payable {}
+
+    fallback() external payable {}
+
     /**
      * @dev Sets the value of {token} to the token that the vault will
      * hold as underlying value. It initializes the vault's own 'moo' token.
@@ -77,10 +81,6 @@ contract BeefyETHVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardU
     function getPricePerFullShare() public view returns (uint256) {
         return totalSupply() == 0 ? 1e18 : balance() * 1e18 / totalSupply();
     }
-    
-    receive() external payable {}
-    
-    fallback() external payable {}
 
     /**
      * @dev The entrypoint of funds into the system. People deposit with this function
@@ -124,16 +124,10 @@ contract BeefyETHVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardU
      * tokens are burned in the process.
      */
     function withdraw(uint256 _shares) public {
-        // (vault_want_bal * (withdrawal_amount / total_supply_vault_token)
-        // ratio of want in proportion to withdrawal amount
         uint256 userOwedWant = (balance() * _shares) / totalSupply();
         _burn(msg.sender, _shares);
 
-
-        // how much want is in the vault
         uint vaultWantBal = address(this).balance;
-        // if the vault has less want than the user is withdrawing,
-        // we need to withdraw from the strategy
         if (vaultWantBal < userOwedWant) {
             uint _withdraw = userOwedWant - vaultWantBal;
             strategy.withdraw(_withdraw);
@@ -144,7 +138,7 @@ contract BeefyETHVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardU
             }
         }
 
-        (bool success,) = msg.sender.call{value: userOwedWant}('');
+        (bool success,) = msg.sender.call{value : userOwedWant}('');
         require(success, 'ETH_TRANSFER_FAILED');
     }
 
@@ -154,7 +148,6 @@ contract BeefyETHVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardU
      */
     function proposeStrat(address payable _implementation) public onlyOwner {
         require(address(this) == CapSingleStakeStrategyETH(_implementation).vault(), "Proposal not valid for this Vault");
-        //        require(want() == IStrategyV7(_implementation).want(), "Different want");
         stratCandidate = StratCandidate({
         implementation : _implementation,
         proposedTime : block.timestamp

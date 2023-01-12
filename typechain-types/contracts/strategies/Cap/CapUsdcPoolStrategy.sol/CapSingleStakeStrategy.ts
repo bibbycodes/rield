@@ -33,13 +33,13 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
     "balanceOfPool()": FunctionFragment;
     "balanceOfWant()": FunctionFragment;
     "beforeDeposit()": FunctionFragment;
-    "callReward()": FunctionFragment;
     "deposit()": FunctionFragment;
     "gasprice()": FunctionFragment;
+    "getDevFee()": FunctionFragment;
+    "getStakingFee()": FunctionFragment;
     "harvest()": FunctionFragment;
     "harvestOnDeposit()": FunctionFragment;
     "lastHarvest()": FunctionFragment;
-    "nativeToWant()": FunctionFragment;
     "owner()": FunctionFragment;
     "panic()": FunctionFragment;
     "pause()": FunctionFragment;
@@ -53,8 +53,8 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
     "setDevFee(uint256)": FunctionFragment;
     "setHarvestOnDeposit(bool)": FunctionFragment;
     "setProtocolTokenAddress(address)": FunctionFragment;
-    "setProtocolTokenFee(uint256)": FunctionFragment;
     "setShouldGasThrottle(bool)": FunctionFragment;
+    "setStakingFee(uint256)": FunctionFragment;
     "shouldGasThrottle()": FunctionFragment;
     "token()": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
@@ -70,13 +70,13 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
       | "balanceOfPool"
       | "balanceOfWant"
       | "beforeDeposit"
-      | "callReward"
       | "deposit"
       | "gasprice"
+      | "getDevFee"
+      | "getStakingFee"
       | "harvest"
       | "harvestOnDeposit"
       | "lastHarvest"
-      | "nativeToWant"
       | "owner"
       | "panic"
       | "pause"
@@ -90,8 +90,8 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
       | "setDevFee"
       | "setHarvestOnDeposit"
       | "setProtocolTokenAddress"
-      | "setProtocolTokenFee"
       | "setShouldGasThrottle"
+      | "setStakingFee"
       | "shouldGasThrottle"
       | "token"
       | "transferOwnership"
@@ -114,12 +114,13 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
     functionFragment: "beforeDeposit",
     values?: undefined
   ): string;
-  encodeFunctionData(
-    functionFragment: "callReward",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "deposit", values?: undefined): string;
   encodeFunctionData(functionFragment: "gasprice", values?: undefined): string;
+  encodeFunctionData(functionFragment: "getDevFee", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "getStakingFee",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "harvest", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "harvestOnDeposit",
@@ -127,10 +128,6 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "lastHarvest",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "nativeToWant",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
@@ -168,12 +165,12 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
     values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
-    functionFragment: "setProtocolTokenFee",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
     functionFragment: "setShouldGasThrottle",
     values: [PromiseOrValue<boolean>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setStakingFee",
+    values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "shouldGasThrottle",
@@ -205,9 +202,13 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
     functionFragment: "beforeDeposit",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "callReward", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "gasprice", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getDevFee", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getStakingFee",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "harvest", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "harvestOnDeposit",
@@ -215,10 +216,6 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "lastHarvest",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "nativeToWant",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -253,11 +250,11 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setProtocolTokenFee",
+    functionFragment: "setShouldGasThrottle",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setShouldGasThrottle",
+    functionFragment: "setStakingFee",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -393,13 +390,15 @@ export interface CapSingleStakeStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    callReward(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     deposit(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
     gasprice(overrides?: CallOverrides): Promise<[string]>;
+
+    getDevFee(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    getStakingFee(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     harvest(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -408,8 +407,6 @@ export interface CapSingleStakeStrategy extends BaseContract {
     harvestOnDeposit(overrides?: CallOverrides): Promise<[boolean]>;
 
     lastHarvest(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    nativeToWant(overrides?: CallOverrides): Promise<[string[]]>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
 
@@ -454,13 +451,13 @@ export interface CapSingleStakeStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    setProtocolTokenFee(
-      fee: PromiseOrValue<BigNumberish>,
+    setShouldGasThrottle(
+      _shouldGasThrottle: PromiseOrValue<boolean>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    setShouldGasThrottle(
-      _shouldGasThrottle: PromiseOrValue<boolean>,
+    setStakingFee(
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -497,13 +494,15 @@ export interface CapSingleStakeStrategy extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  callReward(overrides?: CallOverrides): Promise<BigNumber>;
-
   deposit(
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
   gasprice(overrides?: CallOverrides): Promise<string>;
+
+  getDevFee(overrides?: CallOverrides): Promise<BigNumber>;
+
+  getStakingFee(overrides?: CallOverrides): Promise<BigNumber>;
 
   harvest(
     overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -512,8 +511,6 @@ export interface CapSingleStakeStrategy extends BaseContract {
   harvestOnDeposit(overrides?: CallOverrides): Promise<boolean>;
 
   lastHarvest(overrides?: CallOverrides): Promise<BigNumber>;
-
-  nativeToWant(overrides?: CallOverrides): Promise<string[]>;
 
   owner(overrides?: CallOverrides): Promise<string>;
 
@@ -558,13 +555,13 @@ export interface CapSingleStakeStrategy extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  setProtocolTokenFee(
-    fee: PromiseOrValue<BigNumberish>,
+  setShouldGasThrottle(
+    _shouldGasThrottle: PromiseOrValue<boolean>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  setShouldGasThrottle(
-    _shouldGasThrottle: PromiseOrValue<boolean>,
+  setStakingFee(
+    fee: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -599,19 +596,19 @@ export interface CapSingleStakeStrategy extends BaseContract {
 
     beforeDeposit(overrides?: CallOverrides): Promise<void>;
 
-    callReward(overrides?: CallOverrides): Promise<BigNumber>;
-
     deposit(overrides?: CallOverrides): Promise<void>;
 
     gasprice(overrides?: CallOverrides): Promise<string>;
+
+    getDevFee(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getStakingFee(overrides?: CallOverrides): Promise<BigNumber>;
 
     harvest(overrides?: CallOverrides): Promise<void>;
 
     harvestOnDeposit(overrides?: CallOverrides): Promise<boolean>;
 
     lastHarvest(overrides?: CallOverrides): Promise<BigNumber>;
-
-    nativeToWant(overrides?: CallOverrides): Promise<string[]>;
 
     owner(overrides?: CallOverrides): Promise<string>;
 
@@ -648,13 +645,13 @@ export interface CapSingleStakeStrategy extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setProtocolTokenFee(
-      fee: PromiseOrValue<BigNumberish>,
+    setShouldGasThrottle(
+      _shouldGasThrottle: PromiseOrValue<boolean>,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setShouldGasThrottle(
-      _shouldGasThrottle: PromiseOrValue<boolean>,
+    setStakingFee(
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -730,13 +727,15 @@ export interface CapSingleStakeStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    callReward(overrides?: CallOverrides): Promise<BigNumber>;
-
     deposit(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     gasprice(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getDevFee(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getStakingFee(overrides?: CallOverrides): Promise<BigNumber>;
 
     harvest(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -745,8 +744,6 @@ export interface CapSingleStakeStrategy extends BaseContract {
     harvestOnDeposit(overrides?: CallOverrides): Promise<BigNumber>;
 
     lastHarvest(overrides?: CallOverrides): Promise<BigNumber>;
-
-    nativeToWant(overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -791,13 +788,13 @@ export interface CapSingleStakeStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    setProtocolTokenFee(
-      fee: PromiseOrValue<BigNumberish>,
+    setShouldGasThrottle(
+      _shouldGasThrottle: PromiseOrValue<boolean>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    setShouldGasThrottle(
-      _shouldGasThrottle: PromiseOrValue<boolean>,
+    setStakingFee(
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -835,13 +832,15 @@ export interface CapSingleStakeStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    callReward(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     deposit(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     gasprice(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getDevFee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getStakingFee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     harvest(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -850,8 +849,6 @@ export interface CapSingleStakeStrategy extends BaseContract {
     harvestOnDeposit(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     lastHarvest(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    nativeToWant(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -898,13 +895,13 @@ export interface CapSingleStakeStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    setProtocolTokenFee(
-      fee: PromiseOrValue<BigNumberish>,
+    setShouldGasThrottle(
+      _shouldGasThrottle: PromiseOrValue<boolean>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    setShouldGasThrottle(
-      _shouldGasThrottle: PromiseOrValue<boolean>,
+    setStakingFee(
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

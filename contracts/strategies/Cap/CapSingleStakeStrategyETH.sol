@@ -19,7 +19,7 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
     address public protocolTokenAddress;
     uint256 constant DIVISOR = 1 ether;
     uint256 DEV_FEE = 3 * 10 ** 17;
-    uint256 PROTOCOL_TOKEN_FEE = 0;
+    uint256 STAKING_CONTRACT_FEE = 0;
 
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
@@ -39,7 +39,9 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
         rewards = _rewards;
     }
 
-
+    receive() external payable {}
+    fallback() external payable {}
+    
     function deposit() public payable whenNotPaused {
         if (address(this).balance > 0) {
             ICapETHPool(pool).deposit{value : address(this).balance}();
@@ -94,12 +96,10 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
         }
     }
     
-    receive() external payable {}
-    fallback() external payable {}
     // performance fees
     function chargeFees() internal {
         uint256 devFeeAmount = address(this).balance * DEV_FEE / DIVISOR;
-        uint256 protocolTokenFeeAmount = address(this).balance * PROTOCOL_TOKEN_FEE / DIVISOR;
+        uint256 protocolTokenFeeAmount = address(this).balance * STAKING_CONTRACT_FEE / DIVISOR;
         (bool ownerTransferSuccess,) = owner().call{value : devFeeAmount}('');
         require(ownerTransferSuccess, "OWNER_FEE_TRANSFER_FAILED");
          
@@ -110,9 +110,6 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
         
         emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
     }
-
-    // Adds liquidity to AMM and gets more LP tokens.
-    function swapRewards() internal virtual {}
 
     // calculate the total underlying 'wantToken' held by the strat.
     function balanceOf() public view returns (uint256) {
@@ -135,18 +132,28 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
     }
 
     // native reward amount for calling harvest
-    function callReward() public view returns (uint256) {}
+    // function callReward() public view returns (uint256) {}
 
     function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyOwner {
         harvestOnDeposit = _harvestOnDeposit;
     }
 
     function setDevFee(uint fee) external onlyOwner {
+        require(fee + STAKING_CONTRACT_FEE <= 5 * 10 ** 17, "fee too high");
         DEV_FEE = fee;
     }
 
-    function setProtocolTokenFee(uint fee) external onlyOwner {
-        PROTOCOL_TOKEN_FEE = fee;
+    function setStakingFee(uint fee) external onlyOwner {
+        require(fee + DEV_FEE <= 5 * 10 ** 17, "fee too high");
+        STAKING_CONTRACT_FEE = fee;
+    }
+
+    function getDevFee() external view returns (uint256) {
+        return DEV_FEE;
+    }
+
+    function getStakingFee() external view returns (uint256) {
+        return STAKING_CONTRACT_FEE;
     }
 
     function setProtocolTokenAddress(address _protocolTokenAddress) external onlyOwner {
@@ -160,7 +167,6 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
     // called as part of strat migration. Sends all the available funds back to the vault.
     function retireStrat() external {
         require(msg.sender == vault, "!vault");
-
         _harvest();
         uint256 tokenBal = address(this).balance;
         uint256 poolBal = balanceOfPool();
@@ -184,6 +190,4 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
         _unpause();
         deposit();
     }
-
-    function nativeToWant() external view virtual returns (address[] memory) {}
 }

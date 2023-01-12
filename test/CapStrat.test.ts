@@ -112,6 +112,13 @@ describe("Cap ERC20 Strategy", () => {
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
       expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETHER);
     })
+    
+    it("Deposits are disabled when the strat is paused", async () => {
+      const {alice, vault, strategy, ethToken} = await loadFixture(setupFixture);
+      await strategy.pause();
+      await ethToken.connect(alice).approve(vault.address, TEN_ETHER);
+      await expect(vault.connect(alice).deposit(ONE_ETHER)).to.be.revertedWith("Pausable: paused");
+    })
   })
 
   describe("Harvest", () => {
@@ -131,6 +138,10 @@ describe("Cap ERC20 Strategy", () => {
       expect(await capPool.deposits(strategy.address)).to.equal(parseEther("1.7"));
       await expect(txReceipt).to.emit(capPool, "Deposit")
       await expect(txReceipt).to.emit(capRewards, "CollectRewards")
+    })
+    
+    it("Sends performance fees to staking contract address when a protocolStakingFee is set", async () => {
+      
     })
   })
 
@@ -162,6 +173,140 @@ describe("Cap ERC20 Strategy", () => {
       expect(await vault.balanceOf(alice.address)).to.equal(0);
       expect(await ethToken.balanceOf(alice.address)).to.equal(expectedAliceGmx);
       expect(await ethToken.balanceOf(deployer.address)).to.equal(ownerFee);
+    })
+
+    it("Returns want amounts requested for withdrawal by multiple parties", async () => {
+      const {alice, vault, strategy, capPool, bob, ethToken} = await loadFixture(setupFixture);
+      await ethToken.connect(alice).approve(vault.address, TEN_ETHER);
+      await ethToken.connect(bob).approve(vault.address, TEN_ETHER);
+      
+      expect(await vault.totalSupply()).to.equal(0);
+
+      await vault.connect(alice)
+        .deposit(ONE_ETHER);
+
+      await vault.connect(bob)
+        .deposit(ONE_ETHER);
+
+      expect(await vault.totalSupply()).to.equal(parseEther("2"));
+      expect(await capPool.deposits(strategy.address)).to.equal(parseEther("2"));
+      expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
+      expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETHER);
+
+      await vault.connect(alice).withdraw(parseEther("0.5"))
+      expect(await ethToken.balanceOf(alice.address)).to.equal(parseEther("999.5"));
+      expect(await vault.balanceOf(alice.address)).to.equal(parseEther("0.5"));
+      expect(await capPool.deposits(strategy.address)).to.equal(parseEther("1.5"));
+
+      await vault.connect(bob).withdraw(parseEther("0.5"))
+      expect(await ethToken.balanceOf(bob.address)).to.equal(parseEther("999.5"));
+      expect(await vault.balanceOf(bob.address)).to.equal(parseEther("0.5"));
+      expect(await capPool.deposits(strategy.address)).to.equal(parseEther("1"));
+
+      expect(await vault.totalSupply()).to.equal(parseEther("1"));
+      expect(await vault.balanceOf(alice.address)).to.equal(parseEther("0.5"));
+      expect(await vault.balanceOf(bob.address)).to.equal(parseEther("0.5"));
+    })
+
+    it("Returns eth amounts requested for withdrawal by multiple parties with additional harvest", async () => {
+      const {alice, vault, strategy, capPool, bob, deployer, ethToken} = await loadFixture(setupFixture);
+      await ethToken.connect(alice).approve(vault.address, TEN_ETHER);
+      await ethToken.connect(bob).approve(vault.address, TEN_ETHER);
+      
+      expect(await vault.totalSupply()).to.equal(0);
+
+      await vault.connect(alice)
+        .deposit(ONE_ETHER);
+
+      await vault.connect(bob)
+        .deposit(ONE_ETHER);
+
+      expect(await vault.totalSupply()).to.equal(parseEther("2"));
+      expect(await capPool.deposits(strategy.address)).to.equal(parseEther("2"));
+      expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
+      expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETHER);
+
+      const ownerFee = parseEther("0.3");
+
+      await strategy.harvest()
+
+      const capPoolBalanceOfStrategyAfterHarvest = parseEther("3").sub(ownerFee);
+      const expectedEthBalanceForAliceAndBob = (ONE_ETHER.add(parseEther("0.35")).div(2));
+
+      // NB after harvest, one LP token is worth 1.35 ETH for each party
+      await vault.connect(alice).withdraw(parseEther("0.5"))
+      expect(await vault.balanceOf(alice.address)).to.equal(parseEther("0.5"));
+      expect(await capPool.deposits(strategy.address)).to.equal(capPoolBalanceOfStrategyAfterHarvest.sub(expectedEthBalanceForAliceAndBob));
+
+      const capPoolRemainingBalanceOfStrategyAfterAliceWithdraw = capPoolBalanceOfStrategyAfterHarvest.sub(expectedEthBalanceForAliceAndBob);
+
+      await vault.connect(bob).withdraw(parseEther("0.5"))
+      expect(await vault.balanceOf(bob.address)).to.equal(parseEther("0.5"));
+      expect(await capPool.deposits(strategy.address)).to.equal(capPoolRemainingBalanceOfStrategyAfterAliceWithdraw.sub(expectedEthBalanceForAliceAndBob));
+
+      expect(await vault.totalSupply()).to.equal(parseEther("1"));
+      expect(await vault.balanceOf(alice.address)).to.equal(parseEther("0.5"));
+      expect(await vault.balanceOf(bob.address)).to.equal(parseEther("0.5"));
+    })
+    
+  })
+  
+  describe("Utils", () => {
+    describe("Pausing and un-pausing", () => {
+      it("Sets the strategy as paused and unpaused", async () => {
+        
+      })
+      
+      it("Removes allowances for the Cap Pools when paused", async () => {
+        
+      })
+      
+      it("Gives allowances for the Cap Pools when un-paused", async () => {
+
+      })
+      
+      it("Reverts when depositing while paused", async () => {
+        
+      })
+      
+      it ("Allows users to withdraw while paused", async () => {
+        
+      })
+    })
+    
+    describe("Panic", () => {
+      it("Collects rewards from the strategy and withdraws all funds from the pool", async () => {
+        
+      })
+      
+      it ("Pauses the strategy", async () => {
+        
+      })
+    })
+    
+    describe("Performance Fees", () => {
+      it("Can change the fee for the devs", async () => {
+        const {strategy} = await loadFixture(setupFixture);
+        await strategy.setDevFee(parseEther("0.5"));
+        expect(await strategy.getDevFee()).to.equal(parseEther("0.5"));
+      })
+
+      it("Can change the fee for the staking contract", async () => {
+        const {strategy} = await loadFixture(setupFixture);
+        await strategy.setStakingFee(parseEther("0.1"));
+        expect(await strategy.getStakingFee()).to.equal(parseEther("0.1"));
+      })
+
+      it("Only the owner can modify fees", async () => {
+        const {strategy, alice} = await loadFixture(setupFixture);
+        await expect(strategy.connect(alice).setDevFee(parseEther("0.5"))).to.be.revertedWith("Ownable: caller is not the owner");
+      })
+      
+      it("Combined fees cannot exceed 50%", async () => {
+        const {strategy} = await loadFixture(setupFixture);
+        await strategy.setDevFee(parseEther("0.5"));
+        await expect(strategy.setStakingFee(parseEther("0.5"))).to.be.revertedWith("fee too high")
+      })
     })
   })
 });

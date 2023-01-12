@@ -1,3 +1,5 @@
+pragma solidity ^0.8.12;
+
 interface ICapPool {
     function UNIT (  ) external view returns ( uint256 );
     function creditUserProfit ( address destination, uint256 amount ) external;
