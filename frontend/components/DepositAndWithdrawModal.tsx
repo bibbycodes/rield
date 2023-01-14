@@ -7,12 +7,14 @@ import Modal from '@mui/material/Modal';
 import {Link, TextField} from '@mui/material';
 import {useAccount, useBalance} from 'wagmi';
 import {useContractActions} from '../hooks/useContractActions';
-import {formatEther} from "ethers/lib/utils";
+import {parseUnits} from "ethers/lib/utils";
 import {capitalize} from "../utils/formatters";
 import {useGetUserStakedInVault} from "../hooks/useGetUserStakedInVault";
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
 import {APYsContext} from "../contexts/ApyContext";
+import {useGetShareData} from "../hooks/useGetShareData";
+import {BigNumber} from "ethers";
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -31,13 +33,16 @@ export interface StrategyDetailsModalProps {
 
 export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDetailsModalProps) {
   const {action, selectedStrategy} = useContext(SelectedStrategyContext)
-  const [amount, setAmount] = useState<number>(0)
+  const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress, decimals} = selectedStrategy;
   const {address: userAddress} = useAccount();
-  const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress} = selectedStrategy;
   const {data: balanceData} = useBalance({token: tokenAddress, address: userAddress})
-  const actions = useContractActions({vaultAddress, amount, abi})
-  const formattedBalance = balanceData?.value ? formatEther(balanceData.value) : "0";
-  const {fetchUserStaked, userStaked} = useGetUserStakedInVault({vaultAddress})
+  const formattedBalance = balanceData?.formatted
+  const balance = balanceData?.value
+  const {fullPricePerShare} = useGetShareData(selectedStrategy)
+  const [amount, setAmount] = useState<BigNumber>(parseUnits('0', decimals))
+  const [visibleAmount, setVisibleAmount] = useState<number>(0)
+  const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
+  const {fetchUserStaked, userStaked} = useGetUserStakedInVault(selectedStrategy)
   const {[strategyAddress]: apy} = useContext(APYsContext)
   const handleClose = () => setIsOpen(false);
 
@@ -50,25 +55,46 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   }
   
   const handleSetMax = () => {
-    const amountToSet = (action === 'deposit' || action === 'depositAll') ? +formattedBalance : +userStaked
-    setAmount(amountToSet)
+    if (balance && formattedBalance) {
+      const amountToSet = (action === 'deposit' || action === 'depositAll') ? +formattedBalance : +userStaked
+      setAmount(balance)
+      setVisibleAmount(amountToSet)
+    }
   }
   
   const isBalanceLessThanAmount = (value: number) => {
-    const balanceToCheck = (action === 'deposit' || action === 'depositAll') ? +formattedBalance : +userStaked
-    return !isNaN(value) && balanceToCheck < value
+    if (balance && formattedBalance) {
+      const balanceToCheck = (action === 'deposit' || action === 'depositAll') ? +formattedBalance : +userStaked
+      return !isNaN(value) && balanceToCheck < value
+    }
   }
   
-  const handleAmountChange = (e:   React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // Amount is the amount of shares that should be withdrawn, not the amount of want
+  // function withdraw(uint256 _shares) public {...}
+  
+  // amount of shares in terms of want =
+  // pricePerFullShare / wantAmount
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const newAmount = +e.target.value
     const isNullOrUndefined = e.target.value == null || e.target.value === '';
     if (isNullOrUndefined) {
-      setAmount(0)
+      setAmount(BigNumber.from(0))
+      setVisibleAmount(0)
     } else if (isNaN(newAmount)) {
       setAmount(amount)
+      setVisibleAmount(visibleAmount)
     } else {
-      setAmount(newAmount)
+      if (action === 'withdraw') {
+        const numSharesBN = (fullPricePerShare as BigNumber).div(parseUnits(newAmount.toString(), decimals))
+        setAmount(numSharesBN)
+        setVisibleAmount(newAmount)
+      } else {
+        const amountBn = parseUnits(String(amount), decimals)
+        setAmount(amountBn)
+        setVisibleAmount(newAmount)
+      }
     }
+    console.log(amount)
   }
 
   return (
@@ -101,11 +127,11 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
             </div>
             <div className={'flex p-4 flex-row items-center h-20'}>
               <TextField
-                sx={{  "& fieldset": { border: 'none' }, '& .MuiInputBase-input': {color: isBalanceLessThanAmount(amount) ? 'red' : 'white', fontSize: '2rem', padding: 0} }}
+                sx={{  "& fieldset": { border: 'none' }, '& .MuiInputBase-input': {color: isBalanceLessThanAmount(visibleAmount) ? 'red' : 'white', fontSize: '2rem', padding: 0} }}
                 id="tokenId"
                 margin="normal"
                 onChange={handleAmountChange}
-                value={amount}
+                value={visibleAmount}
                 placeholder={balanceData?.value.toString()}
                 className={`rounded-lg flex-grow`}
               >

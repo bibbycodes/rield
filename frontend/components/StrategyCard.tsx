@@ -9,7 +9,7 @@ import {useContext} from "react";
 import {APYsContext} from "../contexts/ApyContext";
 
 export default function StrategyCard({strategy, openModal}: { strategy: Strategy, openModal: (isOpen: boolean) => void }) {
-  const {userStaked} = useGetUserStakedInVault({vaultAddress: strategy.vaultAddress})
+  const {userStaked} = useGetUserStakedInVault(strategy)
   const {prices} = useContext(TokenPricesContext)
   const APYs = useContext(APYsContext)
   const apy = APYs[strategy.strategyAddress]

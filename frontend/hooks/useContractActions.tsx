@@ -1,18 +1,18 @@
-import { useContractWrite, usePrepareContractWrite, useWaitForTransaction } from 'wagmi'
-import { AbiItem } from "web3-utils";
-import { ethers } from 'ethers';
+import {useContractWrite, usePrepareContractWrite, useWaitForTransaction} from 'wagmi'
+import {AbiItem} from "web3-utils";
+import {BigNumber} from 'ethers';
 
 export interface useContractActionsProps {
   vaultAddress: string,
-  amount: number,
-  abi: AbiItem[]
+  amount: BigNumber,
+  abi: AbiItem[],
+  decimals: number
 }
 
 export function useContractActions({vaultAddress, amount, abi}: useContractActionsProps) {
-  const amountBN = ethers.utils.parseEther(String(amount))
   const {config: depositConfig} = usePrepareContractWrite({
     address: vaultAddress,
-    args: [amountBN],
+    args: [amount],
     functionName: "deposit",
     abi
   })
@@ -24,7 +24,7 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
 
   const {config: withdrawConfig} = usePrepareContractWrite({
     address: vaultAddress,
-    args: [amountBN],
+    args: [amount],
     functionName: "withdraw",
     abi
   })

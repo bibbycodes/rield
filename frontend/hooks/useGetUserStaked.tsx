@@ -44,7 +44,8 @@ export const useGetUserStaked = () => {
       const pricePerShare = pricePerShareData[index]
       console.log({pricePerShare, balance})
       if (pricePerShare && balance) {
-        const userStaked = convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(18))) ?? '0'
+        const decimals = availableStrategies[index].decimals
+        const userStaked = convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(decimals))) ?? '0'
         const dollarAmount = parseFloat(userStaked) * prices[availableStrategies[index].coinGeckoId]
         return acc + dollarAmount
       }

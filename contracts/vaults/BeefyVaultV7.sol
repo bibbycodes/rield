@@ -96,13 +96,23 @@ contract BeefyVaultV7 is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUp
      */
     function deposit(uint _amount) public nonReentrant {
         strategy.beforeDeposit();
+        
+        // The balance of want before transfer
         uint256 _before = balance();
         want().safeTransferFrom(msg.sender, address(this), _amount);
+        
+        // transfer to strategy and strategy.deposit        
         earn();
+        
+        // The balance of want after transfer
         uint256 _after = balance();
+        
+        // The amount of want that was transferred
         _amount = _after - _before;
+        
         // Additional check for deflationary tokens
         uint256 shares = 0;
+        // calculate LP tokens to mint for depositor 
         if (totalSupply() == 0) {
             shares = _amount;
         } else {

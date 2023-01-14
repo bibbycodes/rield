@@ -13,6 +13,7 @@ interface StrategyDetailsModalProps {
 }
 
 export default function Enable({ tokenAddress, vaultAddress, openModal, strategy}: StrategyDetailsModalProps) {
+  const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
   const {address} = useAccount();
   const {approve, isApproved} = useApproveToken(tokenAddress, vaultAddress, address);
   const {data: balance} = useBalance({token: tokenAddress, address})
@@ -25,7 +26,7 @@ export default function Enable({ tokenAddress, vaultAddress, openModal, strategy
   }
 
   return <div>
-    {isApproved && (
+    {(isApproved) && (
       <div className="grid grid-cols-2 gap-3">
         <Button
           onClick={() => handleClick("deposit")}
@@ -41,7 +42,7 @@ export default function Enable({ tokenAddress, vaultAddress, openModal, strategy
       </div>
     )}
 
-    {!isApproved && (
+    {!(isApproved) && (
         <Button className="w-full bg-accentPrimary hover:bg-accentSecondary" variant="contained"
               onClick={() => address && approve?.()}>Approve</Button>
     )}

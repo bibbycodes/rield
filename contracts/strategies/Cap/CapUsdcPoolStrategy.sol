@@ -132,7 +132,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
 
     // it calculates how much 'wantToken' the strategy has working in the farm.
     function balanceOfPool() public view returns (uint256) {
-        return ICapPool(pool).getBalance(address(this));
+        return ICapPool(pool).getCurrencyBalance(address(this));
     }
 
     // returns rewards unharvested

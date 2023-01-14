@@ -1,39 +1,25 @@
-import { Address, useAccount, useContractRead } from "wagmi";
-import { abi } from "../../artifacts/contracts/vaults/BeefyVaultV7.sol/BeefyVaultV7.json";
-import { BigNumber } from "ethers";
-import { convertToEther } from "../lib/utils";
-import { useEffect, useState } from "react";
+import {BigNumber} from "ethers";
+import {convertToEther} from "../lib/utils";
+import {useEffect, useState} from "react";
+import {Strategy} from "../model/strategy";
+import {useGetShareData} from "./useGetShareData";
 
-interface useGetUserStakedProps {
-  vaultAddress: Address,
-}
-
-export const useGetUserStakedInVault = ({vaultAddress}: useGetUserStakedProps) => {
+export const useGetUserStakedInVault = (strategy: Strategy) => {
   const [userStaked, setUserStaked] = useState<string>('0');
-  const {address: userAddress} = useAccount();
+  const {decimals} = strategy;
+  
+  const {fullPricePerShare, refetchFullPricePerShare, userBalance, refetchUserBalance} = useGetShareData(strategy)
 
   const calculateUserStaked = (balance: BigNumber, pricePerShare: BigNumber) => {
-    return balance && pricePerShare ? convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(18))) : '0'
+    // balance is amount of LP token
+    // fullPricePerShare is the price of 1 LP token
+    return balance && pricePerShare ? convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(decimals))) : '0'
   }
 
   const fetchUserStaked = async () => {
     await refetchFullPricePerShare()
     await refetchUserBalance()
   }
-
-  const {data: fullPricePerShare, refetch: refetchFullPricePerShare} = useContractRead({
-    abi,
-    address: vaultAddress,
-    functionName: 'getPricePerFullShare',
-    args: []
-  });
-
-  const {data: userBalance, refetch: refetchUserBalance} = useContractRead({
-    abi,
-    address: vaultAddress,
-    functionName: 'balanceOf',
-    args: [userAddress]
-  })
 
   useEffect(() => {
     if (userBalance && fullPricePerShare) {
