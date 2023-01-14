@@ -27,6 +27,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
     uint256 constant DIVISOR = 1 ether;
     uint256 DEV_FEE = 3 * 10 ** 17;
     uint256 STAKING_CONTRACT_FEE = 0;
+    uint256 CAP_MULTIPLIER = 10 ** 12;
 
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
@@ -58,7 +59,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
     function deposit() public whenNotPaused {
         uint256 tokenBalance = IERC20(token).balanceOf(address(this));
         if (tokenBalance > 0) {
-            ICapPool(pool).deposit(tokenBalance);
+            ICapPool(pool).deposit(tokenBalance * CAP_MULTIPLIER);
             emit Deposit(balanceOf());
         }
     }
@@ -68,7 +69,8 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         uint256 wantTokenBal = IERC20(token).balanceOf(address(this));
 
         if (wantTokenBal < _amount) {
-            ICapPool(pool).withdraw(_amount - wantTokenBal);
+            uint256 amountToWithdraw = _amount - wantTokenBal;
+            ICapPool(pool).withdraw(amountToWithdraw * CAP_MULTIPLIER);
             wantTokenBal = IERC20(token).balanceOf(address(this));
         }
 
