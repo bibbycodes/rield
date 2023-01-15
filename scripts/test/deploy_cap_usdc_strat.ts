@@ -1,6 +1,6 @@
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {ethers} from "hardhat";
-import {BeefyVaultV7, CapPoolMock, CapRewardsMock, TokenMock} from "../typechain-types";
+import {BeefyVaultV7, CapPoolMock, CapRewardsMock, TokenMock} from "../../typechain-types";
 import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
 import fs from "fs";

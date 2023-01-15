@@ -22,7 +22,6 @@ const style = {
   left: '50%',
   transform: 'translate(-50%, -50%)',
   width: 400,
-  height: 400,
   boxShadow: 24,
 };
 
@@ -42,7 +41,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const [amount, setAmount] = useState<BigNumber>(parseUnits('0', decimals))
   const [visibleAmount, setVisibleAmount] = useState<number>(0)
   const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
-  const {fetchUserStaked, userStaked} = useGetUserStakedInVault(selectedStrategy)
+  const {userStaked, fetchUserStaked} = useGetUserStakedInVault(selectedStrategy)
   const {[strategyAddress]: apy} = useContext(APYsContext)
   const handleClose = () => setIsOpen(false);
 
@@ -53,7 +52,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
     await fetchUserStaked()
     handleClose()
   }
-  
+
   const handleSetMax = () => {
     if (balance && formattedBalance) {
       const amountToSet = (action === 'deposit' || action === 'depositAll') ? +formattedBalance : +userStaked
@@ -61,17 +60,17 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
       setVisibleAmount(amountToSet)
     }
   }
-  
+
   const isBalanceLessThanAmount = (value: number) => {
     if (balance && formattedBalance) {
       const balanceToCheck = (action === 'deposit' || action === 'depositAll') ? +formattedBalance : +userStaked
       return !isNaN(value) && balanceToCheck < value
     }
   }
-  
+
   // Amount is the amount of shares that should be withdrawn, not the amount of want
   // function withdraw(uint256 _shares) public {...}
-  
+
   // amount of shares in terms of want =
   // pricePerFullShare / wantAmount
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -89,12 +88,11 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
         setAmount(numSharesBN)
         setVisibleAmount(newAmount)
       } else {
-        const amountBn = parseUnits(String(amount), decimals)
+        const amountBn = parseUnits(newAmount.toString(), decimals)
         setAmount(amountBn)
         setVisibleAmount(newAmount)
       }
     }
-    console.log(amount)
   }
 
   return (
@@ -146,7 +144,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
               </div>
             </div>
           </Box>
-          
+
           <Box className={`flex flex-row justify-between`}>
             <Button className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary`}
                     onClick={() => performAction(action)}>{action}</Button>
