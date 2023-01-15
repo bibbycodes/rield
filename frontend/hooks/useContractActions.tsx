@@ -28,8 +28,7 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
     functionName: "withdraw",
     abi
   })
-
-
+  
   const {data: withdrawData, writeAsync: withdrawFromVault} = useContractWrite(withdrawConfig)
   const {isLoading: isWithdrawLoading, isSuccess: isWithdrawSuccess} = useWaitForTransaction({
     hash: withdrawData?.hash,

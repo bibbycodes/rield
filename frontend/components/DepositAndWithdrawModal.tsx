@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useContext, useState} from 'react';
+import {useContext, useEffect, useState} from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -35,9 +35,10 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const {action, selectedStrategy} = useContext(SelectedStrategyContext)
   const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress, decimals} = selectedStrategy;
   const {address: userAddress} = useAccount();
-  const {data: balanceData} = useBalance({token: tokenAddress, address: userAddress})
-  const formattedBalance = balanceData?.formatted
-  const balance = balanceData?.value
+  const {data: tokenBalanceData} = useBalance({token: tokenAddress, address: userAddress})
+  const {data: vaultTokenBalance} = useBalance({token: vaultAddress, address: userAddress})
+  const formattedTokenBalance = tokenBalanceData?.formatted
+  const tokenBalanceBN = tokenBalanceData?.value
   const {fullPricePerShare} = useGetShareData(selectedStrategy)
   const [amount, setAmount] = useState<BigNumber>(parseUnits('0', decimals))
   const [visibleAmount, setVisibleAmount] = useState<number>(0)
@@ -47,31 +48,32 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const handleClose = () => setIsOpen(false);
 
   const performAction = async (action: TransactionAction) => {
+    console.log(actions[action])
     const fn = actions[action]?.write
     const tx = await fn?.()
     await tx?.wait()
     await fetchUserStaked()
     handleClose()
   }
-  
+
   const handleSetMax = () => {
-    if (balance && formattedBalance) {
-      const amountToSet = (action === 'deposit' || action === 'depositAll') ? +formattedBalance : +userStaked
-      setAmount(balance)
+    if (tokenBalanceBN && formattedTokenBalance) {
+      const amountToSet = (action === 'deposit' || action === 'depositAll') ? +formattedTokenBalance : +userStaked
+      setAmount(tokenBalanceBN)
       setVisibleAmount(amountToSet)
     }
   }
-  
+
   const isBalanceLessThanAmount = (value: number) => {
-    if (balance && formattedBalance) {
-      const balanceToCheck = (action === 'deposit' || action === 'depositAll') ? +formattedBalance : +userStaked
+    if (tokenBalanceBN && formattedTokenBalance) {
+      const balanceToCheck = (action === 'deposit' || action === 'depositAll') ? +formattedTokenBalance : +userStaked
       return !isNaN(value) && balanceToCheck < value
     }
   }
   
   // Amount is the amount of shares that should be withdrawn, not the amount of want
   // function withdraw(uint256 _shares) public {...}
-  
+
   // amount of shares in terms of want =
   // pricePerFullShare / wantAmount
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -85,16 +87,15 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
       setVisibleAmount(visibleAmount)
     } else {
       if (action === 'withdraw') {
-        const numSharesBN = (fullPricePerShare as BigNumber).div(parseUnits(newAmount.toString(), decimals))
+        const numSharesBN = (fullPricePerShare as BigNumber).mul(parseUnits(newAmount.toString(), decimals)).div(parseUnits('1', decimals))
         setAmount(numSharesBN)
         setVisibleAmount(newAmount)
       } else {
-        const amountBn = parseUnits(String(amount), decimals)
+        const amountBn = parseUnits(String(newAmount), decimals)
         setAmount(amountBn)
         setVisibleAmount(newAmount)
       }
     }
-    console.log(amount)
   }
 
   return (
@@ -127,12 +128,19 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
             </div>
             <div className={'flex p-4 flex-row items-center h-20'}>
               <TextField
-                sx={{  "& fieldset": { border: 'none' }, '& .MuiInputBase-input': {color: isBalanceLessThanAmount(visibleAmount) ? 'red' : 'white', fontSize: '2rem', padding: 0} }}
+                sx={{
+                  "& fieldset": {border: 'none'},
+                  '& .MuiInputBase-input': {
+                    color: isBalanceLessThanAmount(visibleAmount) ? 'red' : 'white',
+                    fontSize: '2rem',
+                    padding: 0
+                  }
+                }}
                 id="tokenId"
                 margin="normal"
                 onChange={handleAmountChange}
                 value={visibleAmount}
-                placeholder={balanceData?.value.toString()}
+                placeholder={tokenBalanceData?.value.toString()}
                 className={`rounded-lg flex-grow`}
               >
               </TextField>
@@ -146,7 +154,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
               </div>
             </div>
           </Box>
-          
+
           <Box className={`flex flex-row justify-between`}>
             <Button className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary`}
                     onClick={() => performAction(action)}>{action}</Button>

@@ -86,7 +86,7 @@ contract BeefyVaultV7 is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUp
      * Returns an uint256 with 18 decimals of how much underlying asset one vault share represents.
      */
     function getPricePerFullShare() public view returns (uint256) {
-        return totalSupply() == 0 ? 1e18 : balance() * 1e18 / totalSupply();
+        return totalSupply() == 0 ? 10 ** decimals() : balance() * 10 ** decimals() / totalSupply();
     }
 
     /**

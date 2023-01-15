@@ -168,7 +168,7 @@ describe("Cap ERC20 Strategy", () => {
   })
 
   describe("Withdraw", () => {
-    it("Harvests, Returns tokens to depositor with additional harvest", async () => {
+    it("Withdrawing after harvest returns tokens to depositor with additional harvest", async () => {
       const {alice, vault, strategy, capPool, usdcToken, deployer} = await loadFixture(setupFixture);
       expect(await vault.totalSupply()).to.equal(0);
       await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
@@ -195,6 +195,35 @@ describe("Cap ERC20 Strategy", () => {
       expect(await vault.totalSupply()).to.equal(0);
       expect(await vault.balanceOf(alice.address)).to.equal(0);
       expect(await usdcToken.balanceOf(alice.address)).to.equal(expectedAliceGmx);
+      expect(await usdcToken.balanceOf(deployer.address)).to.equal(ownerFee);
+    })
+
+    it("Withdraw in proportion to the shares sent as an argument", async () => {
+      const {alice, vault, strategy, capPool, usdcToken, deployer} = await loadFixture(setupFixture);
+      expect(await vault.totalSupply()).to.equal(0);
+      await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+      await vault.connect(alice)
+        .deposit(ONE_USDC);
+
+      expect(await vault.totalSupply()).to.equal(ONE_USDC);
+      expect(await capPool.deposits(strategy.address)).to.equal(ONE_USDC);
+      expect(await usdcToken.balanceOf(alice.address)).to.equal(parseUnits("999", 6));
+      expect(await vault.balanceOf(alice.address)).to.equal(ONE_USDC);
+
+      await strategy.harvest();
+
+      const aliceShares = await vault.balanceOf(alice.address);
+      await vault.connect(alice).withdraw(aliceShares.div(2));
+
+      const claimAmount = parseUnits("1", 6);
+      const claimAmountUserPart = claimAmount.sub(parseUnits("0.3", 6));
+      // 30% fee to deployer
+      const ownerFee = claimAmount.sub(parseUnits("0.7", 6));
+      const expectedAliceWithdrawAmount = parseUnits("999.5", 6).add(claimAmountUserPart.div(2));
+
+      expect(await vault.totalSupply()).to.equal(parseUnits("0.5", 6));
+      expect(await usdcToken.balanceOf(alice.address)).to.equal(expectedAliceWithdrawAmount);
+      expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 6));
       expect(await usdcToken.balanceOf(deployer.address)).to.equal(ownerFee);
     })
 
@@ -231,7 +260,7 @@ describe("Cap ERC20 Strategy", () => {
       expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 6));
     })
 
-    it("Returns eth amounts requested for withdrawal by multiple parties with additional harvest", async () => {
+    it("Returns want amounts requested for withdrawal by multiple parties with additional harvest", async () => {
       const {alice, vault, strategy, capPool, bob, deployer, usdcToken} = await loadFixture(setupFixture);
       await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
       await usdcToken.connect(bob).approve(vault.address, TEN_USDC);

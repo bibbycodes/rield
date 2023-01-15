@@ -48,11 +48,14 @@ export const useTotalDollarAmountDeposited = () => {
       }
       return acc
     }, 0) as number
-    setTotalDollarAmountDeposited(formatDollarAmount(userStaked))
+    return userStaked
+    
   }
   
   useEffect(() => {
-    getTotalStakedInDollars()
+    getTotalStakedInDollars().then(userStaked => {
+      setTotalDollarAmountDeposited(formatDollarAmount(userStaked))
+    })
   }, [userAddress, prices])
   
   return {
