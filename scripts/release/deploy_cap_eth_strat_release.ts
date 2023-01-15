@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import fs from "fs";
-import { BeefyVaultV7 } from '../../typechain-types';
+import { BeefyETHVault } from '../../typechain-types';
 
 async function main() {
   const [deployer]: SignerWithAddress[] =
@@ -9,16 +9,15 @@ async function main() {
 
   console.log("Deploying contracts with the account:", deployer.address);
   //
-  const Vault = await ethers.getContractFactory("BeefyVaultV7");
-  const vault: BeefyVaultV7 = (await Vault.deploy()) as BeefyVaultV7;
+  const Vault = await ethers.getContractFactory("BeefyETHVault");
+  const vault: BeefyETHVault = (await Vault.deploy()) as BeefyETHVault;
   await vault.deployed();
 
-  const SingleStakeStrategy = await ethers.getContractFactory("CapSingleStakeStrategy");
+  const SingleStakeStrategy = await ethers.getContractFactory("CapSingleStakeStrategyETH");
   const strategy = await SingleStakeStrategy.deploy(
     vault.address,
-    '0x958cc92297e6F087f41A86125BA8E121F0FbEcF2', // capUsdcPool
-    '0x10f2f3B550d98b6E51461a83AD3FE27123391029', // capUsdcRewards
-    '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8', // usdcToken
+    '0xE0cCd451BB57851c1B2172c07d8b4A7c6952a54e', // capETHPool
+    '0x29163356bBAF0a3bfeE9BA5a52a5C6463114Cb5f', // capETHRewards
   );
 
   await strategy.deployed();
@@ -27,9 +26,8 @@ async function main() {
   console.log("Vault address:", vault.address);
   console.log("Strategy address:", strategy.address);
 
-  // "ethToken":  "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
   fs.writeFileSync(
-    "./resources/deploy_cap_usdc-output.json",
+    "./resources/deploy_cap-output.json",
     JSON.stringify({
       vaultAddress: vault.address,
       deployerAddress: deployer.address,

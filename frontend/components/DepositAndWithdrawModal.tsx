@@ -43,7 +43,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const [amount, setAmount] = useState<BigNumber>(parseUnits('0', decimals))
   const [visibleAmount, setVisibleAmount] = useState<number>(0)
   const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
-  const {fetchUserStaked, userStaked} = useGetUserDepositedInVault(selectedStrategy)
+  const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
   const {[strategyAddress]: apy} = useContext(APYsContext)
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
   
@@ -85,7 +85,6 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
       return !isNaN(value) && balanceToCheck < value
     }
   }
-  
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const newAmount = +e.target.value
@@ -167,8 +166,9 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           </Box>
 
           <Box className={`flex flex-row justify-between`}>
-            <Button className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary`}
-                    onClick={() => performAction(action)}>{action}
+            <Button 
+              className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary`}
+              onClick={() => performAction(action)}>{action}
             </Button>
           </Box>
 
