@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useContext, useEffect, useState} from 'react';
+import {useContext, useState} from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -15,6 +15,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import {APYsContext} from "../contexts/ApyContext";
 import {useGetShareData} from "../hooks/useGetShareData";
 import {BigNumber} from "ethers";
+import {ToastContext} from "../contexts/ToastContext";
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -36,7 +37,6 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress, decimals} = selectedStrategy;
   const {address: userAddress} = useAccount();
   const {data: tokenBalanceData} = useBalance({token: tokenAddress, address: userAddress})
-  const {data: vaultTokenBalance} = useBalance({token: vaultAddress, address: userAddress})
   const formattedTokenBalance = tokenBalanceData?.formatted
   const tokenBalanceBN = tokenBalanceData?.value
   const {fullPricePerShare} = useGetShareData(selectedStrategy)
@@ -45,15 +45,30 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
   const {fetchUserStaked, userStaked} = useGetUserDepositedInVault(selectedStrategy)
   const {[strategyAddress]: apy} = useContext(APYsContext)
+  const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
+  
   const handleClose = () => setIsOpen(false);
 
   const performAction = async (action: TransactionAction) => {
-    console.log(actions[action])
     const fn = actions[action]?.write
     const tx = await fn?.()
-    await tx?.wait()
+    await tx?.wait().then(() => {
+      handleShowToast(action)
+    })
     await fetchUserStaked()
     handleClose()
+  }
+  
+  const handleShowToast = (action: TransactionAction) => {
+    const {isError, isFetching} = actions[action]
+    const actionName = capitalize(action)
+    if (!isFetching) {
+      const message = isError ? `${actionName} failed` : `${actionName} successful!`
+      const severity = isError ? "error" : "success"
+      setToastMessage(message)
+      setSeverity(severity)
+      setOpenToast(true)
+    }
   }
 
   const handleSetMax = () => {
@@ -71,11 +86,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
     }
   }
   
-  // Amount is the amount of shares that should be withdrawn, not the amount of want
-  // function withdraw(uint256 _shares) public {...}
 
-  // amount of shares in terms of want =
-  // pricePerFullShare / wantAmount
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const newAmount = +e.target.value
     const isNullOrUndefined = e.target.value == null || e.target.value === '';
@@ -157,15 +168,18 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
           <Box className={`flex flex-row justify-between`}>
             <Button className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary`}
-                    onClick={() => performAction(action)}>{action}</Button>
+                    onClick={() => performAction(action)}>{action}
+            </Button>
           </Box>
 
           <Box className={`ml-auto mt-4`}>
             APY: {apy ?? selectedStrategy.apy}%
           </Box>
 
-          <Box className={`flex flex-col items-center mt-auto`}>
-            <Link href={tokenUrl} underline="hover" className={`text-tSecondary mt-8`}>Get Token</Link>
+          <Box className={`flex flex-col items-center mt-auto mx-2`}>
+            <Link href={tokenUrl} underline="hover" className={`text-tSecondary`}>
+              Get Token
+            </Link>
           </Box>
         </Box>
       </Modal>

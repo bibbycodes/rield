@@ -18,8 +18,20 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
   })
 
   const {data: depositData, writeAsync: depositIntoVault} = useContractWrite(depositConfig)
-  const {isLoading: isDepositLoading, isSuccess: isDepositSuccess} = useWaitForTransaction({
+  const {isLoading: isDepositLoading, isSuccess: isDepositSuccess, isError: isDepositError, isFetching: isDepositFetching} = useWaitForTransaction({
     hash: depositData?.hash,
+  })
+
+  const {config: depositAllConfig} = usePrepareContractWrite({
+    address: vaultAddress,
+    args: [],
+    functionName: "depositAll",
+    abi
+  })
+
+  const {data: depositAllData, writeAsync: depositAllFromVault} = useContractWrite(depositAllConfig)
+  const {isLoading: isDepositAllLoading, isSuccess: isDepositAllSuccess, isError: isDepositAllError, isFetching: isDepositAllFetching} = useWaitForTransaction({
+    hash: depositAllData?.hash,
   })
 
   const {config: withdrawConfig} = usePrepareContractWrite({
@@ -30,7 +42,7 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
   })
   
   const {data: withdrawData, writeAsync: withdrawFromVault} = useContractWrite(withdrawConfig)
-  const {isLoading: isWithdrawLoading, isSuccess: isWithdrawSuccess} = useWaitForTransaction({
+  const {isLoading: isWithdrawLoading, isSuccess: isWithdrawSuccess, isError: isWithdrawError, isFetching: isWithdrawFetching} = useWaitForTransaction({
     hash: withdrawData?.hash,
   })
 
@@ -42,43 +54,38 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
   })
 
   const {data: withdrawAllData, writeAsync: withdrawAllFromVault} = useContractWrite(withdrawAllConfig)
-  const {isLoading: isWithdrawAllLoading, isSuccess: isWithdrawAllSuccess} = useWaitForTransaction({
+  const {isLoading: isWithdrawAllLoading, isSuccess: isWithdrawAllSuccess, isError: isWithdrawAllError, isFetching: isWithdrawAllFetching} = useWaitForTransaction({
     hash: withdrawAllData?.hash,
-  })
-
-  const {config: depositAllConfig} = usePrepareContractWrite({
-    address: vaultAddress,
-    args: [],
-    functionName: "depositAll",
-    abi
-  })
-
-  const {data: depositAllData, writeAsync: depositAllFromVault} = useContractWrite(depositAllConfig)
-  const {isLoading: isDepositAllLoading, isSuccess: isDepositAllSuccess} = useWaitForTransaction({
-    hash: depositAllData?.hash,
   })
 
   return {
     withdraw: {
       isLoading: isWithdrawLoading,
       isSuccess: isWithdrawSuccess,
+      isError: isWithdrawError,
+      isFetching: isWithdrawFetching,
       write: withdrawFromVault,
     },
     deposit: {
       isLoading: isDepositLoading,
       isSuccess: isDepositSuccess,
+      isError: isDepositError,
+      isFetching: isDepositFetching,
       write: depositIntoVault,
     },
     withdrawAll: {
       isLoading: isWithdrawAllLoading,
       isSuccess: isWithdrawAllSuccess,
+      isError: isWithdrawAllError,
+      isFetching: isWithdrawAllFetching,
       write: withdrawAllFromVault,
     },
     depositAll: {
       isLoading: isDepositAllLoading,
       isSuccess: isDepositAllSuccess,
+      isError: isDepositAllError,
+      isFetching: isDepositAllFetching,
       write: depositAllFromVault,
     }
   }
-
 }
