@@ -310,7 +310,7 @@ describe("Cap ERC20 Strategy", () => {
     describe("Performance Fees", () => {
       it("Can change the fee for the devs", async () => {
         const {strategy} = await loadFixture(setupFixture);
-        await strategy.setDevFee(parseEther("0.5"));
+        await strategy.setDevFee(parseUnits("0.5", 6));
         expect(await strategy.getDevFee()).to.equal(parseUnits("0.5", 6));
       })
 
