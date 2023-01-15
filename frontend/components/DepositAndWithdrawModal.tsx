@@ -9,7 +9,7 @@ import {useAccount, useBalance} from 'wagmi';
 import {useContractActions} from '../hooks/useContractActions';
 import {parseUnits} from "ethers/lib/utils";
 import {capitalize} from "../utils/formatters";
-import {useGetUserStakedInVault} from "../hooks/useGetUserStakedInVault";
+import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
 import {APYsContext} from "../contexts/ApyContext";
@@ -42,7 +42,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const [amount, setAmount] = useState<BigNumber>(parseUnits('0', decimals))
   const [visibleAmount, setVisibleAmount] = useState<number>(0)
   const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
-  const {fetchUserStaked, userStaked} = useGetUserStakedInVault(selectedStrategy)
+  const {fetchUserStaked, userStaked} = useGetUserDepositedInVault(selectedStrategy)
   const {[strategyAddress]: apy} = useContext(APYsContext)
   const handleClose = () => setIsOpen(false);
 

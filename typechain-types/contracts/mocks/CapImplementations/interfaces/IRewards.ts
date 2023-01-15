@@ -4,6 +4,7 @@
 import type {
   BaseContract,
   BigNumber,
+  BigNumberish,
   BytesLike,
   CallOverrides,
   ContractTransaction,
@@ -20,45 +21,45 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../../../common";
+} from "../../../../common";
 
-export interface ICapRewardsInterface extends utils.Interface {
+export interface IRewardsInterface extends utils.Interface {
   functions: {
-    "collectReward()": FunctionFragment;
-    "getClaimableReward()": FunctionFragment;
+    "notifyRewardReceived(uint256)": FunctionFragment;
+    "updateRewards(address)": FunctionFragment;
   };
 
   getFunction(
-    nameOrSignatureOrTopic: "collectReward" | "getClaimableReward"
+    nameOrSignatureOrTopic: "notifyRewardReceived" | "updateRewards"
   ): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "collectReward",
-    values?: undefined
+    functionFragment: "notifyRewardReceived",
+    values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "getClaimableReward",
-    values?: undefined
+    functionFragment: "updateRewards",
+    values: [PromiseOrValue<string>]
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "collectReward",
+    functionFragment: "notifyRewardReceived",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getClaimableReward",
+    functionFragment: "updateRewards",
     data: BytesLike
   ): Result;
 
   events: {};
 }
 
-export interface ICapRewards extends BaseContract {
+export interface IRewards extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: ICapRewardsInterface;
+  interface: IRewardsInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,
@@ -80,42 +81,62 @@ export interface ICapRewards extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    collectReward(
+    notifyRewardReceived(
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    getClaimableReward(overrides?: CallOverrides): Promise<[BigNumber]>;
+    updateRewards(
+      account: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
   };
 
-  collectReward(
+  notifyRewardReceived(
+    amount: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  getClaimableReward(overrides?: CallOverrides): Promise<BigNumber>;
+  updateRewards(
+    account: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
 
   callStatic: {
-    collectReward(overrides?: CallOverrides): Promise<void>;
+    notifyRewardReceived(
+      amount: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
-    getClaimableReward(overrides?: CallOverrides): Promise<BigNumber>;
+    updateRewards(
+      account: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {};
 
   estimateGas: {
-    collectReward(
+    notifyRewardReceived(
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    getClaimableReward(overrides?: CallOverrides): Promise<BigNumber>;
+    updateRewards(
+      account: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    collectReward(
+    notifyRewardReceived(
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    getClaimableReward(
-      overrides?: CallOverrides
+    updateRewards(
+      account: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
   };
 }

@@ -5,9 +5,9 @@
 import { Contract, Signer, utils } from "ethers";
 import type { Provider } from "@ethersproject/providers";
 import type {
-  ICapPool,
-  ICapPoolInterface,
-} from "../../../../contracts/interfaces/cap/ICapPool";
+  IRewards,
+  IRewardsInterface,
+} from "../../../../../contracts/mocks/CapImplementations/interfaces/IRewards";
 
 const _abi = [
   {
@@ -18,9 +18,9 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "deposit",
+    name: "notifyRewardReceived",
     outputs: [],
-    stateMutability: "payable",
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -31,41 +31,22 @@ const _abi = [
         type: "address",
       },
     ],
-    name: "getCurrencyBalance",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "currencyAmount",
-        type: "uint256",
-      },
-    ],
-    name: "withdraw",
+    name: "updateRewards",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
 ] as const;
 
-export class ICapPool__factory {
+export class IRewards__factory {
   static readonly abi = _abi;
-  static createInterface(): ICapPoolInterface {
-    return new utils.Interface(_abi) as ICapPoolInterface;
+  static createInterface(): IRewardsInterface {
+    return new utils.Interface(_abi) as IRewardsInterface;
   }
   static connect(
     address: string,
     signerOrProvider: Signer | Provider
-  ): ICapPool {
-    return new Contract(address, _abi, signerOrProvider) as ICapPool;
+  ): IRewards {
+    return new Contract(address, _abi, signerOrProvider) as IRewards;
   }
 }

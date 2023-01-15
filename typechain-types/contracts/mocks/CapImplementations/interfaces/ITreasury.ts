@@ -9,7 +9,6 @@ import type {
   CallOverrides,
   ContractTransaction,
   Overrides,
-  PayableOverrides,
   PopulatedTransaction,
   Signer,
   utils,
@@ -22,48 +21,42 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../../../common";
+} from "../../../../common";
 
-export interface ICapPoolInterface extends utils.Interface {
+export interface ITreasuryInterface extends utils.Interface {
   functions: {
-    "deposit(uint256)": FunctionFragment;
-    "getCurrencyBalance(address)": FunctionFragment;
-    "withdraw(uint256)": FunctionFragment;
+    "fundOracle(address,uint256)": FunctionFragment;
+    "notifyFeeReceived(address,uint256)": FunctionFragment;
   };
 
   getFunction(
-    nameOrSignatureOrTopic: "deposit" | "getCurrencyBalance" | "withdraw"
+    nameOrSignatureOrTopic: "fundOracle" | "notifyFeeReceived"
   ): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "deposit",
-    values: [PromiseOrValue<BigNumberish>]
+    functionFragment: "fundOracle",
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "getCurrencyBalance",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "withdraw",
-    values: [PromiseOrValue<BigNumberish>]
+    functionFragment: "notifyFeeReceived",
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
 
-  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "fundOracle", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "getCurrencyBalance",
+    functionFragment: "notifyFeeReceived",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
   events: {};
 }
 
-export interface ICapPool extends BaseContract {
+export interface ITreasury extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: ICapPoolInterface;
+  interface: ITreasuryInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,
@@ -85,50 +78,41 @@ export interface ICapPool extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    deposit(
+    fundOracle(
+      destination: PromiseOrValue<string>,
       amount: PromiseOrValue<BigNumberish>,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    getCurrencyBalance(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    withdraw(
-      currencyAmount: PromiseOrValue<BigNumberish>,
+    notifyFeeReceived(
+      currency: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
   };
 
-  deposit(
+  fundOracle(
+    destination: PromiseOrValue<string>,
     amount: PromiseOrValue<BigNumberish>,
-    overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  getCurrencyBalance(
-    account: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  withdraw(
-    currencyAmount: PromiseOrValue<BigNumberish>,
+  notifyFeeReceived(
+    currency: PromiseOrValue<string>,
+    amount: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    deposit(
+    fundOracle(
+      destination: PromiseOrValue<string>,
       amount: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    getCurrencyBalance(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    withdraw(
-      currencyAmount: PromiseOrValue<BigNumberish>,
+    notifyFeeReceived(
+      currency: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
   };
@@ -136,35 +120,29 @@ export interface ICapPool extends BaseContract {
   filters: {};
 
   estimateGas: {
-    deposit(
+    fundOracle(
+      destination: PromiseOrValue<string>,
       amount: PromiseOrValue<BigNumberish>,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    getCurrencyBalance(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    withdraw(
-      currencyAmount: PromiseOrValue<BigNumberish>,
+    notifyFeeReceived(
+      currency: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    deposit(
+    fundOracle(
+      destination: PromiseOrValue<string>,
       amount: PromiseOrValue<BigNumberish>,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    getCurrencyBalance(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    withdraw(
-      currencyAmount: PromiseOrValue<BigNumberish>,
+    notifyFeeReceived(
+      currency: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
   };

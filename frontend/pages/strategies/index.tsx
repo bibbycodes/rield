@@ -2,16 +2,20 @@ import {availableStrategies} from '../../model/strategy';
 import StrategyCard from '../../components/StrategyCard';
 import {useState} from 'react';
 import DepositAndWithdrawModal from '../../components/DepositAndWithdrawModal';
-import {useGetUserStaked} from "../../hooks/useGetUserStaked";
-import {Typography} from "@mui/material";
+import {useTotalDollarAmountDeposited} from "../../hooks/useTotalDollarAmountDeposited";
+import {WithLoader} from "../../components/WithLoader";
 
 export default function Compound() {
   const [isStrategyDetailsModalOpen, setIsStrategyDetailsModalOpen] = useState<boolean>(false);
-  const {userStaked} = useGetUserStaked()
+  const {totalDollarAmountDeposited} = useTotalDollarAmountDeposited()
 
   return <>
-    <div>
-      <Typography className={`text-2xl text-tPrimary mb-4`}>Total Deposits: ${userStaked}</Typography>
+    <div className={`flex`}>
+      <span className={`flex text-2xl text-tPrimary mb-4 w-full`}>
+        Total Deposits: <WithLoader className={`ml-2 w-16`} type={`text`} isLoading={totalDollarAmountDeposited == null}>
+        <p>${totalDollarAmountDeposited}</p>
+      </WithLoader>
+      </span>
     </div>
     <div className={`grid md:grid-cols-2 grid-cols-1 gap-4`}>
       {availableStrategies.map(strategy => <StrategyCard key={strategy.vaultAddress} strategy={strategy} openModal={setIsStrategyDetailsModalOpen}/>)}

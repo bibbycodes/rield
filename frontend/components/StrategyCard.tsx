@@ -1,15 +1,16 @@
 import {Card, Typography} from '@mui/material';
 import {Strategy} from '../model/strategy';
-import {useGetUserStakedInVault} from "../hooks/useGetUserStakedInVault";
+import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
 import Enable from './Enable';
 import {shortenString} from '../utils/formatters';
 import {StrategyLogos} from "./StrategyLogos";
 import {TokenPricesContext} from "../contexts/TokenPricesContext";
 import {useContext} from "react";
 import {APYsContext} from "../contexts/ApyContext";
+import {WithLoader} from "./WithLoader";
 
 export default function StrategyCard({strategy, openModal}: { strategy: Strategy, openModal: (isOpen: boolean) => void }) {
-  const {userStaked} = useGetUserStakedInVault(strategy)
+  const {userStaked} = useGetUserDepositedInVault(strategy)
   const {prices} = useContext(TokenPricesContext)
   const APYs = useContext(APYsContext)
   const apy = APYs[strategy.strategyAddress]
@@ -17,6 +18,7 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
   const getUserStakedInDollars = (amount: string) => {
     return (parseFloat(amount) * prices[strategy.coinGeckoId]).toFixed(2)
   }
+  
 
   const handleOpenModal = () => {
     openModal(true)
@@ -33,9 +35,11 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
             <Typography
               className={`text-xs text-tSecondary`}>{shortenString(userStaked)} {(strategy.tokenSymbol)}</Typography>
           </div>
-          <div className="flex flex-col my-6 mb-6">
+          <div className="flex flex-col my-6">
             <Typography className="text-xs text-tSecondary">APY</Typography>
-            <Typography className={`text-2xl text-tPrimary`}>{apy}%</Typography>
+            <WithLoader className={`min-w-[5rem]`} type={`text`} isLoading={apy == null}>
+              <Typography className={`text-2xl text-tPrimary`}>{apy}%</Typography>
+            </WithLoader>
           </div>
         </div>
         <Enable

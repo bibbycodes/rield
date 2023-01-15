@@ -3,10 +3,11 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
+import "hardhat/console.sol";
 import "../interfaces/beefy/IStrategyV7.sol";
 
 /**
@@ -56,6 +57,11 @@ contract BeefyVaultV7 is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUp
         return IERC20Upgradeable(strategy.want());
     }
 
+    function decimals() public view virtual override returns (uint8) {
+        address want = address(strategy.want());
+        return ERC20(want).decimals();
+    }
+
     /**
      * @dev It calculates the total underlying value of {token} held by the system.
      * It takes into account the vault contract balance, the strategy contract balance
@@ -96,11 +102,10 @@ contract BeefyVaultV7 is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUp
      */
     function deposit(uint _amount) public nonReentrant {
         strategy.beforeDeposit();
-        
         // The balance of want before transfer
         uint256 _before = balance();
         want().safeTransferFrom(msg.sender, address(this), _amount);
-        
+        uint256 current = balance();
         // transfer to strategy and strategy.deposit        
         earn();
         

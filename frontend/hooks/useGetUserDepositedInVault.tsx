@@ -4,7 +4,7 @@ import {useEffect, useState} from "react";
 import {Strategy} from "../model/strategy";
 import {useGetShareData} from "./useGetShareData";
 
-export const useGetUserStakedInVault = (strategy: Strategy) => {
+export const useGetUserDepositedInVault = (strategy: Strategy) => {
   const [userStaked, setUserStaked] = useState<string>('0');
   const {decimals} = strategy;
   

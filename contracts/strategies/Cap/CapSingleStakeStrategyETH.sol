@@ -9,6 +9,7 @@ import "../Common/StratFeeManager.sol";
 import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/cap/ICapETHPool.sol";
 import "../../interfaces/cap/ICapRewards.sol";
+import "hardhat/console.sol";
 
 contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
     using SafeERC20 for IERC20;
@@ -78,7 +79,7 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
             _harvest();
         }
     }
-
+    
     function harvest() external gasThrottle virtual {
         _harvest();
     }

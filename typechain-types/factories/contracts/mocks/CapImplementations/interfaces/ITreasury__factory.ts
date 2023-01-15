@@ -5,67 +5,58 @@
 import { Contract, Signer, utils } from "ethers";
 import type { Provider } from "@ethersproject/providers";
 import type {
-  ICapPool,
-  ICapPoolInterface,
-} from "../../../../contracts/interfaces/cap/ICapPool";
+  ITreasury,
+  ITreasuryInterface,
+} from "../../../../../contracts/mocks/CapImplementations/interfaces/ITreasury";
 
 const _abi = [
   {
     inputs: [
+      {
+        internalType: "address",
+        name: "destination",
+        type: "address",
+      },
       {
         internalType: "uint256",
         name: "amount",
         type: "uint256",
       },
     ],
-    name: "deposit",
+    name: "fundOracle",
     outputs: [],
-    stateMutability: "payable",
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
     inputs: [
       {
         internalType: "address",
-        name: "account",
+        name: "currency",
         type: "address",
       },
-    ],
-    name: "getCurrencyBalance",
-    outputs: [
       {
         internalType: "uint256",
-        name: "",
+        name: "amount",
         type: "uint256",
       },
     ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "currencyAmount",
-        type: "uint256",
-      },
-    ],
-    name: "withdraw",
+    name: "notifyFeeReceived",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
 ] as const;
 
-export class ICapPool__factory {
+export class ITreasury__factory {
   static readonly abi = _abi;
-  static createInterface(): ICapPoolInterface {
-    return new utils.Interface(_abi) as ICapPoolInterface;
+  static createInterface(): ITreasuryInterface {
+    return new utils.Interface(_abi) as ITreasuryInterface;
   }
   static connect(
     address: string,
     signerOrProvider: Signer | Provider
-  ): ICapPool {
-    return new Contract(address, _abi, signerOrProvider) as ICapPool;
+  ): ITreasury {
+    return new Contract(address, _abi, signerOrProvider) as ITreasury;
   }
 }
