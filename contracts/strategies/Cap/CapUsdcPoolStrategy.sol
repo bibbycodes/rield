@@ -15,6 +15,7 @@ import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/common/IUniswapRouterV3.sol";
 import "../../interfaces/cap/ICapPool.sol";
 import "../../interfaces/cap/ICapRewards.sol";
+import "hardhat/console.sol";
 
 contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
     using SafeERC20 for IERC20;
@@ -24,8 +25,8 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
     address public vault;
     address public rewards;
     address public protocolTokenAddress;
-    uint256 constant DIVISOR = 1 ether;
-    uint256 DEV_FEE = 3 * 10 ** 17;
+    uint256 constant DIVISOR = 10 ** 6;
+    uint256 public DEV_FEE;
     uint256 STAKING_CONTRACT_FEE = 0;
     uint256 CAP_MULTIPLIER = 10 ** 12;
 
@@ -48,6 +49,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         rewards = _rewards;
         token = _token;
         _giveAllowances();
+        DEV_FEE = 3 * 10 ** (ERC20(token).decimals() - 1);
     }
 
 
@@ -69,8 +71,8 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         uint256 wantTokenBal = IERC20(token).balanceOf(address(this));
 
         if (wantTokenBal < _amount) {
-            uint256 amountToWithdraw = _amount - wantTokenBal;
-            ICapPool(pool).withdraw(amountToWithdraw * CAP_MULTIPLIER);
+            uint256 amountToWithdraw = (_amount - wantTokenBal) * CAP_MULTIPLIER;
+            ICapPool(pool).withdraw(amountToWithdraw);
             wantTokenBal = IERC20(token).balanceOf(address(this));
         }
 
@@ -134,7 +136,8 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
 
     // it calculates how much 'wantToken' the strategy has working in the farm.
     function balanceOfPool() public view returns (uint256) {
-        return ICapPool(pool).getCurrencyBalance(address(this));
+        uint256 capPoolAmount = ICapPool(pool).getCurrencyBalance(address(this));
+        return capPoolAmount;
     }
 
     // returns rewards unharvested

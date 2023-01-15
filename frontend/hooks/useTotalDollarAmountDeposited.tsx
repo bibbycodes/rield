@@ -8,9 +8,8 @@ import {availableStrategies} from "../model/strategy";
 import {TokenPricesContext} from "../contexts/TokenPricesContext";
 import {formatDollarAmount} from "../utils/formatters";
 
-
-export const useGetUserStaked = () => {
-  const [userStaked, setUserStaked] = useState<string>();
+export const useTotalDollarAmountDeposited = () => {
+  const [totalDollarAmountDeposited, setTotalDollarAmountDeposited] = useState<string | null>(null);
   const {address: userAddress} = useAccount();
   const {prices} = useContext(TokenPricesContext)
 
@@ -36,30 +35,30 @@ export const useGetUserStaked = () => {
     })
   }
   
-  
   async function getTotalStakedInDollars() {
     const balanceData = await multicall(balanceCalls)
     const pricePerShareData = await multicall(pricePerShareCalls)
     const userStaked: number = balanceData.reduce((acc: any, balance: any, index: number) => {
       const pricePerShare = pricePerShareData[index]
-      console.log({pricePerShare, balance})
-      if (pricePerShare && balance) {
+      if (pricePerShare && balance && Object.keys(prices).length) {
         const decimals = availableStrategies[index].decimals
-        const userStaked = convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(decimals))) ?? '0'
+        const userStaked = convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(decimals)))
         const dollarAmount = parseFloat(userStaked) * prices[availableStrategies[index].coinGeckoId]
         return acc + dollarAmount
       }
       return acc
     }, 0) as number
-    setUserStaked(formatDollarAmount(userStaked) ?? 0)
+    return userStaked
+    
   }
   
-  
   useEffect(() => {
-    getTotalStakedInDollars()
-  }, [userAddress])
+    getTotalStakedInDollars().then(userStaked => {
+      setTotalDollarAmountDeposited(formatDollarAmount(userStaked))
+    })
+  }, [userAddress, prices])
   
   return {
-    userStaked
+    totalDollarAmountDeposited
   }
 }

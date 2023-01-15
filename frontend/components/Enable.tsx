@@ -43,7 +43,7 @@ export default function Enable({ tokenAddress, vaultAddress, openModal, strategy
     )}
 
     {!(isApproved) && (
-        <Button className="w-full bg-accentPrimary hover:bg-accentSecondary" variant="contained"
+        <Button className="w-full bg-accentPrimary hover:bg-accentSecondary p-3" variant="contained"
               onClick={() => address && approve?.()}>Approve</Button>
     )}
   </div>

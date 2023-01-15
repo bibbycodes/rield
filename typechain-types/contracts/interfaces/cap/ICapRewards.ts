@@ -4,7 +4,6 @@
 import type {
   BaseContract,
   BigNumber,
-  BigNumberish,
   BytesLike,
   CallOverrides,
   ContractTransaction,
@@ -25,113 +24,29 @@ import type {
 
 export interface ICapRewardsInterface extends utils.Interface {
   functions: {
-    "UNIT()": FunctionFragment;
     "collectReward()": FunctionFragment;
-    "cumulativeRewardPerTokenStored()": FunctionFragment;
-    "currency()": FunctionFragment;
     "getClaimableReward()": FunctionFragment;
-    "notifyRewardReceived(uint256)": FunctionFragment;
-    "owner()": FunctionFragment;
-    "pendingReward()": FunctionFragment;
-    "pool()": FunctionFragment;
-    "router()": FunctionFragment;
-    "setOwner(address)": FunctionFragment;
-    "setRouter(address)": FunctionFragment;
-    "trading()": FunctionFragment;
-    "treasury()": FunctionFragment;
-    "updateRewards(address)": FunctionFragment;
   };
 
   getFunction(
-    nameOrSignatureOrTopic:
-      | "UNIT"
-      | "collectReward"
-      | "cumulativeRewardPerTokenStored"
-      | "currency"
-      | "getClaimableReward"
-      | "notifyRewardReceived"
-      | "owner"
-      | "pendingReward"
-      | "pool"
-      | "router"
-      | "setOwner"
-      | "setRouter"
-      | "trading"
-      | "treasury"
-      | "updateRewards"
+    nameOrSignatureOrTopic: "collectReward" | "getClaimableReward"
   ): FunctionFragment;
 
-  encodeFunctionData(functionFragment: "UNIT", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "collectReward",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "cumulativeRewardPerTokenStored",
-    values?: undefined
-  ): string;
-  encodeFunctionData(functionFragment: "currency", values?: undefined): string;
-  encodeFunctionData(
     functionFragment: "getClaimableReward",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "notifyRewardReceived",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "pendingReward",
-    values?: undefined
-  ): string;
-  encodeFunctionData(functionFragment: "pool", values?: undefined): string;
-  encodeFunctionData(functionFragment: "router", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "setOwner",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setRouter",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(functionFragment: "trading", values?: undefined): string;
-  encodeFunctionData(functionFragment: "treasury", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "updateRewards",
-    values: [PromiseOrValue<string>]
   ): string;
 
-  decodeFunctionResult(functionFragment: "UNIT", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "collectReward",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "cumulativeRewardPerTokenStored",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "currency", data: BytesLike): Result;
-  decodeFunctionResult(
     functionFragment: "getClaimableReward",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "notifyRewardReceived",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "pendingReward",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "pool", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "router", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "setOwner", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "setRouter", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "trading", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "treasury", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "updateRewards",
     data: BytesLike
   ): Result;
 
@@ -165,240 +80,42 @@ export interface ICapRewards extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    UNIT(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     collectReward(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    cumulativeRewardPerTokenStored(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    currency(overrides?: CallOverrides): Promise<[string]>;
-
     getClaimableReward(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    notifyRewardReceived(
-      amount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<[string]>;
-
-    pendingReward(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    pool(overrides?: CallOverrides): Promise<[string]>;
-
-    router(overrides?: CallOverrides): Promise<[string]>;
-
-    setOwner(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    setRouter(
-      _router: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    trading(overrides?: CallOverrides): Promise<[string]>;
-
-    treasury(overrides?: CallOverrides): Promise<[string]>;
-
-    updateRewards(
-      account: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
   };
-
-  UNIT(overrides?: CallOverrides): Promise<BigNumber>;
 
   collectReward(
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  cumulativeRewardPerTokenStored(overrides?: CallOverrides): Promise<BigNumber>;
-
-  currency(overrides?: CallOverrides): Promise<string>;
-
   getClaimableReward(overrides?: CallOverrides): Promise<BigNumber>;
 
-  notifyRewardReceived(
-    amount: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
-
-  pendingReward(overrides?: CallOverrides): Promise<BigNumber>;
-
-  pool(overrides?: CallOverrides): Promise<string>;
-
-  router(overrides?: CallOverrides): Promise<string>;
-
-  setOwner(
-    newOwner: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  setRouter(
-    _router: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  trading(overrides?: CallOverrides): Promise<string>;
-
-  treasury(overrides?: CallOverrides): Promise<string>;
-
-  updateRewards(
-    account: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
-    UNIT(overrides?: CallOverrides): Promise<BigNumber>;
-
     collectReward(overrides?: CallOverrides): Promise<void>;
 
-    cumulativeRewardPerTokenStored(
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    currency(overrides?: CallOverrides): Promise<string>;
-
     getClaimableReward(overrides?: CallOverrides): Promise<BigNumber>;
-
-    notifyRewardReceived(
-      amount: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    owner(overrides?: CallOverrides): Promise<string>;
-
-    pendingReward(overrides?: CallOverrides): Promise<BigNumber>;
-
-    pool(overrides?: CallOverrides): Promise<string>;
-
-    router(overrides?: CallOverrides): Promise<string>;
-
-    setOwner(
-      newOwner: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setRouter(
-      _router: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    trading(overrides?: CallOverrides): Promise<string>;
-
-    treasury(overrides?: CallOverrides): Promise<string>;
-
-    updateRewards(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {};
 
   estimateGas: {
-    UNIT(overrides?: CallOverrides): Promise<BigNumber>;
-
     collectReward(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    cumulativeRewardPerTokenStored(
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    currency(overrides?: CallOverrides): Promise<BigNumber>;
-
     getClaimableReward(overrides?: CallOverrides): Promise<BigNumber>;
-
-    notifyRewardReceived(
-      amount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    pendingReward(overrides?: CallOverrides): Promise<BigNumber>;
-
-    pool(overrides?: CallOverrides): Promise<BigNumber>;
-
-    router(overrides?: CallOverrides): Promise<BigNumber>;
-
-    setOwner(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setRouter(
-      _router: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    trading(overrides?: CallOverrides): Promise<BigNumber>;
-
-    treasury(overrides?: CallOverrides): Promise<BigNumber>;
-
-    updateRewards(
-      account: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    UNIT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     collectReward(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    cumulativeRewardPerTokenStored(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    currency(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     getClaimableReward(
       overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    notifyRewardReceived(
-      amount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    pendingReward(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    pool(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    router(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    setOwner(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setRouter(
-      _router: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    trading(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    treasury(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    updateRewards(
-      account: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
   };
 }

@@ -29,6 +29,7 @@ import type {
 
 export interface CapSingleStakeStrategyInterface extends utils.Interface {
   functions: {
+    "DEV_FEE()": FunctionFragment;
     "balanceOf()": FunctionFragment;
     "balanceOfPool()": FunctionFragment;
     "balanceOfWant()": FunctionFragment;
@@ -66,6 +67,7 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
 
   getFunction(
     nameOrSignatureOrTopic:
+      | "DEV_FEE"
       | "balanceOf"
       | "balanceOfPool"
       | "balanceOfWant"
@@ -101,6 +103,7 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
       | "withdraw"
   ): FunctionFragment;
 
+  encodeFunctionData(functionFragment: "DEV_FEE", values?: undefined): string;
   encodeFunctionData(functionFragment: "balanceOf", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "balanceOfPool",
@@ -189,6 +192,7 @@ export interface CapSingleStakeStrategyInterface extends utils.Interface {
     values: [PromiseOrValue<BigNumberish>]
   ): string;
 
+  decodeFunctionResult(functionFragment: "DEV_FEE", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "balanceOfPool",
@@ -380,6 +384,8 @@ export interface CapSingleStakeStrategy extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    DEV_FEE(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     balanceOf(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     balanceOfPool(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -483,6 +489,8 @@ export interface CapSingleStakeStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
   };
+
+  DEV_FEE(overrides?: CallOverrides): Promise<BigNumber>;
 
   balanceOf(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -588,6 +596,8 @@ export interface CapSingleStakeStrategy extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    DEV_FEE(overrides?: CallOverrides): Promise<BigNumber>;
+
     balanceOf(overrides?: CallOverrides): Promise<BigNumber>;
 
     balanceOfPool(overrides?: CallOverrides): Promise<BigNumber>;
@@ -717,6 +727,8 @@ export interface CapSingleStakeStrategy extends BaseContract {
   };
 
   estimateGas: {
+    DEV_FEE(overrides?: CallOverrides): Promise<BigNumber>;
+
     balanceOf(overrides?: CallOverrides): Promise<BigNumber>;
 
     balanceOfPool(overrides?: CallOverrides): Promise<BigNumber>;
@@ -822,6 +834,8 @@ export interface CapSingleStakeStrategy extends BaseContract {
   };
 
   populateTransaction: {
+    DEV_FEE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     balanceOf(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     balanceOfPool(overrides?: CallOverrides): Promise<PopulatedTransaction>;
