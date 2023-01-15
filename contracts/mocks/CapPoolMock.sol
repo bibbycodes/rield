@@ -37,9 +37,8 @@ contract CapPoolMock {
     }
     
     function withdraw(uint256 currencyAmount) external  payable {
-        console.log("withdraw", currencyAmount);
-        deposits[msg.sender] -= currencyAmount;
         currencyAmount = currencyAmount * (10**decimals) / UNIT;
+        deposits[msg.sender] -= currencyAmount;
         if (token == address(0)) {
             payable(msg.sender).sendValue(currencyAmount);
         } else {

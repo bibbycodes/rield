@@ -221,7 +221,7 @@ describe("Cap ERC20 Strategy", () => {
       expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 6));
       expect(await capPool.deposits(strategy.address)).to.equal(parseUnits("1.5", 6));
 
-      await vault.connect(bob).withdraw(parseUnits("0.5, 6"))
+      await vault.connect(bob).withdraw(parseUnits("0.5", 6))
       expect(await usdcToken.balanceOf(bob.address)).to.equal(parseUnits("999.5", 6));
       expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 6));
       expect(await capPool.deposits(strategy.address)).to.equal(parseUnits("1", 6));
@@ -249,7 +249,7 @@ describe("Cap ERC20 Strategy", () => {
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_USDC);
       expect(await vault.balanceOf(bob.address)).to.equal(ONE_USDC);
 
-      const ownerFee = parseUnits("0.3, 6");
+      const ownerFee = parseUnits("0.3", 6);
 
       await strategy.harvest()
 

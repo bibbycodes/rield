@@ -71,7 +71,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         uint256 wantTokenBal = IERC20(token).balanceOf(address(this));
 
         if (wantTokenBal < _amount) {
-            uint256 amountToWithdraw = _amount - wantTokenBal;
+            uint256 amountToWithdraw = (_amount - wantTokenBal) * CAP_MULTIPLIER;
             ICapPool(pool).withdraw(amountToWithdraw);
             wantTokenBal = IERC20(token).balanceOf(address(this));
         }
