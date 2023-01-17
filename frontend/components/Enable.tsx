@@ -6,9 +6,9 @@ import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedSt
 import {Strategy} from "../model/strategy";
 
 interface StrategyDetailsModalProps {
-  tokenAddress: Address, 
-  vaultAddress: Address, 
-  openModal: () => void, 
+  tokenAddress: Address,
+  vaultAddress: Address,
+  openModal: () => void,
   strategy: Strategy
 }
 
@@ -16,7 +16,7 @@ export default function Enable({ tokenAddress, vaultAddress, openModal, strategy
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
   const {address} = useAccount();
   const {approve, isApproved} = useApproveToken(tokenAddress, vaultAddress, address);
-  const {data: balance} = useBalance({token: tokenAddress, address})
+  const {data: balance} = useBalance({token: vaultAddress, address})
   const {setAction, setSelectedStrategy} = useContext(SelectedStrategyContext)
 
   const handleClick = (action: TransactionAction) => {
@@ -24,7 +24,7 @@ export default function Enable({ tokenAddress, vaultAddress, openModal, strategy
     setSelectedStrategy(strategy)
     openModal()
   }
-  
+
   const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
 
   return <div>
@@ -45,8 +45,8 @@ export default function Enable({ tokenAddress, vaultAddress, openModal, strategy
     )}
 
     {showApprove && (
-        <Button 
-          className="w-full bg-accentPrimary hover:bg-accentSecondary p-3" 
+        <Button
+          className="w-full bg-accentPrimary hover:bg-accentSecondary p-3"
           variant="contained"
           onClick={() => address && approve?.()}
         >Approve
