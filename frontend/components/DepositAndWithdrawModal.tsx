@@ -48,7 +48,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
   const {[strategyAddress]: apy} = useContext(APYsContext)
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
-  
+
   const handleClose = () => setIsOpen(false);
 
   const performAction = async (action: TransactionAction) => {
@@ -61,7 +61,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
     await fetchUserStaked()
     handleClose()
   }
-  
+
   const handleShowToast = (action: TransactionAction) => {
     const {isError, isFetching} = actions[action]
     const actionName = capitalize(action)
@@ -100,7 +100,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
       setVisibleAmount(visibleAmount)
     } else {
       if (action === 'withdraw') {
-        const multiplier = BigNumber.from(10 ** 18)
+        const multiplier = BigNumber.from(10).pow(decimals)
         const withdrawAmountInWant = parseUnits(newAmount.toString(), decimals)
         const amountStaked = parseUnits(userStaked, decimals)
         const ratioOfWithdrawAmountToStakedAmount = withdrawAmountInWant.mul(multiplier).div(amountStaked)
@@ -174,7 +174,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           </Box>
 
           <Box className={`flex flex-row justify-between`}>
-            <Button 
+            <Button
               className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary`}
               onClick={() => performAction(action)}>{action}
             </Button>
