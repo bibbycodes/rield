@@ -1,8 +1,7 @@
-import {createContext, Dispatch, ReactNode, SetStateAction, useEffect, useState,} from "react";
+import {createContext, ReactNode, useEffect, useState,} from "react";
 import {availableStrategies} from "../model/strategy";
 import axios from "axios";
 
-export type SetFunction<T> = Dispatch<SetStateAction<T>>
 export type CoinGeckoPrices = {
   [coinGeckoId: string]: number
 }

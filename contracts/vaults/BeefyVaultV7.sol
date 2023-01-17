@@ -153,8 +153,6 @@ contract BeefyVaultV7 is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUp
         // ratio of want in proportion to withdrawal amount          
         uint256 userOwedWant = (balance() * _shares) / totalSupply();
         _burn(msg.sender, _shares);
-        
-
         // how much want is in the vault        
         uint vaultWantBal = want().balanceOf(address(this));
         // if the vault has less want than the user is withdrawing, 

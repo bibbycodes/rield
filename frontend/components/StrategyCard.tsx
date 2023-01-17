@@ -18,7 +18,6 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
   const getUserStakedInDollars = (amount: string) => {
     return (parseFloat(amount) * prices[strategy.coinGeckoId]).toFixed(2)
   }
-  
 
   const handleOpenModal = () => {
     openModal(true)

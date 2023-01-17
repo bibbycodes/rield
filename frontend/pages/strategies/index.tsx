@@ -14,8 +14,13 @@ export default function Compound() {
     <div className={`flex`}>
       <Toast/>
       <span className={`flex text-2xl text-tPrimary mb-4 w-full`}>
-        Total Deposits: <WithLoader className={`ml-2 w-16`} type={`text`} isLoading={totalDollarAmountDeposited == null}>
-        <p>${totalDollarAmountDeposited}</p>
+        Total Deposits: 
+        <WithLoader 
+          className={`ml-2 w-16`} 
+          type={`text`} 
+          isLoading={totalDollarAmountDeposited == null}
+        >
+          <p>${totalDollarAmountDeposited}</p>
       </WithLoader>
       </span>
     </div>

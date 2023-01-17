@@ -24,9 +24,11 @@ export default function Enable({ tokenAddress, vaultAddress, openModal, strategy
     setSelectedStrategy(strategy)
     openModal()
   }
+  
+  const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
 
   return <div>
-    {(isApproved) && (
+    {(!showApprove) && (
       <div className="grid grid-cols-2 gap-3">
         <Button
           onClick={() => handleClick("deposit")}
@@ -42,9 +44,13 @@ export default function Enable({ tokenAddress, vaultAddress, openModal, strategy
       </div>
     )}
 
-    {!(isApproved) && (
-        <Button className="w-full bg-accentPrimary hover:bg-accentSecondary p-3" variant="contained"
-              onClick={() => address && approve?.()}>Approve</Button>
+    {showApprove && (
+        <Button 
+          className="w-full bg-accentPrimary hover:bg-accentSecondary p-3" 
+          variant="contained"
+          onClick={() => address && approve?.()}
+        >Approve
+        </Button>
     )}
   </div>
 }

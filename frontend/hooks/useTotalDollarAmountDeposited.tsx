@@ -23,7 +23,7 @@ export const useTotalDollarAmountDeposited = () => {
       }
     })
   }
-  
+
   const pricePerShareCalls = {
     contracts: availableStrategies.map(strategy => {
       return {
@@ -34,11 +34,11 @@ export const useTotalDollarAmountDeposited = () => {
       }
     })
   }
-  
+
   async function getTotalStakedInDollars() {
     const balanceData = await multicall(balanceCalls)
     const pricePerShareData = await multicall(pricePerShareCalls)
-    const userStaked: number = balanceData.reduce((acc: any, balance: any, index: number) => {
+    return balanceData.reduce((acc: any, balance: any, index: number) => {
       const pricePerShare = pricePerShareData[index]
       if (pricePerShare && balance && Object.keys(prices).length) {
         const decimals = availableStrategies[index].decimals
@@ -48,16 +48,16 @@ export const useTotalDollarAmountDeposited = () => {
       }
       return acc
     }, 0) as number
-    return userStaked
-    
   }
-  
+
   useEffect(() => {
-    getTotalStakedInDollars().then(userStaked => {
-      setTotalDollarAmountDeposited(formatDollarAmount(userStaked))
-    })
+    getTotalStakedInDollars()
+      .then(userStaked => {
+        setTotalDollarAmountDeposited(formatDollarAmount(userStaked))
+      })
+      .catch(console.log)
   }, [userAddress, prices])
-  
+
   return {
     totalDollarAmountDeposited
   }

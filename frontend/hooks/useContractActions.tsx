@@ -18,7 +18,12 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
   })
 
   const {data: depositData, writeAsync: depositIntoVault} = useContractWrite(depositConfig)
-  const {isLoading: isDepositLoading, isSuccess: isDepositSuccess, isError: isDepositError, isFetching: isDepositFetching} = useWaitForTransaction({
+  const {
+    isLoading: isDepositLoading,
+    isSuccess: isDepositSuccess,
+    isError: isDepositError,
+    isFetching: isDepositFetching
+  } = useWaitForTransaction({
     hash: depositData?.hash,
   })
 
@@ -30,31 +35,56 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
   })
 
   const {data: depositAllData, writeAsync: depositAllFromVault} = useContractWrite(depositAllConfig)
-  const {isLoading: isDepositAllLoading, isSuccess: isDepositAllSuccess, isError: isDepositAllError, isFetching: isDepositAllFetching} = useWaitForTransaction({
+  const {
+    isLoading: isDepositAllLoading,
+    isSuccess: isDepositAllSuccess,
+    isError: isDepositAllError,
+    isFetching: isDepositAllFetching
+  } = useWaitForTransaction({
     hash: depositAllData?.hash,
   })
 
   const {config: withdrawConfig} = usePrepareContractWrite({
     address: vaultAddress,
-    args: [amount],
+    args: [
+      amount,
+      {gasLimit: 1300000}],
     functionName: "withdraw",
-    abi
+    abi,
+    onSettled(data, error) {
+      console.log('Settled', {data, error});
+    },
   })
-  
+
   const {data: withdrawData, writeAsync: withdrawFromVault} = useContractWrite(withdrawConfig)
-  const {isLoading: isWithdrawLoading, isSuccess: isWithdrawSuccess, isError: isWithdrawError, isFetching: isWithdrawFetching} = useWaitForTransaction({
+  const {
+    isLoading: isWithdrawLoading,
+    isSuccess: isWithdrawSuccess,
+    isError: isWithdrawError,
+    isFetching: isWithdrawFetching
+  } = useWaitForTransaction({
     hash: withdrawData?.hash,
   })
 
   const {config: withdrawAllConfig} = usePrepareContractWrite({
     address: vaultAddress,
-    args: [],
+    args: [{
+      gasLimit: 1300000,
+    }],
     functionName: "withdrawAll",
-    abi
+    abi,
+    onSettled(data, error) {
+      console.log('Settled', {data, error});
+    },
   })
 
   const {data: withdrawAllData, writeAsync: withdrawAllFromVault} = useContractWrite(withdrawAllConfig)
-  const {isLoading: isWithdrawAllLoading, isSuccess: isWithdrawAllSuccess, isError: isWithdrawAllError, isFetching: isWithdrawAllFetching} = useWaitForTransaction({
+  const {
+    isLoading: isWithdrawAllLoading,
+    isSuccess: isWithdrawAllSuccess,
+    isError: isWithdrawAllError,
+    isFetching: isWithdrawAllFetching
+  } = useWaitForTransaction({
     hash: withdrawAllData?.hash,
   })
 

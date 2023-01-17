@@ -37,8 +37,10 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress, decimals} = selectedStrategy;
   const {address: userAddress} = useAccount();
   const {data: tokenBalanceData} = useBalance({token: tokenAddress, address: userAddress})
+  const {data: vaultTokenBalanceData} = useBalance({token: vaultAddress, address: userAddress})
   const formattedTokenBalance = tokenBalanceData?.formatted
   const tokenBalanceBN = tokenBalanceData?.value
+  const vaultTokenBalanceBn = vaultTokenBalanceData?.value
   const {fullPricePerShare} = useGetShareData(selectedStrategy)
   const [amount, setAmount] = useState<BigNumber>(parseUnits('0', decimals))
   const [visibleAmount, setVisibleAmount] = useState<number>(0)
@@ -51,6 +53,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
   const performAction = async (action: TransactionAction) => {
     const fn = actions[action]?.write
+    console.log({fn, action, actionData: actions[action]})
     const tx = await fn?.()
     await tx?.wait().then(() => {
       handleShowToast(action)
@@ -97,7 +100,12 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
       setVisibleAmount(visibleAmount)
     } else {
       if (action === 'withdraw') {
-        const numSharesBN = (fullPricePerShare as BigNumber).mul(parseUnits(newAmount.toString(), decimals)).div(parseUnits('1', decimals))
+        const multiplier = BigNumber.from(10 ** 18)
+        const withdrawAmountInWant = parseUnits(newAmount.toString(), decimals)
+        const amountStaked = parseUnits(userStaked, decimals)
+        const ratioOfWithdrawAmountToStakedAmount = withdrawAmountInWant.mul(multiplier).div(amountStaked)
+        const numSharesBN = ratioOfWithdrawAmountToStakedAmount.mul(vaultTokenBalanceBn as BigNumber).div(multiplier)
+        console.log({numSharesBN, staked: amountStaked, newAmount, userStaked, wantAmount: withdrawAmountInWant,fullPricePerShare, ratioOfWantToWithdraw: ratioOfWithdrawAmountToStakedAmount})
         setAmount(numSharesBN)
         setVisibleAmount(newAmount)
       } else {
