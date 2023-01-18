@@ -1,21 +1,21 @@
 import * as React from 'react';
-import {useContext, useState} from 'react';
+import { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import {Link, TextField} from '@mui/material';
-import {useAccount, useBalance} from 'wagmi';
-import {useContractActions} from '../hooks/useContractActions';
-import {parseUnits} from "ethers/lib/utils";
-import {capitalize} from "../utils/formatters";
-import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
-import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
+import { Link, TextField } from '@mui/material';
+import { useAccount, useBalance } from 'wagmi';
+import { useContractActions } from '../hooks/useContractActions';
+import { parseUnits } from "ethers/lib/utils";
+import { capitalize } from "../utils/formatters";
+import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
+import { SelectedStrategyContext, TransactionAction } from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
-import {APYsContext} from "../contexts/ApyContext";
-import {useGetShareData} from "../hooks/useGetShareData";
-import {BigNumber} from "ethers";
-import {ToastContext} from "../contexts/ToastContext";
+import { APYsContext } from "../contexts/ApyContext";
+import { useGetShareData } from "../hooks/useGetShareData";
+import { BigNumber } from "ethers";
+import { ToastContext } from "../contexts/ToastContext";
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -41,7 +41,6 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const formattedTokenBalance = tokenBalanceData?.formatted
   const tokenBalanceBN = tokenBalanceData?.value
   const vaultTokenBalanceBn = vaultTokenBalanceData?.value
-  const {fullPricePerShare} = useGetShareData(selectedStrategy)
   const [amount, setAmount] = useState<BigNumber>(parseUnits('0', decimals))
   const [visibleAmount, setVisibleAmount] = useState<number>(0)
   const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
@@ -77,8 +76,8 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const handleSetMax = () => {
     if (tokenBalanceBN && formattedTokenBalance) {
       const amountToSet = (action === 'deposit' || action === 'depositAll') ? +formattedTokenBalance : +userStaked
-      setAmount(tokenBalanceBN)
       setVisibleAmount(amountToSet)
+      syncAmountWithVisibleAmount(amountToSet)
     }
   }
 
@@ -89,13 +88,14 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
     }
   }
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const newAmount = +e.target.value
-    const isNullOrUndefined = e.target.value == null || e.target.value === '';
+  function syncAmountWithVisibleAmount(value: string | number) {
+    const newAmount = +value
+    const isNullOrUndefined = value == null || value === '';
+
     if (isNullOrUndefined) {
       setAmount(BigNumber.from(0))
       setVisibleAmount(0)
-    } else if (isNaN(newAmount)) {
+    } else if (!/[0-9]+[.,]?[0-9]*/.test(value.toString())) {
       setAmount(amount)
       setVisibleAmount(visibleAmount)
     } else {
@@ -105,7 +105,6 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
         const amountStaked = parseUnits(userStaked, decimals)
         const ratioOfWithdrawAmountToStakedAmount = withdrawAmountInWant.mul(multiplier).div(amountStaked)
         const numSharesBN = ratioOfWithdrawAmountToStakedAmount.mul(vaultTokenBalanceBn as BigNumber).div(multiplier)
-        console.log({numSharesBN, staked: amountStaked, newAmount, userStaked, wantAmount: withdrawAmountInWant,fullPricePerShare, ratioOfWantToWithdraw: ratioOfWithdrawAmountToStakedAmount})
         setAmount(numSharesBN)
         setVisibleAmount(newAmount)
       } else {
@@ -114,6 +113,11 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
         setVisibleAmount(newAmount)
       }
     }
+  }
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const visibleAmount = e.target.value;
+    syncAmountWithVisibleAmount(visibleAmount);
   }
 
   return (
@@ -163,7 +167,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
               >
               </TextField>
               <div
-                className={`text-tSecondary w-1/3 bg-none ml-auto`}
+                className={`text-tSecondary w-1/3 bg-none ml-auto hover:text-accentPrimary`}
                 onClick={handleSetMax}
               >
                 <Typography className={`w-4 ml-auto mr-8`}>
