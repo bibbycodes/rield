@@ -48,7 +48,8 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
     address: vaultAddress,
     args: [
       amount,
-      {gasLimit: 1300000}],
+      {gasLimit: 1300000}
+    ],
     functionName: "withdraw",
     abi,
     onSettled(data, error) {

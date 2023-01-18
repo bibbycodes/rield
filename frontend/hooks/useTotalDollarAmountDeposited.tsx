@@ -1,12 +1,12 @@
 import {useAccount} from "wagmi";
 import {abi} from "../../artifacts/contracts/vaults/BeefyVaultV7.sol/BeefyVaultV7.json";
 import {BigNumber} from "ethers";
-import {convertToEther} from "../lib/utils";
 import {useContext, useEffect, useState} from "react";
 import {multicall} from "@wagmi/core";
 import {availableStrategies} from "../model/strategy";
 import {TokenPricesContext} from "../contexts/TokenPricesContext";
 import {formatDollarAmount} from "../utils/formatters";
+import {formatUnits} from "ethers/lib/utils";
 
 export const useTotalDollarAmountDeposited = () => {
   const [totalDollarAmountDeposited, setTotalDollarAmountDeposited] = useState<string | null>(null);
@@ -22,6 +22,11 @@ export const useTotalDollarAmountDeposited = () => {
         args: [userAddress]
       }
     })
+  }
+  
+  const calculateUserStakedInDollars = (balance: BigNumber, price: number, pricePerShare: BigNumber, decimals: number) => {
+    const userStaked = formatUnits(balance.mul(pricePerShare).div(BigNumber.from(10).pow(decimals)), 6)
+    return parseFloat(userStaked) * price
   }
 
   const pricePerShareCalls = {
@@ -39,11 +44,11 @@ export const useTotalDollarAmountDeposited = () => {
     const balanceData = await multicall(balanceCalls)
     const pricePerShareData = await multicall(pricePerShareCalls)
     return balanceData.reduce((acc: any, balance: any, index: number) => {
-      const pricePerShare = pricePerShareData[index]
+      const pricePerShare = pricePerShareData[index] as BigNumber
       if (pricePerShare && balance && Object.keys(prices).length) {
         const decimals = availableStrategies[index].decimals
-        const userStaked = convertToEther((balance).mul(pricePerShare).div(BigNumber.from(10).pow(decimals)))
-        const dollarAmount = parseFloat(userStaked) * prices[availableStrategies[index].coinGeckoId]
+        const price = prices[availableStrategies[index].coinGeckoId]
+        const dollarAmount = calculateUserStakedInDollars(balance, price, pricePerShare, decimals)
         return acc + dollarAmount
       }
       return acc
