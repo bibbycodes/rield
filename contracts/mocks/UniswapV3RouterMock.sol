@@ -1,9 +1,13 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.0;
+
 import "../interfaces/common/IUniswapRouterV3.sol";
 
 contract UniswapV3RouterMock is IUniswapRouterV3 {
     constructor(){
     }
-    
+
     function exactInput(IUniswapRouterV3.ExactInputParams memory params) external payable override returns (uint256 amountOut) {
         return 0;
     }

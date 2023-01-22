@@ -7,13 +7,11 @@ import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../interfaces/gmx/IGMXRouter.sol";
 import "../../interfaces/gmx/IGMXTracker.sol";
 import "../../interfaces/gmx/IGLPManager.sol";
-import "../../interfaces/gmx/IGMXVault.sol";
 import "../../interfaces/gmx/IBeefyVault.sol";
 import "../../interfaces/gmx/IGMXStrategy.sol";
 import "../../utils/GasFeeThrottler.sol";
 import "@openzeppelin-4/contracts/access/Ownable.sol";
 import "@openzeppelin-4/contracts/security/Pausable.sol";
-import "../Common/StratFeeManagerInitializable.sol";
 
 contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
     using SafeERC20 for IERC20;
@@ -36,7 +34,7 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
     uint256 public DEV_FEE;
     uint256 STAKING_CONTRACT_FEE = 0;
     uint MAX_FEE = 5 * 10 ** 17; // 0.50%
-    
+
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
 
@@ -46,9 +44,9 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
     event ChargedFees(uint256 fees, uint256 amount);
 
     constructor(
-        address _token,        // 0x5402B5F40310bDED796c7D0F3FF6683f5C0cFfdf (staked glp)  
-        address _rewardToken,  // 0x82af49447d8a07e3bd95bd0d56f35241523fbab1 (weth)  
-        address _minter,       // 0xb95db5b167d75e6d04227cfffa61069348d271f5 (GMX reward router v2)  
+        address _token,        // 0x5402B5F40310bDED796c7D0F3FF6683f5C0cFfdf (staked glp)
+        address _rewardToken,  // 0x82af49447d8a07e3bd95bd0d56f35241523fbab1 (weth)
+        address _minter,       // 0xb95db5b167d75e6d04227cfffa61069348d271f5 (GMX reward router v2)
         address _chef,         // 0xA906F338CB21815cBc4Bc87ace9e68c87eF8d8F1 (GMX reward router)
         address _vault
     ) {

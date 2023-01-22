@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 import "../interfaces/cap/ICapRewards.sol";
@@ -12,7 +14,7 @@ contract CapRewardsMock is ICapRewards {
     constructor(address _token) {
         token = _token;
     }
-    
+
     event CollectRewards(address indexed user, uint256 amount);
 
     mapping(address => uint256) public rewards;
@@ -20,7 +22,7 @@ contract CapRewardsMock is ICapRewards {
     function init ( address _pool ) external {
         poolContract = _pool;
     }
-    
+
     function collectReward (  ) external {
         console.log("rewardsBal", IERC20(token).balanceOf(address(this)));
         IERC20(token).transfer(msg.sender, 10 ** 6);

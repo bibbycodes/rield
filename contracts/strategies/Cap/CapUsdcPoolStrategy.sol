@@ -122,7 +122,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         if (protocolTokenFeeAmount > 0) {
             IERC20(token).safeTransfer(protocolStakingAddress, protocolTokenFeeAmount);
         }
-        
+
         emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
     }
 
@@ -146,7 +146,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
     function rewardsAvailable() public view returns (uint256) {
         return ICapRewards(rewards).getClaimableReward();
     }
-     
+
 
     function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyOwner {
         harvestOnDeposit = _harvestOnDeposit;
@@ -181,7 +181,6 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
     // called as part of strat migration. Sends all the available funds back to the vault.
     function retireStrat() external {
         require(msg.sender == vault, "!vault");
-        IBeefyVault.StratCandidate memory candidate = IBeefyVault(vault).stratCandidate();
         _harvest();
         uint256 tokenBal = IERC20(token).balanceOf(address(this));
         uint256 poolBal = balanceOfPool();

@@ -58,8 +58,8 @@ contract BeefyVaultV7 is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUp
     }
 
     function decimals() public view virtual override returns (uint8) {
-        address want = address(strategy.want());
-        return ERC20(want).decimals();
+        address _want = address(strategy.want());
+        return ERC20(_want).decimals();
     }
 
     /**
@@ -105,19 +105,18 @@ contract BeefyVaultV7 is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUp
         // The balance of want before transfer
         uint256 _before = balance();
         want().safeTransferFrom(msg.sender, address(this), _amount);
-        uint256 current = balance();
-        // transfer to strategy and strategy.deposit        
+        // transfer to strategy and strategy.deposit
         earn();
-        
+
         // The balance of want after transfer
         uint256 _after = balance();
-        
+
         // The amount of want that was transferred
         _amount = _after - _before;
-        
+
         // Additional check for deflationary tokens
         uint256 shares = 0;
-        // calculate LP tokens to mint for depositor 
+        // calculate LP tokens to mint for depositor
         if (totalSupply() == 0) {
             shares = _amount;
         } else {
@@ -150,13 +149,13 @@ contract BeefyVaultV7 is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUp
      */
     function withdraw(uint256 _shares) public {
         // (vault_want_bal * (withdrawal_amount / total_supply_vault_token)
-        // ratio of want in proportion to withdrawal amount          
+        // ratio of want in proportion to withdrawal amount
         uint256 userOwedWant = (balance() * _shares) / totalSupply();
         _burn(msg.sender, _shares);
-        // how much want is in the vault        
+        // how much want is in the vault
         uint vaultWantBal = want().balanceOf(address(this));
-        // if the vault has less want than the user is withdrawing, 
-        // we need to withdraw from the strategy        
+        // if the vault has less want than the user is withdrawing,
+        // we need to withdraw from the strategy
         if (vaultWantBal < userOwedWant) {
             uint _withdraw = userOwedWant - vaultWantBal;
             strategy.withdraw(_withdraw);
@@ -169,10 +168,10 @@ contract BeefyVaultV7 is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUp
 
         want().safeTransfer(msg.sender, userOwedWant);
     }
-    
-    /** 
+
+    /**
      * @dev Sets the candidate for the new strat to use with this vault.
-     * @param _implementation The address of the candidate strategy.  
+     * @param _implementation The address of the candidate strategy.
      */
     function proposeStrat(address _implementation) public onlyOwner {
         require(address(this) == IStrategyV7(_implementation).vault(), "Proposal not valid for this Vault");
@@ -185,10 +184,10 @@ contract BeefyVaultV7 is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUp
         emit NewStratCandidate(_implementation);
     }
 
-    /** 
-     * @dev It switches the active strat for the strat candidate. After upgrading, the 
-     * candidate implementation is set to the 0x00 address, and proposedTime to a time 
-     * happening in +100 years for safety. 
+    /**
+     * @dev It switches the active strat for the strat candidate. After upgrading, the
+     * candidate implementation is set to the 0x00 address, and proposedTime to a time
+     * happening in +100 years for safety.
      */
 
     function upgradeStrat() public onlyOwner {

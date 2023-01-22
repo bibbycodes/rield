@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 import "../interfaces/cap/ICapRewards.sol";
@@ -15,7 +17,7 @@ contract CapETHRewardsMock is ICapRewards {
     function init ( address _pool ) external {
         poolContract = _pool;
     }
-    
+
     receive() external payable {}
     fallback() external payable {}
 
