@@ -11,7 +11,6 @@ import "../../interfaces/gmx/IGMXStrategy.sol";
 import "../Common/StratFeeManager.sol";
 import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/common/IUniswapRouterV3.sol";
-import 'hardhat/console.sol';
 
 contract StrategyGMX is StrategyManager, GasFeeThrottler {
     using SafeERC20 for IERC20;
@@ -39,7 +38,7 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
         rewardStorage = IGMXRouter(chef).feeGmxTracker();
         balanceTracker = IGMXRouter(chef).stakedGmxTracker();
     }
-    
+
     function want() external view returns (address) {
         return wantToken;
     }

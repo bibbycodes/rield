@@ -22,7 +22,10 @@ export default function StrategyCard({
     if (!prices[strategy.coinGeckoId]) {
       return '-'
     }
-    return (amount.mul(BigNumber.from(prices[strategy.coinGeckoId] * 1000))).div(1000).div(BigNumber.from(10).pow(strategy.decimals)).toString()
+    const balanceInUsd = ethers.utils.formatUnits(
+      amount.mul(prices[strategy.coinGeckoId] * 1000).div(1000),
+      strategy.decimals);
+    return (+balanceInUsd).toFixed(2);
   }
 
   const handleOpenModal = () => {

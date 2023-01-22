@@ -8,12 +8,10 @@ import { Link, TextField } from '@mui/material';
 import { useAccount, useBalance } from 'wagmi';
 import { useContractActions } from '../hooks/useContractActions';
 import { parseUnits } from "ethers/lib/utils";
-import { capitalize } from "../utils/formatters";
 import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
 import { SelectedStrategyContext, TransactionAction } from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
 import { APYsContext } from "../contexts/ApyContext";
-import { useGetShareData } from "../hooks/useGetShareData";
 import { BigNumber, ethers } from "ethers";
 import { ToastContext } from "../contexts/ToastContext";
 
@@ -63,9 +61,8 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
   const handleShowToast = (action: TransactionAction) => {
     const {isError, isFetching} = actions[action]
-    const actionName = capitalize(action)
     if (!isFetching) {
-      const message = isError ? `${actionName} failed` : `${actionName} successful!`
+      const message = isError ? `${action} failed` : `${action} successful!`
       const severity = isError ? "error" : "success"
       setToastMessage(message)
       setSeverity(severity)
