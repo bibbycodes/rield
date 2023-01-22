@@ -25,7 +25,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
     address public vault;
     address public rewards;
     address public protocolStakingAddress;
-    uint256 constant DIVISOR = 10 ** 6;
+    uint256 DIVISOR;
     uint256 public DEV_FEE;
     uint256 STAKING_CONTRACT_FEE = 0;
     uint256 CAP_MULTIPLIER = 10 ** 12;
@@ -50,6 +50,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         token = _token;
         _giveAllowances();
         DEV_FEE = 3 * 10 ** (ERC20(token).decimals() - 1);
+        DIVISOR = 10 ** ERC20(token).decimals();
     }
 
 

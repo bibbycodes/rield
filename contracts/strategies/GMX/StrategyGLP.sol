@@ -32,7 +32,7 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
     address public vault;
 
     address public protocolStakingAddress;
-    uint256 constant DIVISOR = 10 ** 6;
+    uint256 DIVISOR;
     uint256 public DEV_FEE;
     uint256 STAKING_CONTRACT_FEE = 0;
     uint MAX_FEE = 5 * 10 ** 17; // 0.50%
@@ -63,6 +63,7 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
         gmxVault = IGLPManager(glpManager).vault();
         _giveAllowances();
         DEV_FEE = 3 * 10 ** (ERC20(token).decimals() - 2);
+        DIVISOR = 10 ** ERC20(token).decimals();
     }
 
     // puts the funds to work
