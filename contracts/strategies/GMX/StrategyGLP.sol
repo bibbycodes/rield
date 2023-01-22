@@ -12,6 +12,7 @@ import "../../interfaces/gmx/IGMXStrategy.sol";
 import "../../utils/GasFeeThrottler.sol";
 import "@openzeppelin-4/contracts/access/Ownable.sol";
 import "@openzeppelin-4/contracts/security/Pausable.sol";
+import "hardhat/console.sol";
 
 contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
     using SafeERC20 for IERC20;
@@ -30,10 +31,10 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
     address public vault;
 
     address public protocolStakingAddress;
-    uint256 DIVISOR;
-    uint256 public DEV_FEE;
     uint256 STAKING_CONTRACT_FEE = 0;
-    uint MAX_FEE = 5 * 10 ** 17; // 0.50%
+    uint MAX_FEE; // 0.50%
+    uint DEV_FEE;
+    uint DIVISOR;
 
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
@@ -58,10 +59,14 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
         glpRewardStorage = IGMXRouter(chef).feeGlpTracker();
         gmxRewardStorage = IGMXRouter(chef).feeGmxTracker();
         glpManager = IGMXRouter(minter).glpManager();
-        gmxVault = IGLPManager(glpManager).vault();
         _giveAllowances();
         DEV_FEE = 3 * 10 ** (ERC20(token).decimals() - 2);
         DIVISOR = 10 ** ERC20(token).decimals();
+        MAX_FEE = 5 * 10 ** (ERC20(token).decimals() - 1);
+    }
+    
+    function want() external view returns (address) {
+        return token;
     }
 
     // puts the funds to work
@@ -110,9 +115,10 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
 
     // performance fees
     function chargeFees() internal {
-        uint256 devFeeAmount = IERC20(token).balanceOf(address(this)) * DEV_FEE / DIVISOR;
-        uint256 protocolTokenFeeAmount = IERC20(token).balanceOf(address(this)) * STAKING_CONTRACT_FEE / DIVISOR;
-        IERC20(token).safeTransfer(owner(), devFeeAmount);
+        uint256 devFeeAmount = IERC20(rewardToken).balanceOf(address(this)) * DEV_FEE / DIVISOR;
+        console.log("devFeeAmount: %s", devFeeAmount);
+        uint256 protocolTokenFeeAmount = IERC20(rewardToken).balanceOf(address(this)) * STAKING_CONTRACT_FEE / DIVISOR;
+        IERC20(rewardToken).safeTransfer(owner(), devFeeAmount);
 
         if (protocolTokenFeeAmount > 0) {
             IERC20(token).safeTransfer(protocolStakingAddress, protocolTokenFeeAmount);
@@ -140,7 +146,7 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
     }
 
     // it calculates how much 'token' the strategy has working in the farm.
-    // Always zer as you don't have to stake GLP
+    // Always zero as you don't have to stake GLP
     function balanceOfPool() public pure returns (uint256) {
         return 0;
     }
@@ -212,6 +218,8 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
     }
 
     function _giveAllowances() internal {
+        console.log("glpManager", glpManager);
+        console.log("rewardToken", rewardToken);
         IERC20(rewardToken).safeApprove(glpManager, type(uint).max);
     }
 
