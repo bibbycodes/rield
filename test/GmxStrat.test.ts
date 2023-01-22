@@ -28,7 +28,7 @@ describe("GMX", () => {
     const gmxToken: TokenMock = (await Token.deploy("GMX", "GMX", 18)) as TokenMock;
     await gmxToken.deployed();
 
-    const ethToken = await Token.deploy("WETH", "WETH", 18,);
+    const ethToken = await Token.deploy("WETH", "WETH", 18);
     await ethToken.deployed();
 
     const UniSwapMock = await ethers.getContractFactory("UniswapV2RouterMock");
@@ -49,10 +49,11 @@ describe("GMX", () => {
       owner: deployer.address,
     }
 
-    const Strategy = await ethers.getContractFactory("StrategyGMXUniV2");
+    const Strategy = await ethers.getContractFactory("StrategyGMXUniV3");
     const strategy = await Strategy.deploy(
       gmxRouterMock.address,
       [ethToken.address, gmxToken.address],
+      [3000],
       commonAddresses
     );
     await strategy.deployed();
@@ -158,17 +159,17 @@ describe("GMX", () => {
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
 
       await strategy.harvest();
-      
+
       const aliceShares = await vault.balanceOf(alice.address);
       await vault.connect(alice).withdraw(aliceShares);
-      
+
       const compoundAmount = parseEther("0.1");
       const claimAmount = parseEther("1");
       const claimAmountUserPart = claimAmount.sub(parseEther("0.3"));
       const ownerFee = claimAmount.sub(parseEther("0.7"));
-      
-      const expectedAliceGmx = ONE_THOUSAND_ETH.add(claimAmountUserPart).add(compoundAmount);  
-      
+
+      const expectedAliceGmx = ONE_THOUSAND_ETH.add(claimAmountUserPart).add(compoundAmount);
+
       expect(await vault.totalSupply()).to.equal(0);
       expect(await vault.balanceOf(alice.address)).to.equal(0);
       expect(await gmx.balanceOf(alice.address)).to.equal(expectedAliceGmx);
