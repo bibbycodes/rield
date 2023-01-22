@@ -24,7 +24,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
     address public pool;
     address public vault;
     address public rewards;
-    address public protocolTokenAddress;
+    address public protocolStakingAddress;
     uint256 constant DIVISOR = 10 ** 6;
     uint256 public DEV_FEE;
     uint256 STAKING_CONTRACT_FEE = 0;
@@ -119,8 +119,9 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         IERC20(token).safeTransfer(owner(), devFeeAmount);
 
         if (protocolTokenFeeAmount > 0) {
-            IERC20(token).safeTransfer(protocolTokenAddress, protocolTokenFeeAmount);
+            IERC20(token).safeTransfer(protocolStakingAddress, protocolTokenFeeAmount);
         }
+        
         emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
     }
 
@@ -144,9 +145,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
     function rewardsAvailable() public view returns (uint256) {
         return ICapRewards(rewards).getClaimableReward();
     }
-
-    // native reward amount for calling harvest
-    // function callReward() public view returns (uint256) {}
+     
 
     function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyOwner {
         harvestOnDeposit = _harvestOnDeposit;
@@ -170,8 +169,8 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         return STAKING_CONTRACT_FEE;
     }
 
-    function setProtocolTokenAddress(address _protocolTokenAddress) external onlyOwner {
-        protocolTokenAddress = _protocolTokenAddress;
+    function setProtocolStakingAddress(address _protocolStakingAddress) external onlyOwner {
+        protocolStakingAddress = _protocolStakingAddress;
     }
 
     function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {

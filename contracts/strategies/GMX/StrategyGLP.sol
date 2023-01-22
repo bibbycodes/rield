@@ -2,22 +2,25 @@
 
 pragma solidity ^0.8.0;
 
+import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
-
 import "../../interfaces/gmx/IGMXRouter.sol";
 import "../../interfaces/gmx/IGMXTracker.sol";
 import "../../interfaces/gmx/IGLPManager.sol";
 import "../../interfaces/gmx/IGMXVault.sol";
 import "../../interfaces/gmx/IBeefyVault.sol";
 import "../../interfaces/gmx/IGMXStrategy.sol";
+import "../../utils/GasFeeThrottler.sol";
+import "@openzeppelin-4/contracts/access/Ownable.sol";
+import "@openzeppelin-4/contracts/security/Pausable.sol";
 import "../Common/StratFeeManagerInitializable.sol";
 
-contract StrategyGLP is StratFeeManagerInitializable {
+contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
     using SafeERC20 for IERC20;
 
     // Tokens used
-    address public want;
-    address public native;
+    address public token;
+    address public rewardToken;
 
     // Third party contracts
     address public minter;
@@ -26,34 +29,40 @@ contract StrategyGLP is StratFeeManagerInitializable {
     address public gmxRewardStorage;
     address public glpManager;
     address public gmxVault;
+    address public vault;
 
+    address public protocolStakingAddress;
+    uint256 constant DIVISOR = 10 ** 6;
+    uint256 public DEV_FEE;
+    uint256 STAKING_CONTRACT_FEE = 0;
+    uint MAX_FEE = 5 * 10 ** 17; // 0.50%
+    
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
 
-    event StratHarvest(address indexed harvester, uint256 wantHarvested, uint256 tvl);
+    event StratHarvest(address indexed harvester, uint256 tokenHarvested, uint256 tvl);
     event Deposit(uint256 tvl);
     event Withdraw(uint256 tvl);
-    event ChargedFees(uint256 callFees, uint256 beefyFees, uint256 strategistFees);
+    event ChargedFees(uint256 fees, uint256 amount);
 
-    function initialize(
-        address _want,
-        address _native,
-        address _minter,
-        address _chef,
-        CommonAddresses calldata _commonAddresses
-    ) public initializer {
-        __StratFeeManager_init(_commonAddresses);
-        want = _want;
-        native = _native;
+    constructor(
+        address _token,        // 0x5402B5F40310bDED796c7D0F3FF6683f5C0cFfdf (staked glp)  
+        address _rewardToken,  // 0x82af49447d8a07e3bd95bd0d56f35241523fbab1 (weth)  
+        address _minter,       // 0xb95db5b167d75e6d04227cfffa61069348d271f5 (GMX reward router v2)  
+        address _chef,         // 0xA906F338CB21815cBc4Bc87ace9e68c87eF8d8F1 (GMX reward router)
+        address _vault
+    ) {
+        token = _token;
+        rewardToken = _rewardToken;
         minter = _minter;
         chef = _chef;
-
+        vault = _vault;
         glpRewardStorage = IGMXRouter(chef).feeGlpTracker();
         gmxRewardStorage = IGMXRouter(chef).feeGmxTracker();
         glpManager = IGMXRouter(minter).glpManager();
         gmxVault = IGLPManager(glpManager).vault();
-
         _giveAllowances();
+        DEV_FEE = 3 * 10 ** (ERC20(token).decimals() - 2);
     }
 
     // puts the funds to work
@@ -64,86 +73,75 @@ contract StrategyGLP is StratFeeManagerInitializable {
     function withdraw(uint256 _amount) external {
         require(msg.sender == vault, "!vault");
 
-        uint256 wantBal = balanceOfWant();
+        uint256 tokenBal = balanceOfWant();
 
-        if (wantBal > _amount) {
-            wantBal = _amount;
+        if (tokenBal > _amount) {
+            tokenBal = _amount;
         }
 
-        IERC20(want).safeTransfer(vault, wantBal);
-
+        IERC20(token).safeTransfer(vault, tokenBal);
         emit Withdraw(balanceOf());
     }
 
-    function beforeDeposit() external virtual override {
+    function beforeDeposit() external virtual {
         if (harvestOnDeposit) {
             require(msg.sender == vault, "!vault");
-            _harvest(tx.origin);
+            _harvest();
         }
     }
 
     function harvest() external virtual {
-        _harvest(tx.origin);
-    }
-
-    function harvest(address callFeeRecipient) external virtual {
-        _harvest(callFeeRecipient);
-    }
-
-    function managerHarvest() external onlyManager {
-        _harvest(tx.origin);
+        _harvest();
     }
 
     // compounds earnings and charges performance fee
-    function _harvest(address callFeeRecipient) internal whenNotPaused {
-        IGMXRouter(chef).compound();   // Claim and restake esGMX and multiplier points
+    function _harvest() internal whenNotPaused {
+        IGMXRouter(chef).compound();   // Claim and re-stake esGMX and multiplier points
         IGMXRouter(chef).claimFees();
-        uint256 nativeBal = IERC20(native).balanceOf(address(this));
-        if (nativeBal > 0) {
-            chargeFees(callFeeRecipient);
+        uint256 rewardTokenBal = IERC20(rewardToken).balanceOf(address(this));
+        if (rewardTokenBal > 0) {
+            chargeFees();
             uint256 before = balanceOfWant();
             mintGlp();
-            uint256 wantHarvested = balanceOfWant() - before;
-
+            uint256 tokenHarvested = balanceOfWant() - before;
             lastHarvest = block.timestamp;
-            emit StratHarvest(msg.sender, wantHarvested, balanceOf());
+            emit StratHarvest(msg.sender, tokenHarvested, balanceOf());
         }
     }
 
     // performance fees
-    function chargeFees(address callFeeRecipient) internal {
-        IFeeConfig.FeeCategory memory fees = getFees();
-        uint256 feeBal = IERC20(native).balanceOf(address(this)) * fees.total / DIVISOR;
+    function chargeFees() internal {
+        uint256 devFeeAmount = IERC20(token).balanceOf(address(this)) * DEV_FEE / DIVISOR;
+        uint256 protocolTokenFeeAmount = IERC20(token).balanceOf(address(this)) * STAKING_CONTRACT_FEE / DIVISOR;
+        IERC20(token).safeTransfer(owner(), devFeeAmount);
 
-        uint256 callFeeAmount = feeBal * fees.call / DIVISOR;
-        IERC20(native).safeTransfer(callFeeRecipient, callFeeAmount);
+        if (protocolTokenFeeAmount > 0) {
+            IERC20(token).safeTransfer(protocolStakingAddress, protocolTokenFeeAmount);
+        }
 
-        uint256 beefyFeeAmount = feeBal * fees.beefy / DIVISOR;
-        IERC20(native).safeTransfer(beefyFeeRecipient, beefyFeeAmount);
-
-        uint256 strategistFeeAmount = feeBal * fees.strategist / DIVISOR;
-        IERC20(native).safeTransfer(strategist, strategistFeeAmount);
-
-        emit ChargedFees(callFeeAmount, beefyFeeAmount, strategistFeeAmount);
+        emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
     }
 
     // mint more GLP with the ETH earned as fees
     function mintGlp() internal {
-        uint256 nativeBal = IERC20(native).balanceOf(address(this));
-        IGMXRouter(minter).mintAndStakeGlp(native, nativeBal, 0, 0);
+        uint256 rewardTokenBal = IERC20(rewardToken).balanceOf(address(this));
+        if (rewardTokenBal > 0) {
+            IGMXRouter(minter).mintAndStakeGlp(rewardToken, rewardTokenBal, 0, 0);
+        }
     }
 
-    // calculate the total underlaying 'want' held by the strat.
+    // calculate the total underlying 'token' held by the strat.
     function balanceOf() public view returns (uint256) {
         return balanceOfWant() + balanceOfPool();
     }
 
-    // it calculates how much 'want' this contract holds.
+    // it calculates how much 'token' this contract holds.
     function balanceOfWant() public view returns (uint256) {
-        return IERC20(want).balanceOf(address(this));
+        return IERC20(token).balanceOf(address(this));
     }
 
-    // it calculates how much 'want' the strategy has working in the farm.
+    // it calculates how much 'token' the strategy has working in the farm.
+    // Always zer as you don't have to stake GLP
     function balanceOfPool() public pure returns (uint256) {
         return 0;
     }
@@ -155,25 +153,37 @@ contract StrategyGLP is StratFeeManagerInitializable {
         return rewardGLP + rewardGMX;
     }
 
-    // native reward amount for calling harvest
-    function callReward() public view returns (uint256) {
-        IFeeConfig.FeeCategory memory fees = getFees();
-        uint256 nativeBal = rewardsAvailable();
-
-        return nativeBal * fees.total / DIVISOR * fees.call / DIVISOR;
-    }
-
-    function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyManager {
+    function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyOwner {
         harvestOnDeposit = _harvestOnDeposit;
-
-        if (harvestOnDeposit) {
-            setWithdrawalFee(0);
-        } else {
-            setWithdrawalFee(10);
-        }
     }
 
-    // called as part of strat migration. Transfers all want, GLP, esGMX and MP to new strat.
+    function setDevFee(uint fee) external onlyOwner {
+        require(fee + STAKING_CONTRACT_FEE <= MAX_FEE, "fee too high");
+        DEV_FEE = fee;
+    }
+
+    function setStakingFee(uint fee) external onlyOwner {
+        require(fee + DEV_FEE <= MAX_FEE, "fee too high");
+        STAKING_CONTRACT_FEE = fee;
+    }
+
+    function getDevFee() external view returns (uint256) {
+        return DEV_FEE;
+    }
+
+    function getStakingFee() external view returns (uint256) {
+        return STAKING_CONTRACT_FEE;
+    }
+
+    function setStakingAddress(address _protocolStakingAddress) external onlyOwner {
+        protocolStakingAddress = _protocolStakingAddress;
+    }
+
+    function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {
+        shouldGasThrottle = _shouldGasThrottle;
+    }
+
+    // called as part of strat migration. Transfers all token, GLP, esGMX and MP to new strat.
     function retireStrat() external {
         require(msg.sender == vault, "!vault");
 
@@ -183,33 +193,31 @@ contract StrategyGLP is StratFeeManagerInitializable {
         IGMXRouter(chef).signalTransfer(stratAddress);
         IGMXStrategy(stratAddress).acceptTransfer();
 
-        uint256 wantBal = IERC20(want).balanceOf(address(this));
-        IERC20(want).transfer(vault, wantBal);
+        uint256 tokenBal = IERC20(token).balanceOf(address(this));
+        IERC20(token).transfer(vault, tokenBal);
     }
 
     // pauses deposits and withdraws all funds from third party systems.
-    function panic() public onlyManager {
+    function panic() public onlyOwner {
         pause();
     }
 
-    function pause() public onlyManager {
+    function pause() public onlyOwner {
         _pause();
-
         _removeAllowances();
     }
 
-    function unpause() external onlyManager {
+    function unpause() external onlyOwner {
         _unpause();
-
         _giveAllowances();
     }
 
     function _giveAllowances() internal {
-        IERC20(native).safeApprove(glpManager, type(uint).max);
+        IERC20(rewardToken).safeApprove(glpManager, type(uint).max);
     }
 
     function _removeAllowances() internal {
-        IERC20(native).safeApprove(glpManager, 0);
+        IERC20(rewardToken).safeApprove(glpManager, 0);
     }
 
     function acceptTransfer() external {
@@ -218,6 +226,6 @@ contract StrategyGLP is StratFeeManagerInitializable {
         IGMXRouter(chef).acceptTransfer(prevStrat);
 
         // send back 1 wei to complete upgrade
-        IERC20(want).safeTransfer(prevStrat, 1);
+        IERC20(token).safeTransfer(prevStrat, 1);
     }
 }
