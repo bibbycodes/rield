@@ -12,7 +12,7 @@ async function main() {
 
   const ethToken = await Token.deploy("WETH", "WETH", 18);
   await ethToken.deployed();
-  
+
   const UniSwapMock = await ethers.getContractFactory("UniswapV3RouterMock");
   const uniSwapMock = await UniSwapMock.deploy();
   await uniSwapMock.deployed();
@@ -24,7 +24,7 @@ async function main() {
   const Vault = await ethers.getContractFactory("BeefyVaultV7");
   const vault = await Vault.deploy();
   await vault.deployed();
-  
+
   const commonAddresses = {
     vault: vault.address,
     unirouter: uniSwapMock.address,
@@ -40,22 +40,20 @@ async function main() {
   await strategy.deployed();
 
   await vault.initialize(strategy.address, "GMX_AUTO_C", "GMX_AUTO_C")
-  
+
   await gmxToken.mintFor(gmxRouterMock.address, ethers.utils.parseEther("1000000000"));
-  await gmxToken.mintFor(strategy.address, ethers.utils.parseEther("1000000000"));
-  
+
   await ethToken.mintFor(gmxRouterMock.address, ethers.utils.parseEther("1000000000"));
-  await ethToken.mintFor(strategy.address, ethers.utils.parseEther("1000000000"));
 
   await ethToken.mintFor(deployer.address, ethers.utils.parseEther("1000000000"));
   await gmxToken.mintFor(deployer.address, ethers.utils.parseEther("1000000000"));
-  
+
   console.log("Vault Deployed to:", vault.address);
   console.log("GMX Deployed to:", gmxToken.address);
   console.log("UniSwap Deployed to:", uniSwapMock.address);
   console.log("GMXRouter Deployed to:", gmxRouterMock.address);
   console.log("Strategy Deployed to:", strategy.address);
-  
+
   fs.writeFileSync(
     "./resources/deploy_gmx-output.json",
     JSON.stringify({

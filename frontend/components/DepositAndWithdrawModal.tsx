@@ -14,7 +14,7 @@ import { SelectedStrategyContext, TransactionAction } from "../contexts/Selected
 import CloseIcon from '@mui/icons-material/Close';
 import { APYsContext } from "../contexts/ApyContext";
 import { useGetShareData } from "../hooks/useGetShareData";
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { ToastContext } from "../contexts/ToastContext";
 
 const style = {
@@ -75,7 +75,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
   const handleSetMax = () => {
     if (tokenBalanceBN && formattedTokenBalance) {
-      const amountToSet = (action === 'deposit' || action === 'depositAll') ? +formattedTokenBalance : +userStaked
+      const amountToSet = (action === 'deposit' || action === 'depositAll') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
       setVisibleAmount(amountToSet)
       syncAmountWithVisibleAmount(amountToSet)
     }
@@ -83,7 +83,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
   const isBalanceLessThanAmount = (value: number) => {
     if (tokenBalanceBN && formattedTokenBalance) {
-      const balanceToCheck = (action === 'deposit' || action === 'depositAll') ? +formattedTokenBalance : +userStaked
+      const balanceToCheck = (action === 'deposit' || action === 'depositAll') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
       return !isNaN(value) && balanceToCheck < value
     }
   }
@@ -102,8 +102,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
       if (action === 'withdraw') {
         const multiplier = BigNumber.from(10).pow(decimals)
         const withdrawAmountInWant = parseUnits(newAmount.toString(), decimals)
-        const amountStaked = parseUnits(userStaked, decimals)
-        const ratioOfWithdrawAmountToStakedAmount = withdrawAmountInWant.mul(multiplier).div(amountStaked)
+        const ratioOfWithdrawAmountToStakedAmount = withdrawAmountInWant.mul(multiplier).div(userStaked)
         const numSharesBN = ratioOfWithdrawAmountToStakedAmount.mul(vaultTokenBalanceBn as BigNumber).div(multiplier)
         setAmount(numSharesBN)
         setVisibleAmount(newAmount)
@@ -134,8 +133,8 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           className={`bg-backgroundPrimary border-none text-tPrimary flex p-4 flex-col rounded-lg`}
         >
           <div className={"flex pb-2"}>
-            <Typography id="modal-modal-title" variant="h6" component="h2">
-              {capitalize(action)}
+            <Typography id="modal-modal-title" variant="h6" component="h2" className="capitalize">
+              {action}
             </Typography>
             <div
               className={'disabled:text-tSecondary h-1 ml-auto disabled:border-tSecondary'}

@@ -1,22 +1,28 @@
-import {Card, Typography} from '@mui/material';
-import {Strategy} from '../model/strategy';
-import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
+import { Card, Typography } from '@mui/material';
+import { Strategy } from '../model/strategy';
+import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
 import Enable from './Enable';
-import {shortenString} from '../utils/formatters';
-import {StrategyLogos} from "./StrategyLogos";
-import {TokenPricesContext} from "../contexts/TokenPricesContext";
-import {useContext} from "react";
-import {APYsContext} from "../contexts/ApyContext";
-import {WithLoader} from "./WithLoader";
+import { StrategyLogos } from "./StrategyLogos";
+import { TokenPricesContext } from "../contexts/TokenPricesContext";
+import { useContext } from "react";
+import { APYsContext } from "../contexts/ApyContext";
+import { WithLoader } from "./WithLoader";
+import { BigNumber, ethers } from 'ethers';
 
-export default function StrategyCard({strategy, openModal}: { strategy: Strategy, openModal: (isOpen: boolean) => void }) {
+export default function StrategyCard({
+                                       strategy,
+                                       openModal
+                                     }: { strategy: Strategy, openModal: (isOpen: boolean) => void }) {
   const {userStaked} = useGetUserDepositedInVault(strategy)
   const {prices} = useContext(TokenPricesContext)
   const APYs = useContext(APYsContext)
   const apy = APYs[strategy.strategyAddress]
 
-  const getUserStakedInDollars = (amount: string) => {
-    return (parseFloat(amount) * prices[strategy.coinGeckoId]).toFixed(2)
+  const getUserStakedInDollars = (amount: BigNumber) => {
+    if (!prices[strategy.coinGeckoId]) {
+      return '-'
+    }
+    return (amount.mul(BigNumber.from(prices[strategy.coinGeckoId] * 1000))).div(1000).div(BigNumber.from(10).pow(strategy.decimals)).toString()
   }
 
   const handleOpenModal = () => {
@@ -32,7 +38,7 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
             <Typography className="text-xs text-tSecondary">Staked</Typography>
             <Typography className={`text-2xl text-tPrimary`}>${getUserStakedInDollars(userStaked)}</Typography>
             <Typography
-              className={`text-xs text-tSecondary`}>{shortenString(userStaked)} {(strategy.tokenSymbol)}</Typography>
+              className={`text-xs text-tSecondary`}>{ethers.utils.formatUnits(userStaked, strategy.decimals)} {(strategy.tokenSymbol)}</Typography>
           </div>
           <div className="flex flex-col my-6">
             <Typography className="text-xs text-tSecondary">APY</Typography>

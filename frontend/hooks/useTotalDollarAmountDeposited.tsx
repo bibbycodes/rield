@@ -23,9 +23,9 @@ export const useTotalDollarAmountDeposited = () => {
       }
     })
   }
-  
+
   const calculateUserStakedInDollars = (balance: BigNumber, price: number, pricePerShare: BigNumber, decimals: number) => {
-    const userStaked = formatUnits(balance.mul(pricePerShare).div(BigNumber.from(10).pow(decimals)), 6)
+    const userStaked = formatUnits(balance.mul(pricePerShare).div(BigNumber.from(10).pow(decimals)), decimals)
     return parseFloat(userStaked) * price
   }
 
