@@ -303,4 +303,28 @@ describe("GLP", () => {
       expect(await vault.balanceOf(bob.address)).to.equal(parseEther("0.5"));
     })
   })
+  describe("Performance Fees", () => {
+    it("Can change the fee for the devs", async () => {
+      const {strategy} = await loadFixture(setupFixture);
+      await strategy.setDevFee(parseEther("0.5"));
+      expect(await strategy.getDevFee()).to.equal(parseEther("0.5"));
+    })
+
+    it("Can change the fee for the staking contract", async () => {
+      const {strategy} = await loadFixture(setupFixture);
+      await strategy.setStakingFee(parseEther("0.1"));
+      expect(await strategy.getStakingFee()).to.equal(parseEther("0.1"));
+    })
+
+    it("Only the owner can modify fees", async () => {
+      const {strategy, alice} = await loadFixture(setupFixture);
+      await expect(strategy.connect(alice).setDevFee(parseEther("0.5"))).to.be.revertedWith("Ownable: caller is not the owner");
+    })
+
+    it("Combined fees cannot exceed 50%", async () => {
+      const {strategy} = await loadFixture(setupFixture);
+      await strategy.setDevFee(parseEther("0.5"));
+      await expect(strategy.setStakingFee(parseEther("0.5"))).to.be.revertedWith("fee too high")
+    })
+  })
 });
