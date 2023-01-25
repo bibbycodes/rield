@@ -1,27 +1,26 @@
-import { Card, Typography } from '@mui/material';
-import { Strategy } from '../model/strategy';
-import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
+import {Card, Typography} from '@mui/material';
+import {Strategy} from '../model/strategy';
+import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
 import Enable from './Enable';
-import { StrategyLogos } from "./StrategyLogos";
-import { TokenPricesContext } from "../contexts/TokenPricesContext";
-import { useContext } from "react";
-import { APYsContext } from "../contexts/ApyContext";
-import { WithLoader } from "./WithLoader";
-import { BigNumber, ethers } from 'ethers';
+import {StrategyLogos} from "./StrategyLogos";
+import {TokenPricesContext} from "../contexts/TokenPricesContext";
+import {useContext, useEffect} from "react";
+import {APYsContext} from "../contexts/ApyContext";
+import {WithLoader} from "./WithLoader";
+import {BigNumber, ethers} from 'ethers';
 
-export default function StrategyCard({
-                                       strategy,
-                                       openModal
-                                     }: { strategy: Strategy, openModal: (isOpen: boolean) => void }) {
+export default function StrategyCard({strategy, openModal}: { strategy: Strategy, openModal: (isOpen: boolean) => void }) {
   const {userStaked} = useGetUserDepositedInVault(strategy)
   const {prices} = useContext(TokenPricesContext)
   const APYs = useContext(APYsContext)
   const apy = APYs[strategy.strategyAddress]
 
   const getUserStakedInDollars = (amount: BigNumber) => {
-    if (!prices[strategy.coinGeckoId]) {
-      return '-'
+    const isAmountPositive = amount.gt(BigNumber.from(0))
+    if (!prices[strategy.coinGeckoId] || !isAmountPositive) {
+      return 0
     }
+    
     const balanceInUsd = ethers.utils.formatUnits(
       amount.mul(prices[strategy.coinGeckoId] * 1000).div(1000),
       strategy.decimals);

@@ -1,10 +1,11 @@
 import {Button} from '@mui/material';
 import {useContext} from 'react';
 import {useApproveToken} from '../hooks/useApproveToken';
-import {Address, useAccount, useBalance} from 'wagmi';
+import {Address, useAccount, useBalance, useConnect} from 'wagmi';
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import {Strategy} from "../model/strategy";
-
+import { arbitrum } from 'wagmi/chains'
+import { InjectedConnector } from 'wagmi/connectors/injected'
 interface StrategyDetailsModalProps {
   tokenAddress: Address,
   vaultAddress: Address,
@@ -12,17 +13,27 @@ interface StrategyDetailsModalProps {
   strategy: Strategy
 }
 
-export default function Enable({ tokenAddress, vaultAddress, openModal, strategy}: StrategyDetailsModalProps) {
+export default function Enable({tokenAddress, vaultAddress, openModal, strategy}: StrategyDetailsModalProps) {
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
   const {address} = useAccount();
   const {approve, isApproved} = useApproveToken(tokenAddress, vaultAddress, address);
   const {data: balance} = useBalance({token: vaultAddress, address})
   const {setAction, setSelectedStrategy} = useContext(SelectedStrategyContext)
+  // const {isConnected} = useAccount()
+  const { connect } = useConnect({connector: new InjectedConnector({chains: [arbitrum]})})
 
   const handleClick = (action: TransactionAction) => {
     setAction(action)
     setSelectedStrategy(strategy)
     openModal()
+  }
+  
+  const handleConnectOrApprove = () => {
+    if (isConnected) {
+      approve()
+    } else {
+      connect()
+    }
   }
 
   const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
@@ -45,12 +56,11 @@ export default function Enable({ tokenAddress, vaultAddress, openModal, strategy
     )}
 
     {showApprove && (
-        <Button
-          className="w-full bg-accentPrimary hover:bg-accentSecondary p-3"
-          variant="contained"
-          onClick={() => address && approve?.()}
-        >Approve
-        </Button>
+      <Button
+        className="w-full bg-accentPrimary hover:bg-accentSecondary p-3"
+        variant="contained"
+        onClick={() => handleConnectOrApprove()}
+      >{true ? 'Approve' : 'Connect Wallet'}</Button>
     )}
   </div>
 }

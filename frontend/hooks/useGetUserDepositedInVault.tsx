@@ -9,8 +9,6 @@ export const useGetUserDepositedInVault = (strategy: Strategy) => {
   const {decimals} = strategy;
 
   const {fullPricePerShare, refetchFullPricePerShare, userBalance, refetchUserBalance} = useGetShareData(strategy)
-  console.log({fullPricePerShare, userBalance})
-
   const calculateUserStaked = (balance: BigNumber, pricePerShare: BigNumber) => {
     // balance is amount of LP token
     // fullPricePerShare is the price of 1 LP token in terms of the want token

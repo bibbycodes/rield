@@ -1,9 +1,10 @@
 import axios from "axios";
 import {ethers} from "ethers";
 import {Address} from "wagmi";
-import capRouterAbi from '../resources/abis/cap-router.json';
-import ERC20Abi from '../resources/abis/erc20.json';
+import capRouterAbi from '../../resources/abis/cap/cap-router.json';
+import ERC20Abi from '../../resources/abis/erc20.json';
 import {formatUnits} from "ethers/lib/utils";
+import {getContract} from "./utils";
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 /* eslint-disable */
@@ -134,9 +135,6 @@ export const getRouterContract = (provider: any): ethers.Contract => {
   return new ethers.Contract(contractAddress, capRouterAbi, provider);
 }
 
-export const getContract = (address: string, abi: any, provider: any) => {
-  return new ethers.Contract(address, abi, provider);
-}
 
 export const getPoolShare = async (address: Address, provider: any) => {
   const contract = getRouterContract(provider);

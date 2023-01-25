@@ -10,13 +10,13 @@ export const Providers = ({children}: { children: ReactNode }) => {
   return (
     <ThemeProvider theme={muiTheme}>
       <ToastContextProvider>
-        <APYsContextProvider>
-          <TokenPricesContextProvider>
+        <TokenPricesContextProvider>
+          <APYsContextProvider>
             <SelectedStrategyContextProvider>
               {children}
             </SelectedStrategyContextProvider>
-          </TokenPricesContextProvider>
-        </APYsContextProvider>
+          </APYsContextProvider>
+        </TokenPricesContextProvider>
       </ToastContextProvider>
     </ThemeProvider>
   );

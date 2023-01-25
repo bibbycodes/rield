@@ -52,9 +52,6 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
     ],
     functionName: "withdraw",
     abi,
-    onSettled(data, error) {
-      console.log('Settled', {data, error});
-    },
   })
 
   const {data: withdrawData, writeAsync: withdrawFromVault} = useContractWrite(withdrawConfig)
@@ -74,9 +71,6 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
     }],
     functionName: "withdrawAll",
     abi,
-    onSettled(data, error) {
-      console.log('Settled', {data, error});
-    },
   })
 
   const {data: withdrawAllData, writeAsync: withdrawAllFromVault} = useContractWrite(withdrawAllConfig)
