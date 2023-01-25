@@ -20,9 +20,9 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
     if (!prices[strategy.coinGeckoId] || !isAmountPositive) {
       return 0
     }
-    
+
     const balanceInUsd = ethers.utils.formatUnits(
-      amount.mul(prices[strategy.coinGeckoId] * 1000).div(1000),
+      amount.mul((prices[strategy.coinGeckoId] * 1000).toFixed(0)).div(1000),
       strategy.decimals);
     return (+balanceInUsd).toFixed(2);
   }
