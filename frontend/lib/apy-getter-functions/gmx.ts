@@ -13,6 +13,7 @@ export const calculateAPR = (tokensPerInterval: BigNumber, aum: BigNumber, ethPr
 }
 
 export const getGmxGlpApr = async (provider: any, ethPrice: number, token: 'GLP' | 'GMX'): Promise<number> => {
+  console.log({ethPrice})
   const aum = await getGmxAum(provider);
   const tokensPerInterval = token === 'GMX' ? await getGmxTokensPerInterval(provider) : await getGLPTokensPerInterval(provider);
   return calculateAPR(tokensPerInterval.bn, aum.bn, ethPrice) * 100;
@@ -32,7 +33,7 @@ export const getGmxAum = async (provider: any): Promise<result> => {
 export const getGlpPrice = async (provider: any): Promise<result> => {
   const contract = getContract('0x3963FfC9dff443c2A94f21b129D429891E32ec18', glpManagerAbi, provider)
   const result = (await contract.getPrice(false)) as BigNumber
-  return {bn: result, asNumber: result.div(BigNumber.from(10).pow(18)).toNumber() / 10e12}
+  return {bn: result, asNumber: result.div(BigNumber.from(10).pow(18)).toNumber() / 10e11}
 }
 
 export const getGmxTokensPerInterval = async (provider: any): Promise<result> => {

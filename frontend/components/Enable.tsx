@@ -59,7 +59,7 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
       <Button
         className="w-full bg-accentPrimary hover:bg-accentSecondary p-3"
         variant="contained"
-        onClick={() => handleConnectOrApprove()}
+        onClick={() => approve()}
       >{true ? 'Approve' : 'Connect Wallet'}</Button>
     )}
   </div>

@@ -4,7 +4,7 @@ import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
 import Enable from './Enable';
 import {StrategyLogos} from "./StrategyLogos";
 import {TokenPricesContext} from "../contexts/TokenPricesContext";
-import {useContext, useEffect} from "react";
+import {useContext} from "react";
 import {APYsContext} from "../contexts/ApyContext";
 import {WithLoader} from "./WithLoader";
 import {BigNumber, ethers} from 'ethers';
@@ -22,7 +22,7 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
     }
     
     const balanceInUsd = ethers.utils.formatUnits(
-      amount.mul(prices[strategy.coinGeckoId] * 1000).div(1000),
+      amount.mul((prices[strategy.coinGeckoId] * 10000).toFixed(0)).div(10000),
       strategy.decimals);
     return (+balanceInUsd).toFixed(2);
   }
