@@ -22,12 +22,12 @@ export function useApproveToken(tokenAddress: string, contractAddress: string, u
     functionName: 'allowance',
     args: [userAddress, contractAddress]
   });
-  
+
   const fetchAllowance = async () => {
     const {data} = await refetch()
     setIsApproved(data?.gt(0))
   }
-  
+
   useEffect(() => {
     const fetch = async () => {
       await fetchAllowance()
@@ -38,7 +38,7 @@ export function useApproveToken(tokenAddress: string, contractAddress: string, u
   async function handleApprove() {
     const tx = await writeAsync?.()
     await tx?.wait()
-    setIsApproved(data?.gt(0))
+    await fetchAllowance()
   }
 
   return {

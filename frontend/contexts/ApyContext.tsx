@@ -3,8 +3,6 @@ import {Address, useNetwork, useProvider} from "wagmi";
 import {calculateApyWithFee} from "../utils/calculator";
 import {ApyGetter} from "../lib/apy-getter/apy-getter";
 import {availableStrategies} from "../model/strategy";
-import {useGMXData} from "../hooks/useGMXData";
-import {calculateAPR} from "../lib/apy-getter-functions/gmx";
 import {TokenPricesContext} from "./TokenPricesContext";
 
 const APYsContext = createContext<{ [strategy: Address]: number }>({})

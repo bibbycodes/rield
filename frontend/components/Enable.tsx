@@ -6,6 +6,7 @@ import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedSt
 import {Strategy} from "../model/strategy";
 import { arbitrum } from 'wagmi/chains'
 import { InjectedConnector } from 'wagmi/connectors/injected'
+import { useGetUserDepositedInVault } from '../hooks/useGetUserDepositedInVault';
 interface StrategyDetailsModalProps {
   tokenAddress: Address,
   vaultAddress: Address,
@@ -17,9 +18,9 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
   const {address} = useAccount();
   const {approve, isApproved} = useApproveToken(tokenAddress, vaultAddress, address);
-  const {data: balance} = useBalance({token: vaultAddress, address})
+  const {userStaked} = useGetUserDepositedInVault(strategy)
   const {setAction, setSelectedStrategy} = useContext(SelectedStrategyContext)
-  // const {isConnected} = useAccount()
+  const {isConnected} = useAccount()
   const { connect } = useConnect({connector: new InjectedConnector({chains: [arbitrum]})})
 
   const handleClick = (action: TransactionAction) => {
@@ -27,7 +28,7 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
     setSelectedStrategy(strategy)
     openModal()
   }
-  
+
   const handleConnectOrApprove = () => {
     if (isConnected) {
       approve()
@@ -47,7 +48,7 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
           className={'text-tPrimary bg-accentPrimary hover:bg-accentSecondary p-3'}
         >Deposit</Button>
         <Button
-          disabled={balance?.value?.lte(0)}
+          disabled={userStaked?.lte(0)}
           variant="outlined"
           className={'disabled:text-tSecondary disabled:border-tSecondary p-3'}
           onClick={() => handleClick('withdraw')}

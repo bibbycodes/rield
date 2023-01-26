@@ -27,23 +27,6 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
     hash: depositData?.hash,
   })
 
-  const {config: depositAllConfig} = usePrepareContractWrite({
-    address: vaultAddress,
-    args: [],
-    functionName: "depositAll",
-    abi
-  })
-
-  const {data: depositAllData, writeAsync: depositAllFromVault} = useContractWrite(depositAllConfig)
-  const {
-    isLoading: isDepositAllLoading,
-    isSuccess: isDepositAllSuccess,
-    isError: isDepositAllError,
-    isFetching: isDepositAllFetching
-  } = useWaitForTransaction({
-    hash: depositAllData?.hash,
-  })
-
   const {config: withdrawConfig} = usePrepareContractWrite({
     address: vaultAddress,
     args: [
@@ -64,25 +47,6 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
     hash: withdrawData?.hash,
   })
 
-  const {config: withdrawAllConfig} = usePrepareContractWrite({
-    address: vaultAddress,
-    args: [{
-      gasLimit: 1300000,
-    }],
-    functionName: "withdrawAll",
-    abi,
-  })
-
-  const {data: withdrawAllData, writeAsync: withdrawAllFromVault} = useContractWrite(withdrawAllConfig)
-  const {
-    isLoading: isWithdrawAllLoading,
-    isSuccess: isWithdrawAllSuccess,
-    isError: isWithdrawAllError,
-    isFetching: isWithdrawAllFetching
-  } = useWaitForTransaction({
-    hash: withdrawAllData?.hash,
-  })
-
   return {
     withdraw: {
       isLoading: isWithdrawLoading,
@@ -97,20 +61,6 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
       isError: isDepositError,
       isFetching: isDepositFetching,
       write: depositIntoVault,
-    },
-    withdrawAll: {
-      isLoading: isWithdrawAllLoading,
-      isSuccess: isWithdrawAllSuccess,
-      isError: isWithdrawAllError,
-      isFetching: isWithdrawAllFetching,
-      write: withdrawAllFromVault,
-    },
-    depositAll: {
-      isLoading: isDepositAllLoading,
-      isSuccess: isDepositAllSuccess,
-      isError: isDepositAllError,
-      isFetching: isDepositAllFetching,
-      write: depositAllFromVault,
     }
   }
 }

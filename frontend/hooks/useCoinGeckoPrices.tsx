@@ -1,11 +1,11 @@
-import { CoinGeckoPrices } from "../contexts/TokenPricesContext";
-import {useState} from "react";
+import { Prices } from "../contexts/TokenPricesContext";
+import {useEffect, useState} from "react";
 import {availableStrategies} from "../model/strategy";
 import axios from "axios";
 import {isEmpty} from "../utils/formatters";
 
 export const useCoinGeckoPrices = () => {
-  const [prices, setPrices] = useState<CoinGeckoPrices>({});
+  const [prices, setPrices] = useState<Prices>({});
   const [lastUpdated, setLastUpdated] = useState<number>(0);
   const shouldUpdate = () => Date.now() - lastUpdated > 5 * 60 * 1000 || isEmpty(prices)
   const updatePrices = async () => {
@@ -13,6 +13,7 @@ export const useCoinGeckoPrices = () => {
       const coinGeckoIds = availableStrategies.map(strategy => strategy.coinGeckoId)
       const coinGeckoIdsString = coinGeckoIds.join(',')
       const {data} = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdsString}&vs_currencies=usd`)
+      console.log(data)
       let transformedData = coinGeckoIds.reduce((acc, id) => {
         acc[id] = data[id]?.usd
         return acc
@@ -27,6 +28,10 @@ export const useCoinGeckoPrices = () => {
       setLastUpdated(Date.now())
     }
   }
+  
+  useEffect(() => {
+    updatePrices()
+  }, [lastUpdated])
   
   return {coinGeckoPrices: prices, updateCoinGeckoPrices: updatePrices}
 }

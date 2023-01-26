@@ -25,11 +25,11 @@ export default function Compound() {
       </span>
     </div>
     <div className={`grid md:grid-cols-2 grid-cols-1 gap-4`}>
-      {availableStrategies.map(strategy => <StrategyCard key={strategy.vaultAddress} strategy={strategy} openModal={setIsStrategyDetailsModalOpen}/>)}
-      <DepositAndWithdrawModal
-        isOpen={isStrategyDetailsModalOpen}
-        setIsOpen={setIsStrategyDetailsModalOpen}
-      ></DepositAndWithdrawModal>
+      {/*{availableStrategies.map(strategy => <StrategyCard key={strategy.vaultAddress} strategy={strategy} openModal={setIsStrategyDetailsModalOpen}/>)}*/}
+      {/*<DepositAndWithdrawModal*/}
+      {/*  isOpen={isStrategyDetailsModalOpen}*/}
+      {/*  setIsOpen={setIsStrategyDetailsModalOpen}*/}
+      {/*></DepositAndWithdrawModal>*/}
     </div>
   </>
 }

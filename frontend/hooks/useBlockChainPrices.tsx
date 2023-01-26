@@ -1,11 +1,11 @@
 import {useEffect, useState} from "react"
 import {getGlpPrice} from "../lib/apy-getter-functions/gmx"
 import {useProvider} from "wagmi";
-import {CoinGeckoPrices} from "../contexts/TokenPricesContext";
+import {Prices} from "../contexts/TokenPricesContext";
 
 export const useBlockChainPrices = () => {
   const provider = useProvider()
-  const [prices, setPrices] = useState<CoinGeckoPrices>({});
+  const [prices, setPrices] = useState<Prices>({});
   
   const getGlpPriceFromChain = async () => {
     const glpPrice = await getGlpPrice(provider)
