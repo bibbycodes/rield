@@ -1,12 +1,12 @@
-import {Button} from '@mui/material';
 import {useContext} from 'react';
 import {useApproveToken} from '../hooks/useApproveToken';
-import {Address, useAccount, useBalance, useConnect} from 'wagmi';
+import {Address, useAccount, useConnect} from 'wagmi';
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import {Strategy} from "../model/strategy";
-import { arbitrum } from 'wagmi/chains'
-import { InjectedConnector } from 'wagmi/connectors/injected'
-import { useGetUserDepositedInVault } from '../hooks/useGetUserDepositedInVault';
+import {arbitrum} from 'wagmi/chains'
+import {InjectedConnector} from 'wagmi/connectors/injected'
+import {useGetUserDepositedInVault} from '../hooks/useGetUserDepositedInVault';
+
 interface StrategyDetailsModalProps {
   tokenAddress: Address,
   vaultAddress: Address,
@@ -42,26 +42,23 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
   return <div>
     {(!showApprove) && (
       <div className="grid grid-cols-2 gap-3">
-        <Button
+        <button
           onClick={() => handleClick("deposit")}
-          variant="contained"
-          className={'text-tPrimary bg-accentPrimary hover:bg-accentSecondary p-3'}
-        >Deposit</Button>
-        <Button
+          className={'text-tPrimary bg-accentPrimary hover:bg-accentSecondary p-3 rounded-lg uppercase'}
+        >Deposit</button>
+        <button
           disabled={userStaked?.lte(0)}
-          variant="outlined"
-          className={'disabled:text-tSecondary disabled:border-tSecondary p-3'}
+          className={'disabled:text-tSecondary disabled:border-tSecondary p-3 rounded-lg border-2 text-accentPrimary border-accentPrimary hover:text-accentSecondary hover:border-accentSecondary uppercase'}
           onClick={() => handleClick('withdraw')}
-        >Withdraw</Button>
+        >Withdraw</button>
       </div>
     )}
 
     {showApprove && (
-      <Button
-        className="w-full bg-accentPrimary hover:bg-accentSecondary p-3"
-        variant="contained"
+      <button
+        className="w-full text-tPrimary bg-accentPrimary hover:bg-accentSecondary p-3 rounded-lg uppercase"
         onClick={() => approve()}
-      >{true ? 'Approve' : 'Connect Wallet'}</Button>
+      >{true ? 'Approve' : 'Connect Wallet'}</button>
     )}
   </div>
 }

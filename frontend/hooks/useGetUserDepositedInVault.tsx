@@ -1,33 +1,39 @@
-import { BigNumber } from "ethers";
-import { useEffect, useState } from "react";
-import { Strategy } from "../model/strategy";
-import { useGetShareData } from "./useGetShareData";
-import { formatUnits } from "ethers/lib/utils";
+import {BigNumber} from "ethers";
+import {useContext, useEffect, useState} from "react";
+import {Strategy} from "../model/strategy";
+import {VaultDataContext} from "../contexts/vault-data-context/VaultDataContext";
+import {useAccount} from "wagmi";
 
 export const useGetUserDepositedInVault = (strategy: Strategy) => {
   const [userStaked, setUserStaked] = useState<BigNumber>(BigNumber.from(0));
   const {decimals} = strategy;
-
-  const {fullPricePerShare, refetchFullPricePerShare, userBalance, refetchUserBalance} = useGetShareData(strategy)
+  const {address: userAddress} = useAccount();
+  const {vaultsData, refetchSingle} = useContext(VaultDataContext)
+  
   const calculateUserStaked = (balance: BigNumber, pricePerShare: BigNumber) => {
-    // balance is amount of LP token
-    // fullPricePerShare is the price of 1 LP token in terms of the want token
-    return balance && pricePerShare ?
+    return balance && pricePerShare && userAddress ?
       balance.mul(pricePerShare)
         .div(BigNumber.from(10).pow(decimals))
       : BigNumber.from(0)
   }
 
   const fetchUserStaked = async () => {
-    await refetchFullPricePerShare()
-    await refetchUserBalance()
+    if (!userAddress) return
+    await refetchSingle(strategy, userAddress)
   }
 
   useEffect(() => {
-    if (userBalance && fullPricePerShare) {
-      setUserStaked(calculateUserStaked(userBalance as BigNumber, fullPricePerShare as BigNumber))
+    
+    if (!(userAddress && vaultsData[strategy.vaultAddress] )) {
+      return;
     }
-  }, [fullPricePerShare, userBalance])
+    
+    const {
+      vaultBalance,
+      vaultPricePerFullShare,
+    } = vaultsData[strategy.vaultAddress]
+    setUserStaked(calculateUserStaked(vaultBalance as BigNumber, vaultPricePerFullShare as BigNumber))
+  }, [vaultsData[strategy.vaultAddress]])
 
   return {
     fetchUserStaked,

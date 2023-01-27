@@ -1,19 +1,18 @@
 import * as React from 'react';
-import { useContext, useState } from 'react';
+import {useContext, useState} from 'react';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import { Link, TextField } from '@mui/material';
-import { useAccount, useBalance } from 'wagmi';
-import { useContractActions } from '../hooks/useContractActions';
-import { parseUnits } from "ethers/lib/utils";
-import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
-import { SelectedStrategyContext, TransactionAction } from "../contexts/SelectedStrategyContext";
+import {Link, TextField} from '@mui/material';
+import {useAccount, useBalance} from 'wagmi';
+import {useContractActions} from '../hooks/useContractActions';
+import {parseUnits} from "ethers/lib/utils";
+import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
+import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
-import { APYsContext } from "../contexts/ApyContext";
-import { BigNumber, ethers } from "ethers";
-import { ToastContext } from "../contexts/ToastContext";
+import {APYsContext} from "../contexts/ApyContext";
+import {BigNumber, ethers} from "ethers";
+import {ToastContext} from "../contexts/ToastContext";
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -40,7 +39,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const tokenBalanceBN = tokenBalanceData?.value
   const vaultTokenBalanceBn = vaultTokenBalanceData?.value
   const [amount, setAmount] = useState<BigNumber>(parseUnits('0', decimals))
-  const [visibleAmount, setVisibleAmount] = useState<number>(0)
+  const [visibleAmount, setVisibleAmount] = useState<string>('0')
   const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
   const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
   const {[strategyAddress]: apy} = useContext(APYsContext)
@@ -49,8 +48,18 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const handleClose = () => setIsOpen(false);
 
   const performAction = async (action: TransactionAction) => {
+    if (action === 'withdraw') {
+      const multiplier = BigNumber.from(10).pow(decimals)
+      const withdrawAmountInWant = parseUnits(visibleAmount.toString(), decimals)
+      const ratioOfWithdrawAmountToStakedAmount = withdrawAmountInWant.mul(multiplier).div(userStaked)
+      const numSharesBN = ratioOfWithdrawAmountToStakedAmount.mul(vaultTokenBalanceBn as BigNumber).div(multiplier)
+      setAmount(numSharesBN)
+    } else {
+      const amountBn = parseUnits(String(visibleAmount), decimals)
+      setAmount(amountBn)
+    }
+    
     const fn = actions[action]?.write
-    console.log({fn, action, actionData: actions[action]})
     const tx = await fn?.()
     await tx?.wait().then(() => {
       handleShowToast(action)
@@ -72,48 +81,32 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
   const handleSetMax = () => {
     if (tokenBalanceBN && formattedTokenBalance) {
-      const amountToSet = (action === 'deposit' || action === 'depositAll') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
-      setVisibleAmount(amountToSet)
-      syncAmountWithVisibleAmount(amountToSet)
+      const amountToSet = (action === 'deposit') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
+      if (amountToSet == 0) {
+        setVisibleAmount('0.00')
+        return
+      }
+      setVisibleAmount(amountToSet.toString())
     }
   }
 
   const isBalanceLessThanAmount = (value: number) => {
     if (tokenBalanceBN && formattedTokenBalance) {
-      const balanceToCheck = (action === 'deposit' || action === 'depositAll') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
+      const balanceToCheck = (action === 'deposit') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
       return !isNaN(value) && balanceToCheck < value
     }
   }
 
-  function syncAmountWithVisibleAmount(value: string | number) {
-    const newAmount = +value
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const value = e.target.value.match(/^-{0,1}\d*\.?\d{0,18}/)?.join('')
     const isNullOrUndefined = value == null || value === '';
 
     if (isNullOrUndefined) {
-      setAmount(BigNumber.from(0))
-      setVisibleAmount(0)
-    } else if (!/[0-9]+[.,]?[0-9]*/.test(value.toString())) {
-      setAmount(amount)
-      setVisibleAmount(visibleAmount)
-    } else {
-      if (action === 'withdraw') {
-        const multiplier = BigNumber.from(10).pow(decimals)
-        const withdrawAmountInWant = parseUnits(newAmount.toString(), decimals)
-        const ratioOfWithdrawAmountToStakedAmount = withdrawAmountInWant.mul(multiplier).div(userStaked)
-        const numSharesBN = ratioOfWithdrawAmountToStakedAmount.mul(vaultTokenBalanceBn as BigNumber).div(multiplier)
-        setAmount(numSharesBN)
-        setVisibleAmount(newAmount)
-      } else {
-        const amountBn = parseUnits(String(newAmount), decimals)
-        setAmount(amountBn)
-        setVisibleAmount(newAmount)
-      }
+      setVisibleAmount('')
+      return
     }
-  }
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const visibleAmount = e.target.value;
-    syncAmountWithVisibleAmount(visibleAmount);
+    setVisibleAmount(value)
   }
 
   return (
@@ -149,7 +142,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
                 sx={{
                   "& fieldset": {border: 'none'},
                   '& .MuiInputBase-input': {
-                    color: isBalanceLessThanAmount(visibleAmount) ? 'red' : 'white',
+                    color: isBalanceLessThanAmount(+visibleAmount) ? 'red' : 'white',
                     fontSize: '2rem',
                     padding: 0
                   }
@@ -158,7 +151,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
                 margin="normal"
                 onChange={handleAmountChange}
                 value={visibleAmount}
-                placeholder={tokenBalanceData?.value.toString()}
+                placeholder={'0.0'}
                 className={`rounded-lg flex-grow`}
               >
               </TextField>
@@ -174,10 +167,10 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           </Box>
 
           <Box className={`flex flex-row justify-between`}>
-            <Button
-              className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary`}
+            <button
+              className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
               onClick={() => performAction(action)}>{action}
-            </Button>
+            </button>
           </Box>
 
           <Box className={`ml-auto mt-4`}>

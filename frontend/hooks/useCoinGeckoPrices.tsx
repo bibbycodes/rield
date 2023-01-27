@@ -6,10 +6,11 @@ import {isEmpty} from "../utils/formatters";
 
 export const useCoinGeckoPrices = () => {
   const [prices, setPrices] = useState<Prices>({});
-  const [lastUpdated, setLastUpdated] = useState<number>(0);
-  const shouldUpdate = () => Date.now() - lastUpdated > 5 * 60 * 1000 || isEmpty(prices)
+  const shouldUpdate = (priceData: {data: any, date: number} | null) => priceData == null || Date.now() - priceData.date > 5 * 60 * 1000 || isEmpty(priceData.data)
+
   const updatePrices = async () => {
-    if (shouldUpdate()) {
+    const priceData = readPricesFromLocalStorage();
+    if (shouldUpdate(priceData)) {
       const coinGeckoIds = availableStrategies.map(strategy => strategy.coinGeckoId)
       const coinGeckoIdsString = coinGeckoIds.join(',')
       const {data} = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdsString}&vs_currencies=usd`)
@@ -19,19 +20,32 @@ export const useCoinGeckoPrices = () => {
         return acc
       }, {} as any)
       
-      transformedData = Object.entries(transformedData).filter(([key, value]) => value).reduce((acc, [key, value]) => {
+      transformedData = Object.entries(transformedData).filter(([, value]) => value).reduce((acc, [key, value]) => {
         acc[key] = value
         return acc
       }, {} as any)
       
       setPrices({...transformedData})
-      setLastUpdated(Date.now())
+      cachePriceInLocalStorage({data: transformedData, date: Date.now()})
     }
   }
   
+  const cachePriceInLocalStorage = (data:any) => {
+    localStorage.setItem(`coinGeckoPrices`, JSON.stringify(data))
+  }
+
+  function readPricesFromLocalStorage() {
+    const pricesFromLocalStorage = localStorage.getItem('coinGeckoPrices')
+    if (pricesFromLocalStorage) {
+      const parse = JSON.parse(pricesFromLocalStorage);
+      setPrices(parse.data)
+      return parse;
+    }
+  }
+
   useEffect(() => {
     updatePrices()
-  }, [lastUpdated])
+  }, [])
   
   return {coinGeckoPrices: prices, updateCoinGeckoPrices: updatePrices}
 }

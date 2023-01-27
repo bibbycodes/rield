@@ -6,17 +6,17 @@ import {multicall} from "@wagmi/core";
 import {getVaultMultiCallData, refetchSingle, VaultData} from "./utils";
 
 export interface VaultContextData {
-  vaultData: { [vaultAddress: Address]: Strategy & VaultData}
+  vaultsData: { [vaultAddress: Address]: Strategy & VaultData}
   isLoading: boolean
   refetchSingle: (strategy: Strategy, userAddress: Address) => Promise<VaultData>
-  refetchAll: Promise<void>
+  refetchAll: () => Promise<void>
 }
 
 const VaultDataContext = createContext<VaultContextData>({
-  vaultData: {},
+  vaultsData: {},
   isLoading: true,
   refetchSingle: () => Promise.resolve({} as VaultData),
-  refetchAll: Promise.resolve()
+  refetchAll: () => Promise.resolve()
 })
 
 
@@ -24,7 +24,7 @@ const VaultDataContextProvider = ({children}: {
   children: React.ReactNode;
 }) => {
   const {address} = useAccount();
-  const [vaultData, setVaultData] = useState<{ [vaultAddress: Address]: any }>({})
+  const [vaultsData, setVaultsData] = useState<{ [vaultAddress: Address]: any }>({})
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const erc20Vaults = availableStrategies.filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)
   const ethVaults = availableStrategies.filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
@@ -71,7 +71,7 @@ const VaultDataContextProvider = ({children}: {
         }, {} as any)
 
 
-        setVaultData({
+        setVaultsData({
           ...erc20VaultData,
           ...ethVaultData
         })
@@ -86,7 +86,7 @@ const VaultDataContextProvider = ({children}: {
 
 
   return (
-    <VaultDataContext.Provider value={{vaultData, isLoading, refetchSingle, refetchAll: getVaultData}}>
+    <VaultDataContext.Provider value={{vaultsData, isLoading, refetchSingle, refetchAll: getVaultData}}>
       {children}
     </VaultDataContext.Provider>
   )
