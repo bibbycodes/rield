@@ -1,9 +1,10 @@
 import {Address, useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction} from "wagmi";
 import { BigNumber } from "ethers";
 import { useEffect, useState } from "react";
-import { abi } from '../../artifacts/contracts/token/GMD.sol/GMD.json';
+import ERC20Abi from '../resources/abis/erc20.json';
 
 export function useApproveToken(tokenAddress: string, contractAddress: string, userAddress: string | undefined) {
+  const abi = Array.from(ERC20Abi)
   const maxInt = BigNumber.from(2).pow(BigNumber.from(255))
   const [isApproved, setIsApproved] = useState(false);
   const {config} = usePrepareContractWrite({
