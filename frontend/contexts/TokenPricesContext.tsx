@@ -25,7 +25,6 @@ const TokenPricesContextProvider = ({children}: {
   const [prices, setPrices] = useState<Prices>(coinGeckoPrices);
   
   const mergePrices = async () => {
-    console.log(coinGeckoPrices, blockChainPrices)
     if (!isEmpty(coinGeckoPrices) || !isEmpty(blockChainPrices)) {
       setPrices({...prices, ...coinGeckoPrices, ...blockChainPrices})
     }
@@ -38,9 +37,7 @@ const TokenPricesContextProvider = ({children}: {
   }
   
   useEffect(() => {
-    mergePrices().then(() => {
-      console.log("merged prices", prices)
-    })
+    mergePrices().then()
   }, [coinGeckoPrices, blockChainPrices])
   
 

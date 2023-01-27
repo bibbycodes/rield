@@ -14,7 +14,6 @@ export const useCoinGeckoPrices = () => {
       const coinGeckoIds = availableStrategies.map(strategy => strategy.coinGeckoId)
       const coinGeckoIdsString = coinGeckoIds.join(',')
       const {data} = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdsString}&vs_currencies=usd`)
-      console.log(data)
       let transformedData = coinGeckoIds.reduce((acc, id) => {
         acc[id] = data[id]?.usd
         return acc

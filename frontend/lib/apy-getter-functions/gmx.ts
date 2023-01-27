@@ -10,7 +10,6 @@ export const calculateAPR = (tokensPerInterval: BigNumber, aum: BigNumber, ethPr
   const tenTo18 = BigNumber.from(10).pow(18);
   const tenTo12 = BigNumber.from(10).pow(12);
   const tpi = tokensPerInterval.div(tenTo12).toNumber() / 10e5;
-  console.log((tpi * ethPrice * secondsPerYear) /  aum.div(tenTo18).toNumber())
   return (tpi * ethPrice * secondsPerYear) /  aum.div(tenTo18).toNumber();
 }
 

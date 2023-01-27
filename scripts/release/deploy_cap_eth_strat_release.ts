@@ -6,9 +6,6 @@ import { BeefyETHVault } from '../../typechain-types';
 async function main() {
   const [deployer]: SignerWithAddress[] =
     await ethers.getSigners();
-
-  console.log("Deploying contracts with the account:", deployer.address);
-  //
   const Vault = await ethers.getContractFactory("BeefyETHVault");
   const vault: BeefyETHVault = (await Vault.deploy()) as BeefyETHVault;
   await vault.deployed();

@@ -11,7 +11,6 @@ export const useTotalDollarAmountDeposited = () => {
   const [totalDollarAmountDeposited, setTotalDollarAmountDeposited] = useState<string | null>(null);
   const {address: userAddress} = useAccount();
   const {prices} = useContext(TokenPricesContext)
-
   const {vaultsData} = useContext(VaultDataContext)
 
   const calculateUserStakedInDollars = (balance: BigNumber, price: number, pricePerShare: BigNumber, decimals: number) => {
@@ -21,11 +20,11 @@ export const useTotalDollarAmountDeposited = () => {
 
   async function getTotalStakedInDollars() {
     return availableStrategies.reduce((acc: any, strategy: any, index: number) => {
-      const {
-        vaultBalance: balance,
-        vaultPricePerFullShare: pricePerShare,
-      } = vaultsData[strategy.vaultAddress]
-      if (pricePerShare && balance && Object.keys(prices).length && userAddress) {
+      if (vaultsData[strategy.vaultAddress] && Object.keys(prices).length && userAddress) {
+        const {
+          vaultBalance: balance,
+          vaultPricePerFullShare: pricePerShare,
+        } = vaultsData[strategy.vaultAddress]
         const decimals = availableStrategies[index].decimals
         const price = prices[availableStrategies[index].coinGeckoId]
         const dollarAmount = calculateUserStakedInDollars(balance, price, pricePerShare, decimals)
@@ -40,7 +39,6 @@ export const useTotalDollarAmountDeposited = () => {
       .then(userStaked => {
         setTotalDollarAmountDeposited(formatDollarAmount(userStaked))
       })
-      .catch(console.log)
   }, [userAddress, prices])
 
   return {

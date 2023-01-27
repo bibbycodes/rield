@@ -13,7 +13,6 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
   const {userStaked} = useGetUserDepositedInVault(strategy)
   const {prices} = useContext(TokenPricesContext)
   const {apys, isLoading} = useContext(APYsContext)
-  console.log(isLoading)
   const apy = apys[strategy.strategyAddress]
 
   // TODO: Move this to a useGetUserStaked
