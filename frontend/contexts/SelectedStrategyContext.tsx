@@ -1,7 +1,7 @@
 import {createContext, Dispatch, ReactNode, SetStateAction, useState,} from "react";
 import {availableStrategies, Strategy} from "../model/strategy";
 
-export type TransactionAction = "deposit" | "withdraw" | "depositAll" | "withdrawAll";
+export type TransactionAction = "deposit" | "withdraw";
 export type SetFunction<T> =  Dispatch<SetStateAction<T>>
 
 const SelectedStrategyContext = createContext<{

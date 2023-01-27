@@ -1,19 +1,20 @@
 import * as React from 'react';
-import { useContext, useState } from 'react';
+import {useContext, useState} from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import { Link, TextField } from '@mui/material';
-import { useAccount, useBalance } from 'wagmi';
-import { useContractActions } from '../hooks/useContractActions';
-import { parseUnits } from "ethers/lib/utils";
-import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
-import { SelectedStrategyContext, TransactionAction } from "../contexts/SelectedStrategyContext";
+import {Link, TextField} from '@mui/material';
+import {useAccount, useBalance} from 'wagmi';
+import {useContractActions} from '../hooks/useContractActions';
+import {parseUnits} from "ethers/lib/utils";
+import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
+import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
-import { APYsContext } from "../contexts/ApyContext";
-import { BigNumber, ethers } from "ethers";
-import { ToastContext } from "../contexts/ToastContext";
+import {APYsContext} from "../contexts/ApyContext";
+import {BigNumber, ethers} from "ethers";
+import {ToastContext} from "../contexts/ToastContext";
+import Image from 'next/image'
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -72,7 +73,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
   const handleSetMax = () => {
     if (tokenBalanceBN && formattedTokenBalance) {
-      const amountToSet = (action === 'deposit' || action === 'depositAll') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
+      const amountToSet = (action === 'deposit') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
       setVisibleAmount(amountToSet)
       syncAmountWithVisibleAmount(amountToSet)
     }
@@ -80,7 +81,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
   const isBalanceLessThanAmount = (value: number) => {
     if (tokenBalanceBN && formattedTokenBalance) {
-      const balanceToCheck = (action === 'deposit' || action === 'depositAll') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
+      const balanceToCheck = (action === 'deposit') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
       return !isNaN(value) && balanceToCheck < value
     }
   }
@@ -141,7 +142,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           </div>
           <Box className={`bg-backgroundSecondary rounded-lg`}>
             <div className="pt-5 p-4 text-3xl flex items-center">
-              <img height={45} width={45} src={tokenLogoUrl} alt=""/>
+              <Image alt={"Token Logo"} height={45} width={45} src={tokenLogoUrl}/>
               <span className="ml-3">{selectedStrategy.tokenSymbol}</span>
             </div>
             <div className={'flex p-4 flex-row items-center h-20'}>
