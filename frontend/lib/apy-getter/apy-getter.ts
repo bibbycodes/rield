@@ -5,10 +5,10 @@ import * as gmx from "../../resources/vault-details/deploy_gmx-output.json";
 import * as glp from "../../resources/vault-details/deploy_glp-output.json";
 import {getCapAPY} from "../apy-getter-functions/cap";
 import {getGmxGlpApr} from "../apy-getter-functions/gmx";
-import {CoinGeckoPrices} from "../../contexts/TokenPricesContext";
+import {Prices} from "../../contexts/TokenPricesContext";
 
 export class ApyGetter {
-  constructor(private provider: any, private prices: CoinGeckoPrices) {
+  constructor(private provider: any, private prices: Prices) {
 
   }
 
@@ -19,9 +19,9 @@ export class ApyGetter {
       case capWethPool.strategyAddress:
         return getCapAPY('weth', this.provider)
       case gmx.strategyAddress:
-        return getGmxGlpApr(this.provider, this.prices['ethereum'], 'GMX')
+        return getGmxGlpApr(this.provider, 'GMX')
       case glp.strategyAddress:
-        return getGmxGlpApr(this.provider, this.prices['ethereum'], 'GLP')
+        return getGmxGlpApr(this.provider, 'GLP')
       default:
         return 0
     }

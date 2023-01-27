@@ -1,16 +1,14 @@
 import {createContext, ReactNode, useEffect, useState,} from "react";
-import {availableStrategies} from "../model/strategy";
-import axios from "axios";
+import {useCoinGeckoPrices} from "../hooks/useCoinGeckoPrices";
+import {useBlockChainPrices} from "../hooks/useBlockChainPrices";
 import {isEmpty} from "../utils/formatters";
-import {useProvider} from "wagmi";
-import {getGlpPrice} from "../lib/apy-getter-functions/gmx";
 
-export type CoinGeckoPrices = {
+export type Prices = {
   [coinGeckoId: string]: number
 }
 
 interface TokenPrices {
-  prices: CoinGeckoPrices;
+  prices: Prices;
   updatePrices: () => Promise<void>;
 }
 
@@ -22,41 +20,28 @@ const TokenPricesContext = createContext<TokenPrices>({
 const TokenPricesContextProvider = ({children}: {
   children: ReactNode;
 }) => {
-  const [prices, setPrices] = useState<CoinGeckoPrices>({});
-  const [lastUpdated, setLastUpdated] = useState<number>(0);
-  const [glpPrice, setGlpPrice] = useState<number>(0);
-  const provider = useProvider()
+  const {coinGeckoPrices, updateCoinGeckoPrices} = useCoinGeckoPrices()
+  const {blockChainPrices, updateBlockChainPrices} = useBlockChainPrices()
+  const [prices, setPrices] = useState<Prices>(coinGeckoPrices);
   
-  const shouldUpdate = () => Date.now() - lastUpdated > 5 * 60 * 1000 || isEmpty(prices)
-
-  const updatePrices = async () => {
-    // update prices only if last update was more than 5 minutes ago
-    if (shouldUpdate()) {
-      const coinGeckoIds = availableStrategies.map(strategy => strategy.coinGeckoId)
-      const coinGeckoIdsString = coinGeckoIds.join(',')
-      const {data} = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdsString}&vs_currencies=usd`)
-      
-      const transformedData = coinGeckoIds.reduce((acc, id) => {
-        acc[id] = data[id].usd
-        return acc
-      }, {} as any)
-      
-      setPrices({...transformedData})
-      setLastUpdated(Date.now())
-    }
-    
-    if(glpPrice) {
-      setPrices({...prices, glp: glpPrice})
+  const mergePrices = async () => {
+    console.log(coinGeckoPrices, blockChainPrices)
+    if (!isEmpty(coinGeckoPrices) || !isEmpty(blockChainPrices)) {
+      setPrices({...prices, ...coinGeckoPrices, ...blockChainPrices})
     }
   }
   
+  const updatePrices = async () => {
+    await updateCoinGeckoPrices()
+    await updateBlockChainPrices()
+    await mergePrices()
+  }
+  
   useEffect(() => {
-    updatePrices()
-    getGlpPrice(provider).then(({asNumber}) => {
-      console.log({asNumber})
-      setGlpPrice(asNumber)
+    mergePrices().then(() => {
+      console.log("merged prices", prices)
     })
-  }, [])
+  }, [coinGeckoPrices, blockChainPrices])
   
 
   return (

@@ -3,18 +3,20 @@ import {Address, useNetwork, useProvider} from "wagmi";
 import {calculateApyWithFee} from "../utils/calculator";
 import {ApyGetter} from "../lib/apy-getter/apy-getter";
 import {availableStrategies} from "../model/strategy";
-import {useGMXData} from "../hooks/useGMXData";
-import {calculateAPR} from "../lib/apy-getter-functions/gmx";
 import {TokenPricesContext} from "./TokenPricesContext";
 
-const APYsContext = createContext<{ [strategy: Address]: number }>({})
+const APYsContext = createContext<{ apys: { [strategy: Address]: number }, isLoading: boolean }>({
+  apys: {},
+  isLoading: true,
+})
 
 const APYsContextProvider = ({children}: {
   children: ReactNode;
 }) => {
   const provider = useProvider()
   const {chain} = useNetwork()
-  const [APYs, setAPYs] = useState<{ [strategy: Address]: number }>({});
+  const [apys, setApys] = useState<{ [strategy: Address]: number }>({});
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const {prices} = useContext(TokenPricesContext)
   const apyGetter = new ApyGetter(provider, prices)
 
@@ -26,17 +28,18 @@ const APYsContextProvider = ({children}: {
           const apysWithFees = Object.keys(APYs).reduce((acc, strategyAddress) => {
             return {...acc, [strategyAddress]: calculateApyWithFee(APYs[strategyAddress] as number, 5, 365)}
           }, {})
-          setAPYs(apysWithFees)
+          setApys(apysWithFees)
+          setIsLoading(false)
         }
       )
-      : setAPYs(availableStrategies.reduce((acc, strategy) => {
+      : setApys(availableStrategies.reduce((acc, strategy) => {
         return {...acc, [strategy.strategyAddress]: 0}
       }, {}))
 
   }, [chain?.id, prices])
 
   return (
-    <APYsContext.Provider value={APYs}>
+    <APYsContext.Provider value={{apys, isLoading}}>
       {children}
     </APYsContext.Provider>
   )
