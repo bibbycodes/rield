@@ -1,8 +1,7 @@
-import { BigNumber } from "ethers";
-import { useEffect, useState } from "react";
-import { Strategy } from "../model/strategy";
-import { useGetShareData } from "./useGetShareData";
-import { formatUnits } from "ethers/lib/utils";
+import {BigNumber} from "ethers";
+import {useEffect, useState} from "react";
+import {Strategy} from "../model/strategy";
+import {useGetShareData} from "./useGetShareData";
 
 export const useGetUserDepositedInVault = (strategy: Strategy) => {
   const [userStaked, setUserStaked] = useState<BigNumber>(BigNumber.from(0));

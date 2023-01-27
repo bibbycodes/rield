@@ -1,5 +1,5 @@
 import {useAccount} from "wagmi";
-import {abi} from "../../artifacts/contracts/vaults/BeefyVaultV7.sol/BeefyVaultV7.json";
+import {abi} from "../resources/abis/BeefyVaultV7.json";
 import {BigNumber} from "ethers";
 import {useContext, useEffect, useState} from "react";
 import {multicall} from "@wagmi/core";

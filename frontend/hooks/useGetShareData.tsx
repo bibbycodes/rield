@@ -1,5 +1,5 @@
 import {useAccount, useContractRead} from "wagmi";
-import {abi} from "../../artifacts/contracts/vaults/BeefyVaultV7.sol/BeefyVaultV7.json";
+import {abi} from "../resources/abis/BeefyVaultV7.json";
 import {Strategy} from "../model/strategy";
 
 export const useGetShareData = ({vaultAddress}: Strategy) => {
