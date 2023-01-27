@@ -13,6 +13,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import {APYsContext} from "../contexts/ApyContext";
 import {BigNumber, ethers} from "ethers";
 import {ToastContext} from "../contexts/ToastContext";
+import Image from 'next/image'
+
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -134,7 +136,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           </div>
           <Box className={`bg-backgroundSecondary rounded-lg`}>
             <div className="pt-5 p-4 text-3xl flex items-center">
-              <img height={45} width={45} src={tokenLogoUrl} alt=""/>
+              <Image alt={"Token Logo"} height={45} width={45} src={tokenLogoUrl}/>
               <span className="ml-3">{selectedStrategy.tokenSymbol}</span>
             </div>
             <div className={'flex p-4 flex-row items-center h-20'}>

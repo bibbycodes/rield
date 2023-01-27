@@ -1,9 +1,9 @@
-import {useContractWrite, usePrepareContractWrite, useWaitForTransaction} from 'wagmi'
+import {Address, useContractWrite, usePrepareContractWrite, useWaitForTransaction} from 'wagmi'
 import {AbiItem} from "web3-utils";
 import {BigNumber} from 'ethers';
 
 export interface useContractActionsProps {
-  vaultAddress: string,
+  vaultAddress: Address,
   amount: BigNumber,
   abi: AbiItem[],
   decimals: number

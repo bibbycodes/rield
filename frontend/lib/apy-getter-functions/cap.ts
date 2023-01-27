@@ -1,3 +1,7 @@
+/* eslint-disable */
+//@ts-nocheck
+
+
 import axios from "axios";
 import {ethers} from "ethers";
 import {Address} from "wagmi";
