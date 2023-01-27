@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import {Link, TextField} from '@mui/material';
-import {useAccount, useBalance} from 'wagmi';
+import {Address, useAccount, useBalance} from 'wagmi';
 import {useContractActions} from '../hooks/useContractActions';
 import {parseUnits} from "ethers/lib/utils";
 import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
@@ -43,7 +43,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const [visibleAmount, setVisibleAmount] = useState<string>('0')
   const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
   const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
-  const {[strategyAddress]: apy} = useContext(APYsContext)
+  const {[strategyAddress]: apy}:{[key: Address]: number} = useContext(APYsContext)
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
 
   const handleClose = () => setIsOpen(false);
