@@ -25,6 +25,9 @@ export const useTotalDollarAmountDeposited = () => {
           vaultBalance: balance,
           vaultPricePerFullShare: pricePerShare,
         } = vaultsData[strategy.vaultAddress]
+        if (balance == null || pricePerShare || null) {
+          return acc;
+        }
         const decimals = availableStrategies[index].decimals
         const price = prices[availableStrategies[index].coinGeckoId]
         const dollarAmount = calculateUserStakedInDollars(balance, price, pricePerShare, decimals)
