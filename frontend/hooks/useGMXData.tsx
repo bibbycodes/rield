@@ -54,7 +54,6 @@ export const useGMXData = () => {
 
   useEffect(() => {
     const [aum, glpPrice, glpTokensPerInterval, gmxTokensPerInterval] = data as BigNumber[]
-    console.log([aum, glpPrice, glpTokensPerInterval, gmxTokensPerInterval])
     setGmxDataAsNumbers({
       aum: aum.div(BigNumber.from(String(10**18))).toNumber(),
       glpPrice: parseFloat(glpPrice.div(BigNumber.from(10).pow(18)).toNumber().toString()) / 10 ** 12,

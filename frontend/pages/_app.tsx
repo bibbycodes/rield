@@ -22,13 +22,13 @@ export default function App({Component, pageProps}: AppProps) {
   return (
     <div className={`bg-backgroundPrimary h-full`}>
       <WagmiConfig client={client}>
-        <Providers>
-          <ConnectKitProvider>
+        <ConnectKitProvider>
+          <Providers>
             <Layout>
               <Component {...pageProps} />
             </Layout>
-          </ConnectKitProvider>
-        </Providers>
+          </Providers>
+        </ConnectKitProvider>
       </WagmiConfig>
     </div>
   )
