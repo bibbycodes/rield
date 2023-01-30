@@ -4,7 +4,14 @@ import * as gmx from "../resources/vault-details/deploy_gmx-output.json";
 import * as glp from "../resources/vault-details/deploy_glp-output.json";
 import {abi} from '../resources/abis/BeefyVaultV7.json';
 import {Address} from "wagmi";
+import crypto from 'crypto'
 
+const randomAddress = () => {
+  const randomBytes = crypto.randomBytes(20);
+  return `0x${randomBytes.toString("hex")}`;
+}
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 export interface Strategy {
   id: number;
   name: string;
@@ -69,28 +76,7 @@ export const availableStrategies: Strategy[] = [
     coinGeckoId: "glp",
     type: "Autocompound",
     performanceFee: 5
-  },  
-  // {
-  //   id: 0,
-  //   name: "Cap ETH",
-  //   protocol: "Cap.finance",
-  //   tokenSymbol: "ETH",
-  //   tokenAddress: capEth.tokenAddress as Address,
-  //   vaultAddress: capEth.vaultAddress as Address,
-  //   strategyAddress: capEth.strategyAddress as Address,
-  //   protocolLogoUrl: "https://v3.cap.finance/logos/CAP.svg",
-  //   tokenLogoUrl: "https://v3.cap.finance/logos/ETH.svg",
-  //   description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
-  //   protocolUrl: "https://www.cap.finance",
-  //   apy: 13,
-  //   tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=eth`,
-  //   decimals: 18,
-  //   isActive: true,
-  //   abi: abi,
-  //   coinGeckoId: "ethereum",
-  //   type: "Auto Compound",
-  //   performanceFee: 5
-  // },
+  },
   {
     id: 1,
     name: "Cap USDC",
@@ -112,4 +98,89 @@ export const availableStrategies: Strategy[] = [
     type: "Auto Compound",
     performanceFee: 5
   },
+  {
+    id: 0,
+    name: "Cap ETH",
+    protocol: "Cap.finance",
+    tokenSymbol: "ETH",
+    tokenAddress: randomAddress() as Address,
+    vaultAddress: randomAddress() as Address,
+    strategyAddress: randomAddress() as Address,
+    protocolLogoUrl: "/cap-logo.svg",
+    tokenLogoUrl: "/eth-token.svg",
+    description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
+    protocolUrl: "https://www.cap.finance",
+    apy: 13,
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=eth`,
+    decimals: 18,
+    isActive: false,
+    abi: abi,
+    coinGeckoId: "ethereum",
+    type: "Auto Compound",
+    performanceFee: 5
+  },
+  {
+    id: 0,
+    name: "GNS",
+    protocol: "Gains Network",
+    tokenSymbol: "GNS",
+    tokenAddress: randomAddress() as Address,
+    vaultAddress: randomAddress() as Address,
+    strategyAddress: randomAddress() as Address,
+    protocolLogoUrl: "/gns-logo.png",
+    tokenLogoUrl: "/gns-logo.png",
+    description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
+    protocolUrl: "https://gains.trade/",
+    apy: 13,
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=gns`,
+    decimals: 18,
+    isActive: false,
+    abi: abi,
+    coinGeckoId: "gns",
+    type: "Auto Compound",
+    performanceFee: 5
+  },
+  {
+    id: 0,
+    name: "GNS Dai",
+    protocol: "Gains Network",
+    tokenSymbol: "DAI",
+    tokenAddress: randomAddress() as Address,
+    vaultAddress: randomAddress() as Address,
+    strategyAddress: randomAddress() as Address,
+    protocolLogoUrl: "/gns-logo.png",
+    tokenLogoUrl: "/dai-logo.png",
+    description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
+    protocolUrl: "https://gains.trade/",
+    apy: 13,
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=gns`,
+    decimals: 18,
+    isActive: false,
+    abi: abi,
+    coinGeckoId: "gns",
+    type: "Auto Compound",
+    performanceFee: 5
+  },
+  {
+    id: 0,
+    name: "BFR",
+    protocol: "Buffer Finance",
+    tokenSymbol: "BFR",
+    tokenAddress: randomAddress() as Address,
+    vaultAddress: randomAddress() as Address,
+    strategyAddress: randomAddress() as Address,
+    protocolLogoUrl: "/bfr-logo.png",
+    tokenLogoUrl: "/bfr-logo.png",
+    description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
+    protocolUrl: "https://app.buffer.finance/ARBITRUM/earn",
+    apy: 13,
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=gns`,
+    decimals: 18,
+    isActive: false,
+    abi: abi,
+    coinGeckoId: "bfr",
+    type: "Auto Compound",
+    performanceFee: 5
+  },
 ]
+

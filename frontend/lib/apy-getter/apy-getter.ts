@@ -19,9 +19,9 @@ export class ApyGetter {
       case capWethPool.strategyAddress:
         return getCapAPY('weth', this.provider)
       case gmx.strategyAddress:
-        return getGmxGlpApr(this.provider, 'GMX')
+        return getGmxGlpApr(this.provider, 'GMX', this.prices['ethereum'])
       case glp.strategyAddress:
-        return getGmxGlpApr(this.provider, 'GLP')
+        return getGmxGlpApr(this.provider, 'GLP', this.prices['ethereum'])
       default:
         return 0
     }

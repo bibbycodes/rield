@@ -14,6 +14,7 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
   const {prices} = useContext(TokenPricesContext)
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys[strategy.strategyAddress]
+  const {isActive} = strategy
 
   // TODO: Move this to a useGetUserStaked
   const getUserStakedInDollars = (amount: BigNumber) => {
@@ -39,23 +40,32 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
         <div className={`flex`}>
           <div className="flex flex-col my-6 flex-grow">
             <Typography className="text-xs text-tSecondary">Staked</Typography>
-            <Typography className={`text-2xl text-tPrimary`}>${getUserStakedInDollars(userStaked)}</Typography>
+            <Typography className={`text-2xl text-tPrimary`}>{isActive ? getUserStakedInDollars(userStaked): '-' }</Typography>
             <Typography
               className={`text-xs text-tSecondary`}>{ethers.utils.formatUnits(userStaked, strategy.decimals)} {(strategy.tokenSymbol)}</Typography>
           </div>
           <div className="flex flex-col my-6">
             <Typography className="text-xs text-tSecondary">APY</Typography>
-            <WithLoader className={`min-w-[5rem]`} type={`text`} isLoading={isLoading}>
+            {isActive ? (<WithLoader className={`min-w-[5rem]`} type={`text`} isLoading={isLoading}>
               <Typography className={`text-2xl text-tPrimary`}>{apy}%</Typography>
-            </WithLoader>
+            </WithLoader>) : (
+              <Typography className={`text-2xl text-tPrimary`}>-</Typography>
+            )}
           </div>
         </div>
-        <Enable
-          vaultAddress={strategy.vaultAddress}
-          tokenAddress={strategy.tokenAddress}
-          openModal={handleOpenModal}
-          strategy={strategy}
-        ></Enable>
+        {isActive ? (
+          <Enable
+            vaultAddress={strategy.vaultAddress}
+            tokenAddress={strategy.tokenAddress}
+            openModal={handleOpenModal}
+            strategy={strategy}
+          ></Enable>
+        ) : (
+          <button
+            className="w-full text-tPrimary bg-accentPrimary hover:bg-accentSecondary p-3 rounded-lg uppercase"
+          >Coming Soon!</button>
+        )
+        }
       </div>
     </div>
   )

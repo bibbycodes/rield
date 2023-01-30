@@ -11,7 +11,9 @@ export const useCoinGeckoPrices = () => {
   const updatePrices = async () => {
     const priceData = readPricesFromLocalStorage();
     if (shouldUpdate(priceData)) {
-      const coinGeckoIds = availableStrategies.map(strategy => strategy.coinGeckoId)
+      const coinGeckoIds = availableStrategies
+        .filter(strategy => strategy.isActive)
+        .map(strategy => strategy.coinGeckoId)
       const coinGeckoIdsString = coinGeckoIds.join(',')
       const {data} = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdsString}&vs_currencies=usd`)
       let transformedData = coinGeckoIds.reduce((acc, id) => {

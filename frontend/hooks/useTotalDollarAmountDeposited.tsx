@@ -19,7 +19,9 @@ export const useTotalDollarAmountDeposited = () => {
   }
 
   async function getTotalStakedInDollars() {
-    return availableStrategies.reduce((acc: any, strategy: any, index: number) => {
+    return availableStrategies
+      .filter(strategy => strategy.isActive)
+      .reduce((acc: any, strategy: any, index: number) => {
       if (vaultsData[strategy.vaultAddress] && Object.keys(prices).length && userAddress) {
         const {
           vaultBalance: balance,

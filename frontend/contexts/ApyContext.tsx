@@ -34,7 +34,9 @@ const APYsContextProvider = ({children}: {
           setIsLoading(false)
         }
       )
-      : setApys(availableStrategies.reduce((acc, strategy) => {
+      : setApys(availableStrategies
+        .filter(strategy => strategy.isActive)
+        .reduce((acc, strategy) => {
         return {...acc, [strategy.strategyAddress]: 0}
       }, {}))
 

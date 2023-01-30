@@ -26,8 +26,12 @@ const VaultDataContextProvider = ({children}: {
   const {address} = useAccount();
   const [vaultsData, setVaultsData] = useState<{ [vaultAddress: Address]: any }>({})
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const erc20Vaults = availableStrategies.filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)
-  const ethVaults = availableStrategies.filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
+  const erc20Vaults = availableStrategies
+    .filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)
+    .filter(strategy => strategy.isActive)
+  const ethVaults = availableStrategies
+    .filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
+    .filter(strategy => strategy.isActive)
   
   const getVaultData = async () => {
     if (address) {

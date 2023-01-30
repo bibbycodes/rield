@@ -13,12 +13,10 @@ export const calculateAPR = (tokensPerInterval: BigNumber, aum: BigNumber, ethPr
   return (tpi * ethPrice * secondsPerYear) /  aum.div(tenTo18).toNumber();
 }
 
-export const getGmxGlpApr = async (provider: any, token: 'GLP' | 'GMX'): Promise<number> => {
-  const {data} = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd`)
-  const ethPrice = data.ethereum.usd;
+export const getGmxGlpApr = async (provider: any, token: 'GLP' | 'GMX', ethPrice?: number): Promise<number> => {
   const aum = await getGmxAum(provider);
   const tokensPerInterval = token === 'GMX' ? await getGmxTokensPerInterval(provider) : await getGLPTokensPerInterval(provider);
-  return calculateAPR(tokensPerInterval.bn, aum.bn, ethPrice) * 100;
+  return calculateAPR(tokensPerInterval.bn, aum.bn, ethPrice ?? (await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd`)).data.ethereum.usd) * 100;
 }
 
 export interface result {
