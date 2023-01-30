@@ -24,6 +24,22 @@ const muiTheme = createTheme(
         'rld',
       ].join(','),
     },
+    palette: {
+      primary: {
+        main: theme.tPrimary
+      },
+      secondary: {
+        main: theme.tPrimary
+      },
+      background: {
+        default: theme.backgroundPrimary,
+        paper: theme.backgroundSecondary
+      },
+      text: {
+        primary: theme.tPrimary,
+        secondary: theme.tSecondary
+      }
+    }
   },
 );
 
