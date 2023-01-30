@@ -42,7 +42,7 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
             <Typography className="text-xs text-tSecondary">Staked</Typography>
             <Typography className={`text-2xl text-tPrimary`}>{isActive ? getUserStakedInDollars(userStaked): '-' }</Typography>
             <Typography
-              className={`text-xs text-tSecondary`}>{ethers.utils.formatUnits(userStaked, strategy.decimals)} {(strategy.tokenSymbol)}</Typography>
+              className={`text-xs text-tSecondary`}>{isActive ? `${ethers.utils.formatUnits(userStaked, strategy.decimals)} ${(strategy.tokenSymbol)}}` : '-'}</Typography>
           </div>
           <div className="flex flex-col my-6">
             <Typography className="text-xs text-tSecondary">APY</Typography>
