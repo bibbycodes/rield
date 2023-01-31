@@ -11,8 +11,8 @@ const {createTheme} = require("@mui/material");
 const theme = {
   tPrimary: '#FFFFFF',
   tSecondary: '#9597A0',
-  backgroundSecondary: '#080819',
-  backgroundPrimary: '#161a35',
+  backgroundSecondary: '#37373d',
+  backgroundPrimary: '#2c2c2e',
   accentPrimary: '#607EDE',
   accentSecondary: '#7a92df',
 }

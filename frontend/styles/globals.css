@@ -5,7 +5,7 @@
   --max-width: 1100px;
   --border-radius: 12px;
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
+  --background-start-rgb: rgb(44 44 46);
   --background-end-rgb: 255, 255, 255;
 
   --primary-glow: conic-gradient(
@@ -95,12 +95,12 @@ nav {
 
 body {
   color: rbg(--foreground-rgb);
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  /*background: linear-gradient(*/
+  /*    to bottom,*/
+  /*    transparent,*/
+  /*    rgb(var(--background-end-rgb))*/
+  /*  )*/
+  /*  rgb(var(--background-start-rgb));*/
 }
 
 a {

@@ -15,8 +15,9 @@ export default function Layout({children}: PropsWithChildren) {
         <link rel="icon" href="/favicon.ico"/>
       </Head>
 
-      <main>
-        <nav className="text-white w-full bg-backgroundSecondary py-0">
+      <div className="text-white w-full bg-gray-900 h-64 absolute"></div>
+      <main className="relative z-10">
+        <nav className="text-white w-full py-0">
           <div className="flex flex-row w-full">
             <ul className="flex items-center px-10 w-full py-1">
               <div>
@@ -51,7 +52,7 @@ export default function Layout({children}: PropsWithChildren) {
           </div>
         </nav>
 
-        <div className="pt-5 px-10">
+        <div className="py-5 px-10">
           <main>{children}</main>
         </div>
       </main>
