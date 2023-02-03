@@ -3,7 +3,7 @@ import {useContext, useState} from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import {Link, TextField} from '@mui/material';
+import {TextField} from '@mui/material';
 import {useAccount, useBalance} from 'wagmi';
 import {useContractActions} from '../hooks/useContractActions';
 import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
@@ -13,7 +13,7 @@ import {APYsContext} from "../contexts/ApyContext";
 import {ethers} from "ethers";
 import {ToastContext} from "../contexts/ToastContext";
 import Image from 'next/image'
-import { useCalculateSendAmount } from '../hooks/useCalculateSendAmount';
+import {useCalculateSendAmount} from '../hooks/useCalculateSendAmount';
 import {WithLoader} from './WithLoader';
 
 const style = {
@@ -52,7 +52,8 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
   const performAction = async (action: TransactionAction) => {
     const fn = actions[action]?.write
-    const tx = await fn?.()
+    const tx = await fn?.() 
+    handleShowToast(action)
     await tx?.wait().then(() => {
       handleShowToast(action)
     })
@@ -61,8 +62,17 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   }
 
   const handleShowToast = (action: TransactionAction) => {
-    const {isError, isFetching} = actions[action]
-    if (!isFetching) {
+    const {isError, isFetching, isLoading, isSuccess} = actions[action]
+    
+    if (isLoading || isFetching) {
+      const message = isError ? `${action} failed` : `${action} pending!`
+      const severity = isError ? "error" : "info"
+      setToastMessage(message)
+      setSeverity(severity)
+      setOpenToast(true)
+    }
+    
+    if (!isFetching || isSuccess) {
       const message = isError ? `${action} failed` : `${action} successful!`
       const severity = isError ? "error" : "success"
       setToastMessage(message)
@@ -171,9 +181,9 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           </WithLoader>
 
           <Box className={`flex flex-col items-center mt-auto mx-2`}>
-            <Link href={tokenUrl} underline="hover" className={`text-tSecondary`}>
+            <a href={tokenUrl} target="_blank" rel="noopener noreferrer" className={`text-tSecondary`}>
               Get Token
-            </Link>
+            </a>
           </Box>
         </Box>
       </Modal>

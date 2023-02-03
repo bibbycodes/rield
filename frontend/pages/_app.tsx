@@ -7,8 +7,7 @@ import Layout from '../components/Layout';
 import {Providers} from "../lib/Providers";
 
 const alchemyId = process.env.ALCHEMY_ID;
-
-const chains = [arbitrum, hardhat];
+let chains = process.env.ENV === 'dev' ? [arbitrum, hardhat] : [arbitrum];
 
 const client = createClient(
   getDefaultClient({
