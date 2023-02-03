@@ -13,7 +13,7 @@ const theme = {
   tSecondary: '#9597A0',
   backgroundSecondary: '#37373d',
   backgroundPrimary: '#2c2c2e',
-  accentPrimary: '#607EDE',
+  accentPrimary: '#51648d',
   accentSecondary: '#7a92df',
 }
 
