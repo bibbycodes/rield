@@ -6,8 +6,8 @@ interface WithLoaderProps {
   children: JSX.Element;
   className?: string;
   size?: number;
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
   type?: 'circular' | 'linear' | 'spinner' | 'rectangular' | 'text';
 }
 

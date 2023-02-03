@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import {Link, TextField} from '@mui/material';
-import {Address, useAccount, useBalance} from 'wagmi';
+import {useAccount, useBalance} from 'wagmi';
 import {useContractActions} from '../hooks/useContractActions';
 import {parseUnits} from "ethers/lib/utils";
 import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
@@ -14,6 +14,7 @@ import {APYsContext} from "../contexts/ApyContext";
 import {BigNumber, ethers} from "ethers";
 import {ToastContext} from "../contexts/ToastContext";
 import Image from 'next/image'
+import {WithLoader} from './WithLoader';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -43,7 +44,8 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const [visibleAmount, setVisibleAmount] = useState<string>('0')
   const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
   const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
-  const {[strategyAddress]: apy}:{[key: Address]: number} = useContext(APYsContext)
+  const {apys, isLoading} = useContext(APYsContext)
+  const apy = apys?.[strategyAddress]
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
 
   const handleClose = () => setIsOpen(false);
@@ -173,10 +175,11 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
               onClick={() => performAction(action)}>{action}
             </button>
           </Box>
-
-          <Box className={`ml-auto mt-4`}>
-            APY: {apy ?? selectedStrategy.apy}%
-          </Box>
+          <WithLoader isLoading={isLoading} className={`mt-4`} height={`1.5rem`} width={`6rem`} type={'rectangular'}>
+            <Box className={`ml-auto`}>
+              APY: {apy}%
+            </Box>
+          </WithLoader>
 
           <Box className={`flex flex-col items-center mt-auto mx-2`}>
             <Link href={tokenUrl} underline="hover" className={`text-tSecondary`}>
