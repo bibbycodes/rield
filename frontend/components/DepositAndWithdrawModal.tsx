@@ -6,14 +6,14 @@ import Modal from '@mui/material/Modal';
 import {Link, TextField} from '@mui/material';
 import {useAccount, useBalance} from 'wagmi';
 import {useContractActions} from '../hooks/useContractActions';
-import {parseUnits} from "ethers/lib/utils";
 import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
 import {APYsContext} from "../contexts/ApyContext";
-import {BigNumber, ethers} from "ethers";
+import {ethers} from "ethers";
 import {ToastContext} from "../contexts/ToastContext";
 import Image from 'next/image'
+import { useCalculateSendAmount } from '../hooks/useCalculateSendAmount';
 import {WithLoader} from './WithLoader';
 
 const style = {
@@ -40,28 +40,17 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const formattedTokenBalance = tokenBalanceData?.formatted
   const tokenBalanceBN = tokenBalanceData?.value
   const vaultTokenBalanceBn = vaultTokenBalanceData?.value
-  const [amount, setAmount] = useState<BigNumber>(parseUnits('0', decimals))
   const [visibleAmount, setVisibleAmount] = useState<string>('0')
-  const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
   const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys?.[strategyAddress]
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
+  const amount = useCalculateSendAmount(visibleAmount, action, decimals, userStaked, vaultTokenBalanceBn)
+  const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
 
   const handleClose = () => setIsOpen(false);
 
   const performAction = async (action: TransactionAction) => {
-    if (action === 'withdraw') {
-      const multiplier = BigNumber.from(10).pow(decimals)
-      const withdrawAmountInWant = parseUnits(visibleAmount.toString(), decimals)
-      const ratioOfWithdrawAmountToStakedAmount = withdrawAmountInWant.mul(multiplier).div(userStaked)
-      const numSharesBN = ratioOfWithdrawAmountToStakedAmount.mul(vaultTokenBalanceBn as BigNumber).div(multiplier)
-      setAmount(numSharesBN)
-    } else {
-      const amountBn = parseUnits(String(visibleAmount), decimals)
-      setAmount(amountBn)
-    }
-    
     const fn = actions[action]?.write
     const tx = await fn?.()
     await tx?.wait().then(() => {
