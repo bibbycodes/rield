@@ -14,6 +14,7 @@ export interface VaultData {
   vaultPricePerFullShare: BigNumber
   allowance?: BigNumber
   tokenBalance?: BigNumber
+  vaultWantBalance: BigNumber
 }
 
 type MultiCallInput = {
@@ -56,11 +57,17 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
     args: [userAddress]
   }
 
+  const vaultWantBalance = {
+    ...vault,
+    functionName: 'balance',
+  }
+
   return [
     vaultBalance,
     vaultPricePerFullShare,
     allowance,
-    tokenBalance
+    tokenBalance,
+    vaultWantBalance,
   ]
 }
 
@@ -80,9 +87,15 @@ export const getMultiCallDataForEthVault = (strategy: Strategy) => {
     functionName: 'getPricePerFullShare',
   }
 
+  const vaultWantBalance = {
+    ...vault,
+    functionName: 'balance',
+  }
+
   return [
     vaultBalance,
     vaultPricePerFullShare,
+    vaultWantBalance
   ]
 }
 
@@ -90,17 +103,19 @@ export const refetchSingle = async (strategy: Strategy, userAddress: Address): P
   const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
   const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy) : getMultiCallDataForErc20Vault(strategy, userAddress)
   const data = await multicall({contracts: multiCallData})
-  const [vaultBalance, vaultPricePerFullShare, allowance, tokenBalance] = data as BigNumber[]
+  const [vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance] = data as BigNumber[]
   return {
     vaultBalance,
     vaultPricePerFullShare,
     allowance, 
-    tokenBalance
+    tokenBalance,
+    vaultWantBalance
   }
 }
 
 export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Address) => {
   const erc20VaultCallData = strategies
+    .filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)
     .map((strategy: Strategy) => {
       const calls = getMultiCallDataForErc20Vault(strategy, userAddress)
       return {
@@ -108,16 +123,17 @@ export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Addre
         tokenAddress: strategy.tokenAddress,
       }
     })
-    .filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)
+    
 
   const ethVaultCallData = strategies
+    .filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
     .map((strategy) => {
       const calls = getMultiCallDataForEthVault(strategy)
       return {
         calls,
         tokenAddress: strategy.tokenAddress,
       }
-    }).filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
+    })
 
   return {
     erc20VaultCallData: erc20VaultCallData.reduce((acc, strategy) => {
