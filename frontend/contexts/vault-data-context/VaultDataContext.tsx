@@ -46,6 +46,7 @@ const VaultDataContextProvider = ({children}: {
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy) : getMultiCallDataForErc20Vault(strategy, userAddress)
     const data = await multicall({contracts: multiCallData})
     let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance
+    
     if (isEthVault) {
       ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance] = data as BigNumber[])
     } else {
