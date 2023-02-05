@@ -49,7 +49,7 @@ const VaultDataContextProvider = ({children}: {
 
       Promise.all([erc20DVaultDataCalls, ethVaultDataCalls]).then(data => {
         const erc20VaultData = erc20Vaults.reduce((acc, strategy, index) => {
-          const strategyData = data[0].slice(index * 4, index * 4 + 4)
+          const strategyData = data[0].slice(index * 5, index * 5 + 5)
           return {
             ...acc,
             [strategy.vaultAddress]: {
@@ -58,18 +58,20 @@ const VaultDataContextProvider = ({children}: {
               vaultPricePerFullShare: strategyData[1],
               allowance: strategyData[2],
               tokenBalance: strategyData[3],
+              vaultWantBalance: strategyData[4],
             }
           }
         }, {} as any)
 
         const ethVaultData = ethVaults.reduce((acc, strategy, index) => {
-          const strategyData = data[1].slice(index * 2, index * 2 + 2)
+          const strategyData = data[1].slice(index * 3, index * 3 + 3)
           return {
             ...acc,
             [strategy.vaultAddress]: {
               ...strategy,
               vaultBalance: strategyData[0],
               vaultPricePerFullShare: strategyData[1],
+              vaultWantBalance: strategyData[2],
             }
           }
         }, {} as any)

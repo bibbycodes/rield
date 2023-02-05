@@ -11,6 +11,7 @@ export const useTotalDollarAmountDeposited = () => {
   const [totalDollarAmountDeposited, setTotalDollarAmountDeposited] = useState<string | null>(null);
   const {address: userAddress} = useAccount();
   const {prices} = useContext(TokenPricesContext)
+  const pricesStringified = JSON.stringify(prices)
   const {vaultsData} = useContext(VaultDataContext)
 
   const calculateUserStakedInDollars = (balance: BigNumber, price: number, pricePerShare: BigNumber, decimals: number) => {
@@ -44,7 +45,7 @@ export const useTotalDollarAmountDeposited = () => {
       .then(userStaked => {
         setTotalDollarAmountDeposited(formatDollarAmount(userStaked))
       })
-  }, [userAddress, prices])
+  }, [userAddress, pricesStringified])
 
   return {
     totalDollarAmountDeposited
