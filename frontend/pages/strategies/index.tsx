@@ -14,18 +14,20 @@ export default function Compound() {
   const {tvl, isLoading: tvlLoading} = useGetTVL()
 
   return <>
-    <div className={`flex`}>
-      <Toast/>
+    <Toast/>
+    <div className={`flex space-x-7`}>
       <ToolBarDataItem
         MuiIcon={WalletOutlined}
         value={totalDollarAmountDeposited}
         label={"Balance"}
-        isLoading={totalDollarAmountDeposited == null}/>
+        isLoading={totalDollarAmountDeposited == null}
+      />
       <ToolBarDataItem
         MuiIcon={AccountBalance}
         value={tvl.toFixed(2)}
         label={"TVL"}
-        isLoading={tvlLoading}/>
+        isLoading={tvlLoading}
+      />
     </div>
     <div className="flex justify-center">
       <div className={`grid md:grid-cols-2 grid-cols-1 gap-4 [&>*]:shadow-xl max-w-6xl w-full`}>
