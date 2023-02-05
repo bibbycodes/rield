@@ -1,7 +1,5 @@
-import {createContext, ReactNode, useEffect, useState,} from "react";
-import {useCoinGeckoPrices} from "../hooks/useCoinGeckoPrices";
-import {useBlockChainPrices} from "../hooks/useBlockChainPrices";
-import {isEmpty} from "../utils/formatters";
+import { createContext, ReactNode, } from "react";
+import { useFetchPrices } from "../hooks/useFetchPrices";
 
 export type Prices = {
   [coinGeckoId: string]: number
@@ -20,26 +18,7 @@ const TokenPricesContext = createContext<TokenPrices>({
 const TokenPricesContextProvider = ({children}: {
   children: ReactNode;
 }) => {
-  const {coinGeckoPrices, updateCoinGeckoPrices} = useCoinGeckoPrices()
-  const {blockChainPrices, updateBlockChainPrices} = useBlockChainPrices()
-  const [prices, setPrices] = useState<Prices>(coinGeckoPrices);
-  
-  const mergePrices = async () => {
-    if (!isEmpty(coinGeckoPrices) || !isEmpty(blockChainPrices)) {
-      setPrices({...prices, ...coinGeckoPrices, ...blockChainPrices})
-    }
-  }
-  
-  const updatePrices = async () => {
-    await updateCoinGeckoPrices()
-    await updateBlockChainPrices()
-    await mergePrices()
-  }
-  
-  useEffect(() => {
-    mergePrices().then()
-  }, [coinGeckoPrices, blockChainPrices])
-  
+  const {prices, updatePrices} = useFetchPrices()
 
   return (
     <TokenPricesContext.Provider value={{prices, updatePrices}}>
@@ -48,4 +27,4 @@ const TokenPricesContextProvider = ({children}: {
   );
 };
 
-export {TokenPricesContext, TokenPricesContextProvider};
+export { TokenPricesContext, TokenPricesContextProvider };

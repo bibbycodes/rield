@@ -1,6 +1,7 @@
 import {Address, useContractWrite, usePrepareContractWrite, useWaitForTransaction} from 'wagmi'
 import {AbiItem} from "web3-utils";
 import {BigNumber} from 'ethers';
+import { useDebounce } from 'usehooks-ts';
 
 export interface useContractActionsProps {
   vaultAddress: Address,
@@ -10,11 +11,13 @@ export interface useContractActionsProps {
 }
 
 export function useContractActions({vaultAddress, amount, abi}: useContractActionsProps) {
+  const debouncedAmount = useDebounce(amount, 500)
   const {config: depositConfig} = usePrepareContractWrite({
     address: vaultAddress,
-    args: [amount],
+    args: [debouncedAmount],
     functionName: "deposit",
-    abi
+    abi,
+    enabled: Boolean(debouncedAmount),
   })
 
   const {data: depositData, writeAsync: depositIntoVault} = useContractWrite(depositConfig)
@@ -30,11 +33,12 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
   const {config: withdrawConfig} = usePrepareContractWrite({
     address: vaultAddress,
     args: [
-      amount,
+      debouncedAmount,
       {gasLimit: 1300000}
     ],
     functionName: "withdraw",
     abi,
+    enabled: Boolean(debouncedAmount)
   })
 
   const {data: withdrawData, writeAsync: withdrawFromVault} = useContractWrite(withdrawConfig)
