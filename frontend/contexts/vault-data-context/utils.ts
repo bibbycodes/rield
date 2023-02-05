@@ -17,7 +17,7 @@ export interface VaultData {
   vaultWantBalance: BigNumber
 }
 
-type MultiCallInput = {
+export type MultiCallInput = {
   abi: any,
   address: Address,
   functionName: string,
@@ -99,20 +99,6 @@ export const getMultiCallDataForEthVault = (strategy: Strategy) => {
   ]
 }
 
-export const refetchSingle = async (strategy: Strategy, userAddress: Address): Promise<VaultData> => {
-  const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
-  const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy) : getMultiCallDataForErc20Vault(strategy, userAddress)
-  const data = await multicall({contracts: multiCallData})
-  const [vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance] = data as BigNumber[]
-  return {
-    vaultBalance,
-    vaultPricePerFullShare,
-    allowance, 
-    tokenBalance,
-    vaultWantBalance
-  }
-}
-
 export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Address) => {
   const erc20VaultCallData = strategies
     .filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)
@@ -123,7 +109,7 @@ export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Addre
         tokenAddress: strategy.tokenAddress,
       }
     })
-    
+
 
   const ethVaultCallData = strategies
     .filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)

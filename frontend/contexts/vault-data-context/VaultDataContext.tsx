@@ -1,21 +1,28 @@
-import {createContext, useEffect, useState} from "react";
-import {Address, useAccount} from "wagmi";
-import {availableStrategies, Strategy} from '../../model/strategy'
-import {ADDRESS_ZERO} from "../../lib/apy-getter-functions/cap";
-import {multicall} from "@wagmi/core";
-import {getVaultMultiCallData, refetchSingle, VaultData} from "./utils";
+import { createContext, useEffect, useState } from "react";
+import { Address, useAccount } from "wagmi";
+import { availableStrategies, Strategy } from '../../model/strategy'
+import { ADDRESS_ZERO } from "../../lib/apy-getter-functions/cap";
+import { multicall } from "@wagmi/core";
+import {
+  getMultiCallDataForErc20Vault,
+  getMultiCallDataForEthVault,
+  getVaultMultiCallData,
+  MultiCallInput,
+  VaultData
+} from "./utils";
+import { BigNumber } from 'ethers';
 
 export interface VaultContextData {
-  vaultsData: { [vaultAddress: Address]: Strategy & VaultData}
+  vaultsData: { [vaultAddress: Address]: Strategy & VaultData }
   isLoading: boolean
-  refetchSingle: (strategy: Strategy, userAddress: Address) => Promise<VaultData>
+  refetchForStrategy: (strategy: Strategy, userAddress: Address) => Promise<void>
   refetchAll: () => Promise<void>
 }
 
 const VaultDataContext = createContext<VaultContextData>({
   vaultsData: {},
   isLoading: true,
-  refetchSingle: () => Promise.resolve({} as VaultData),
+  refetchForStrategy: () => Promise.resolve(),
   refetchAll: () => Promise.resolve()
 })
 
@@ -32,7 +39,32 @@ const VaultDataContextProvider = ({children}: {
   const ethVaults = availableStrategies
     .filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
     .filter(strategy => strategy.isActive)
-  
+
+
+  const refetchForStrategy = async (strategy: Strategy, userAddress: Address) => {
+    const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
+    const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy) : getMultiCallDataForErc20Vault(strategy, userAddress)
+    const data = await multicall({contracts: multiCallData})
+    let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance
+    if (isEthVault) {
+      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance] = data as BigNumber[])
+    } else {
+      ([vaultBalance, vaultPricePerFullShare, vaultWantBalance] = data as BigNumber[])
+    }
+
+    setVaultsData({
+      ...vaultsData,
+      [strategy.vaultAddress]: {
+        vaultPricePerFullShare,
+        vaultBalance,
+        vaultWantBalance,
+        allowance,
+        tokenBalance
+      }
+    })
+  }
+
+
   const getVaultData = async () => {
     if (address) {
       const {
@@ -85,17 +117,17 @@ const VaultDataContextProvider = ({children}: {
       })
     }
   }
-  
+
   useEffect(() => {
     getVaultData()
   }, [address])
 
 
   return (
-    <VaultDataContext.Provider value={{vaultsData, isLoading, refetchSingle, refetchAll: getVaultData}}>
+    <VaultDataContext.Provider value={{vaultsData, isLoading, refetchForStrategy, refetchAll: getVaultData}}>
       {children}
     </VaultDataContext.Provider>
   )
 }
 
-export {VaultDataContext, VaultDataContextProvider}
+export { VaultDataContext, VaultDataContextProvider }

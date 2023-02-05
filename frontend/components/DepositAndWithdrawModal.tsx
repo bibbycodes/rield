@@ -1,20 +1,21 @@
 import * as React from 'react';
-import {useContext, useState} from 'react';
+import { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import {TextField} from '@mui/material';
-import {useAccount, useBalance} from 'wagmi';
-import {useContractActions} from '../hooks/useContractActions';
-import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
-import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
+import { TextField } from '@mui/material';
+import { useAccount, useBalance } from 'wagmi';
+import { useContractActions } from '../hooks/useContractActions';
+import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
+import { SelectedStrategyContext, TransactionAction } from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
-import {APYsContext} from "../contexts/ApyContext";
-import {ethers} from "ethers";
-import {ToastContext} from "../contexts/ToastContext";
+import { APYsContext } from "../contexts/ApyContext";
+import { ethers } from "ethers";
+import { ToastContext } from "../contexts/ToastContext";
 import Image from 'next/image'
-import {useCalculateSendAmount} from '../hooks/useCalculateSendAmount';
-import {WithLoader} from './WithLoader';
+import { useCalculateSendAmount } from '../hooks/useCalculateSendAmount';
+import { WithLoader } from './WithLoader';
+import IconButton from '@mui/material/IconButton';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -52,33 +53,28 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
   const performAction = async (action: TransactionAction) => {
     const fn = actions[action]?.write
-    const tx = await fn?.() 
-    handleShowToast(action)
-    await tx?.wait().then(() => {
-      handleShowToast(action)
-    })
-    await fetchUserStaked()
-    handleClose()
+    try {
+      const tx = await fn?.()
+      handleClose()
+      if (tx?.hash) {
+        showToast('Transaction sent!', 'info')
+      }
+      await tx?.wait()
+      showToast('Transaction successful!', 'info')
+      await fetchUserStaked()
+    } catch (e: any) {
+      if (e.code === 4001) {
+        // user reject, nothing to do
+      } else {
+        // TODO: show ERROR BOX if it's not user reject
+      }
+    }
   }
 
-  const handleShowToast = (action: TransactionAction) => {
-    const {isError, isFetching, isLoading, isSuccess} = actions[action]
-    
-    if (isLoading || isFetching) {
-      const message = isError ? `${action} failed` : `${action} pending!`
-      const severity = isError ? "error" : "info"
-      setToastMessage(message)
-      setSeverity(severity)
-      setOpenToast(true)
-    }
-    
-    if (!isFetching || isSuccess) {
-      const message = isError ? `${action} failed` : `${action} successful!`
-      const severity = isError ? "error" : "success"
-      setToastMessage(message)
-      setSeverity(severity)
-      setOpenToast(true)
-    }
+  function showToast(msg: string, severity: 'info' | 'error') {
+    setToastMessage(msg)
+    setSeverity(severity)
+    setOpenToast(true)
   }
 
   const handleSetMax = () => {
@@ -128,11 +124,11 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
             <Typography id="modal-modal-title" variant="h6" component="h2" className="capitalize">
               {action}
             </Typography>
-            <div
-              className={'disabled:text-tSecondary h-1 ml-auto disabled:border-tSecondary'}
+            <IconButton
+              className={'mt-[-1rem] mr-[-1rem] text-white ml-auto'}
               onClick={() => handleClose()}>
-              <CloseIcon></CloseIcon>
-            </div>
+              <CloseIcon/>
+            </IconButton>
           </div>
           <Box className={`bg-backgroundSecondary rounded-lg`}>
             <div className="pt-5 p-4 text-3xl flex items-center">

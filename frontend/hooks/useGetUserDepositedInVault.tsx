@@ -8,8 +8,8 @@ export const useGetUserDepositedInVault = (strategy: Strategy) => {
   const [userStaked, setUserStaked] = useState<BigNumber>(BigNumber.from(0));
   const {decimals} = strategy;
   const {address: userAddress} = useAccount();
-  const {vaultsData, refetchSingle} = useContext(VaultDataContext)
-  
+  const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
+
   const calculateUserStaked = (balance: BigNumber, pricePerShare: BigNumber) => {
     return balance && pricePerShare && userAddress ?
       balance.mul(pricePerShare)
@@ -19,14 +19,14 @@ export const useGetUserDepositedInVault = (strategy: Strategy) => {
 
   const fetchUserStaked = async () => {
     if (!userAddress) return
-    await refetchSingle(strategy, userAddress)
+    await refetchForStrategy(strategy, userAddress)
   }
 
   useEffect(() => {
     if (!(userAddress && vaultsData[strategy.vaultAddress] )) {
       return;
     }
-    
+
     const {
       vaultBalance,
       vaultPricePerFullShare,

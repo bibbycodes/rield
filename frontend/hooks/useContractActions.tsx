@@ -11,13 +11,12 @@ export interface useContractActionsProps {
 }
 
 export function useContractActions({vaultAddress, amount, abi}: useContractActionsProps) {
-  const debouncedAmount = useDebounce(amount, 500)
   const {config: depositConfig} = usePrepareContractWrite({
     address: vaultAddress,
-    args: [debouncedAmount],
+    args: [amount],
     functionName: "deposit",
     abi,
-    enabled: Boolean(debouncedAmount),
+    enabled: amount.gt(0)
   })
 
   const {data: depositData, writeAsync: depositIntoVault} = useContractWrite(depositConfig)
@@ -33,12 +32,12 @@ export function useContractActions({vaultAddress, amount, abi}: useContractActio
   const {config: withdrawConfig} = usePrepareContractWrite({
     address: vaultAddress,
     args: [
-      debouncedAmount,
+      amount,
       {gasLimit: 1300000}
     ],
     functionName: "withdraw",
     abi,
-    enabled: Boolean(debouncedAmount)
+    enabled: amount.gt(0)
   })
 
   const {data: withdrawData, writeAsync: withdrawFromVault} = useContractWrite(withdrawConfig)
