@@ -12,32 +12,36 @@ export const useGetTVL = () => {
   const stringifiedPrices = JSON.stringify(prices)
   const [tvl, setTvl] = useState<number>(0)
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  
+
   const getTvl = (): number => {
     if (Object.keys(prices).length > 0) {
-      const result : number = Object.keys(vaultsData).reduce((acc: number, key: Address) => {
-        const {vaultWantBalance, coinGeckoId, decimals}: Strategy & VaultData = vaultsData[key] as Strategy & VaultData
-        const price = prices[coinGeckoId]
-        const vaultTvl = parseFloat(vaultWantBalance.toString()) / (10 ** decimals)
-        const vaultTvlInDollars = vaultTvl * price
-        return acc + vaultTvlInDollars
-      }, 0 as number)
-      return result
+      return Object.keys(vaultsData)
+        .reduce((acc: number, curr: string) => {
+          const {
+            vaultWantBalance,
+            coinGeckoId,
+            decimals
+          }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
+          const price = prices[coinGeckoId]
+          const vaultTvl = parseFloat(vaultWantBalance.toString()) / (10 ** decimals)
+          const vaultTvlInDollars = vaultTvl * price
+          return acc + vaultTvlInDollars
+        }, 0 as number)
     } else {
       return 0
     }
   }
-  
+
   const updateTvl = () => {
     const tvl = getTvl()
     setTvl(tvl)
     setIsLoading(false)
   }
-  
+
   useEffect(() => {
     updateTvl()
   }, [stringifiedVaultsData, stringifiedPrices])
-  
+
   return {
     tvl,
     updateTvl,
