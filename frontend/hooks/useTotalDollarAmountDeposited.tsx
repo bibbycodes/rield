@@ -1,6 +1,6 @@
 import {useAccount} from "wagmi";
 import {BigNumber} from "ethers";
-import {useContext, useEffect, useState} from "react";
+import { useContext, useEffect, useState } from "react";
 import {availableStrategies} from "../model/strategy";
 import {TokenPricesContext} from "../contexts/TokenPricesContext";
 import {formatDollarAmount} from "../utils/formatters";
