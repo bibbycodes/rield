@@ -17,6 +17,7 @@ export const useFetchPrices = () => {
       const coinGeckoIds = availableStrategies
         .filter(strategy => strategy.isActive)
         .map(strategy => strategy.coinGeckoId)
+      coinGeckoIds.push('ethereum')
       const coinGeckoIdsString = coinGeckoIds.join(',')
       const {data} = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdsString}&vs_currencies=usd`)
       let transformedData = new Map(coinGeckoIds.map((id) => [id, data[id]?.usd]));

@@ -83,18 +83,18 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
   const handleSetMax = () => {
     if (tokenBalanceBN && formattedTokenBalance) {
-      const amountToSet = (action === 'deposit') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
-      if (amountToSet == 0) {
+      const amountToSet = (action === 'deposit') ? formattedTokenBalance : ethers.utils.formatUnits(userStaked, decimals)
+      if (parseFloat(amountToSet) == 0) {
         setVisibleAmount('0.00')
         return
       }
-      setVisibleAmount(amountToSet.toString())
+      setVisibleAmount(amountToSet)
     }
   }
 
   const isBalanceLessThanAmount = (value: number) => {
-    if (tokenBalanceBN && formattedTokenBalance) {
-      const balanceToCheck = (action === 'deposit') ? +formattedTokenBalance : +ethers.utils.formatUnits(userStaked, decimals)
+    if (tokenBalanceBN) {
+      const balanceToCheck = (action === 'deposit') ? +ethers.utils.formatUnits(tokenBalanceBN, decimals) : +ethers.utils.formatUnits(userStaked, decimals)
       return !isNaN(value) && balanceToCheck < value
     }
   }
