@@ -52,7 +52,7 @@ export default function Layout({children}: PropsWithChildren) {
           </div>
         </nav>
 
-        <div className="py-5 px-10">
+        <div className="pt-5 pb-10 px-10">
           <main>{children}</main>
         </div>
       </main>

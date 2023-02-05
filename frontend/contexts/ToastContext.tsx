@@ -1,7 +1,7 @@
 import {createContext, ReactNode, useState} from "react";
 import {SetFunction} from "./SelectedStrategyContext";
 
-type ToastSeverity = "success" | "error" | "warning" | "info";
+export type ToastSeverity = "success" | "error" | "warning" | "info";
 
 const ToastContext = createContext<{
   open: boolean, 

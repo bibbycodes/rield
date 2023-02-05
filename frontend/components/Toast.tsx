@@ -3,7 +3,7 @@ import {useContext} from "react";
 import {ToastContext} from "../contexts/ToastContext";
 
 export const Toast = () => {
-  const {open, setOpen, message, setMessage} = useContext(ToastContext)
+  const {open, setOpen, message, setMessage, severity} = useContext(ToastContext)
 
   const handleClose = () => {
     setOpen(false);
@@ -18,7 +18,7 @@ export const Toast = () => {
         onClose={handleClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }} className="capitalize">
+        <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }} className="capitalize">
           {message}
         </Alert>
       </Snackbar>

@@ -16,29 +16,27 @@ export default function Compound() {
   return <>
     <div className={`flex`}>
       <Toast/>
-      <ToolBarDataItem 
+      <ToolBarDataItem
         MuiIcon={WalletOutlined}
         value={totalDollarAmountDeposited}
         label={"Balance"}
-        isLoading={totalDollarAmountDeposited == null}>
-      </ToolBarDataItem>
+        isLoading={totalDollarAmountDeposited == null}/>
       <ToolBarDataItem
         MuiIcon={AccountBalance}
         value={tvl.toFixed(2)}
         label={"TVL"}
-        isLoading={tvlLoading}>
-      </ToolBarDataItem>
+        isLoading={tvlLoading}/>
     </div>
     <div className="flex justify-center">
       <div className={`grid md:grid-cols-2 grid-cols-1 gap-4 [&>*]:shadow-xl max-w-6xl w-full`}>
         {availableStrategies
           .map(strategy => <StrategyCard key={strategy.vaultAddress} strategy={strategy}
                                          openModal={setIsStrategyDetailsModalOpen}/>)}
-        <DepositAndWithdrawModal
-          isOpen={isStrategyDetailsModalOpen}
-          setIsOpen={setIsStrategyDetailsModalOpen}
-        ></DepositAndWithdrawModal>
       </div>
+      <DepositAndWithdrawModal
+        isOpen={isStrategyDetailsModalOpen}
+        setIsOpen={setIsStrategyDetailsModalOpen}
+      />
     </div>
   </>
 }

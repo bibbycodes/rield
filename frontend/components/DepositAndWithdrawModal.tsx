@@ -11,7 +11,7 @@ import { SelectedStrategyContext, TransactionAction } from "../contexts/Selected
 import CloseIcon from '@mui/icons-material/Close';
 import { APYsContext } from "../contexts/ApyContext";
 import { ethers } from "ethers";
-import { ToastContext } from "../contexts/ToastContext";
+import { ToastContext, ToastSeverity } from "../contexts/ToastContext";
 import Image from 'next/image'
 import { useCalculateSendAmount } from '../hooks/useCalculateSendAmount';
 import { WithLoader } from './WithLoader';
@@ -60,7 +60,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
         showToast('Transaction sent!', 'info')
       }
       await tx?.wait()
-      showToast('Transaction successful!', 'info')
+      showToast('Transaction successful!', 'success')
       await fetchUserStaked()
     } catch (e: any) {
       if (e.code === 4001) {
@@ -71,7 +71,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
     }
   }
 
-  function showToast(msg: string, severity: 'info' | 'error') {
+  function showToast(msg: string, severity: ToastSeverity) {
     setToastMessage(msg)
     setSeverity(severity)
     setOpenToast(true)
