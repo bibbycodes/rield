@@ -1,20 +1,20 @@
 import * as React from 'react';
-import { useContext, useState } from 'react';
+import {useContext, useState} from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import { TextField } from '@mui/material';
-import { useAccount, useBalance } from 'wagmi';
-import { useContractActions } from '../hooks/useContractActions';
-import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
-import { SelectedStrategyContext, TransactionAction } from "../contexts/SelectedStrategyContext";
+import {TextField} from '@mui/material';
+import {useAccount, useBalance} from 'wagmi';
+import {useContractActions} from '../hooks/useContractActions';
+import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
+import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
-import { APYsContext } from "../contexts/ApyContext";
-import { ethers } from "ethers";
-import { ToastContext, ToastSeverity } from "../contexts/ToastContext";
+import {APYsContext} from "../contexts/ApyContext";
+import {ethers} from "ethers";
+import {ToastContext, ToastSeverity} from "../contexts/ToastContext";
 import Image from 'next/image'
-import { useCalculateSendAmount } from '../hooks/useCalculateSendAmount';
-import { WithLoader } from './WithLoader';
+import {useCalculateSendAmount} from '../hooks/useCalculateSendAmount';
+import {WithLoader} from './WithLoader';
 import IconButton from '@mui/material/IconButton';
 
 const style = {
@@ -49,25 +49,45 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const amount = useCalculateSendAmount(visibleAmount, action, decimals, userStaked, vaultTokenBalanceBn)
   const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
 
-  const handleClose = () => setIsOpen(false);
+  const handleClose = () => {
+    setVisibleAmount('0')
+    setIsOpen(false)
+  };
+  
+  const getActionVerb = (action: TransactionAction) => {
+    switch (action) {
+      case 'deposit':
+        return 'Deposit'
+      case 'withdraw':
+        return 'Withdrawal'
+      default:
+        return action
+    }
+  }
 
   const performAction = async (action: TransactionAction) => {
-    const fn = actions[action]?.write
-    try {
-      const tx = await fn?.()
-      handleClose()
-      if (tx?.hash) {
-        showToast('Transaction sent!', 'info')
+    if (parseFloat(visibleAmount) > 0) {
+      const actionVerb = getActionVerb(action)
+      const fn = actions[action]?.write
+      try {
+        const tx = await fn?.()
+        handleClose()
+        if (tx?.hash) {
+          showToast(`${actionVerb} submitted!`, 'info')
+        }
+        await tx?.wait()
+        showToast(`${actionVerb} successful!`, 'success')
+        await fetchUserStaked()
+      } catch (e: any) {
+        if (e.code === 4001) {
+          showToast(`Transaction rejected.`, 'warning')
+        } else {
+          console.log(e.message)
+          showToast(`An unexpected error occurred.`, 'error')
+        }
       }
-      await tx?.wait()
-      showToast('Transaction successful!', 'success')
-      await fetchUserStaked()
-    } catch (e: any) {
-      if (e.code === 4001) {
-        // user reject, nothing to do
-      } else {
-        // TODO: show ERROR BOX if it's not user reject
-      }
+    } else {
+      showToast(`Amount must be greater than 0`, 'error')
     }
   }
 
@@ -94,6 +114,10 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
       return !isNaN(value) && balanceToCheck < value
     }
   }
+  
+  const removeLeadingZeros = (value: string) => {
+    return value.replace(/^0+(?=\d)/, '')
+  }
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value.match(/^-{0,1}\d*\.?\d{0,18}/)?.join('')
@@ -104,7 +128,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
       return
     }
 
-    setVisibleAmount(value)
+    setVisibleAmount(removeLeadingZeros(value))
   }
 
   return (
@@ -167,7 +191,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           <Box className={`flex flex-row justify-between`}>
             <button
               className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
-              onClick={() => performAction(action)}>{action}
+              onClick={() =>  performAction(action)}>{action}
             </button>
           </Box>
           <WithLoader isLoading={isLoading} className={`mt-4`} height={`1.5rem`} width={`6rem`} type={'rectangular'}>

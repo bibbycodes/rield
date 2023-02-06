@@ -26,7 +26,6 @@ const VaultDataContext = createContext<VaultContextData>({
   refetchAll: () => Promise.resolve()
 })
 
-
 const VaultDataContextProvider = ({children}: {
   children: React.ReactNode;
 }) => {
@@ -46,16 +45,17 @@ const VaultDataContextProvider = ({children}: {
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy) : getMultiCallDataForErc20Vault(strategy, userAddress)
     const data = await multicall({contracts: multiCallData})
     let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance
-    
+
     if (isEthVault) {
-      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance] = data as BigNumber[])
-    } else {
       ([vaultBalance, vaultPricePerFullShare, vaultWantBalance] = data as BigNumber[])
+    } else {
+      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance] = data as BigNumber[])
     }
 
     setVaultsData({
       ...vaultsData,
       [strategy.vaultAddress]: {
+        ...strategy,
         vaultPricePerFullShare,
         vaultBalance,
         vaultWantBalance,
