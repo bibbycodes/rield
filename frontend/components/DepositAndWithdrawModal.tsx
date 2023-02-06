@@ -16,6 +16,7 @@ import Image from 'next/image'
 import {useCalculateSendAmount} from '../hooks/useCalculateSendAmount';
 import {WithLoader} from './WithLoader';
 import IconButton from '@mui/material/IconButton';
+import WarningIcon from '@mui/icons-material/Warning';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -23,7 +24,7 @@ const style = {
   left: '50%',
   transform: 'translate(-50%, -50%)',
   width: 400,
-  height: 400,
+  mitHeight: `100%`,
   boxShadow: 24,
 };
 
@@ -53,7 +54,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
     setVisibleAmount('0')
     setIsOpen(false)
   };
-  
+
   const getActionVerb = (action: TransactionAction) => {
     switch (action) {
       case 'deposit':
@@ -114,7 +115,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
       return !isNaN(value) && balanceToCheck < value
     }
   }
-  
+
   const removeLeadingZeros = (value: string) => {
     return value.replace(/^0+(?=\d)/, '')
   }
@@ -181,19 +182,34 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
                 className={`text-tSecondary w-1/3 bg-none ml-auto hover:text-accentPrimary`}
                 onClick={handleSetMax}
               >
-                <Typography className={`w-4 ml-auto mr-8`}>
+                <Typography className={`w-4 ml-auto mt-2 mr-8`}>
                   MAX
                 </Typography>
               </div>
             </div>
           </Box>
 
+          {selectedStrategy.hasWithdrawalSchedule && (
+            <Box className={`inline-flex mt-4`}>
+              <Typography className={`text-yellow-200`}>
+              <WarningIcon fontSize="small" className={`mr-1`} />
+                This vault operates on a withdrawal schedule. For details, click <a
+                href={'https://rld-1.gitbook.io/rld/withdrawal-schedules'}
+                className={`text-yellow-200 underline`}
+                target="_blank" rel="noopener noreferrer">
+                here.
+              </a>
+              </Typography>z
+            </Box>
+          )}
+
           <Box className={`flex flex-row justify-between`}>
             <button
               className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
-              onClick={() =>  performAction(action)}>{action}
+              onClick={() => performAction(action)}>{action}
             </button>
           </Box>
+
           <WithLoader isLoading={isLoading} className={`mt-4`} height={`1.5rem`} width={`6rem`} type={'rectangular'}>
             <Box className={`ml-auto`}>
               APY: {apy}%

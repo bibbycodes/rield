@@ -32,6 +32,7 @@ export interface Strategy {
   tokenSymbol: string;
   type: string;
   performanceFee: number
+  hasWithdrawalSchedule?: boolean;
 }
 
 export const availableStrategies: Strategy[] = [
@@ -96,7 +97,8 @@ export const availableStrategies: Strategy[] = [
     abi: abi,
     coinGeckoId: "usd-coin",
     type: "Auto Compound",
-    performanceFee: 5
+    performanceFee: 5,
+    hasWithdrawalSchedule: true,
   },
   // {
   //   id: 3,
@@ -117,7 +119,8 @@ export const availableStrategies: Strategy[] = [
   //   abi: abi,
   //   coinGeckoId: "ethereum",
   //   type: "Auto Compound",
-  //   performanceFee: 5
+  //   performanceFee: 5,
+  //   hasWithdrawalSchedule: true,
   // },
   // {
   //   id: 0,
