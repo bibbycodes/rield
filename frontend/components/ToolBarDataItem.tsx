@@ -14,12 +14,12 @@ interface ToolBarDataItemProps {
 export const ToolBarDataItem = ({MuiIcon, value, label, isLoading}: ToolBarDataItemProps) => {
   return (
     <span className={`flex text-tPrimary mb-4`}>
-        <div className="border border-gray-400 rounded-xl p-2 flex items-center">
-          <MuiIcon fontSize="large"/>
+        <div className="border border-gray-400 rounded-xl w-10 flex items-center my-[3px]">
+          <MuiIcon fontSize="medium" sx={{margin: 'auto'}}/>
         </div>
       
         <div className="flex flex-col ml-3">
-          <div className="text-tSecondary">
+          <div className="text-xs text-tSecondary">
             {label}
           </div>
             
@@ -27,7 +27,7 @@ export const ToolBarDataItem = ({MuiIcon, value, label, isLoading}: ToolBarDataI
             type={`text`}
             isLoading={isLoading}
           >
-            <p className=" text-2xl">${value}</p>
+            <p className="text-2xl">${value}</p>
           </WithLoader>
         </div>
     </span>

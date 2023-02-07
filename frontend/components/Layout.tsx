@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Head from 'next/head';
-import React, { PropsWithChildren } from 'react';
-import { ConnectKitButton } from 'connectkit';
+import React, {PropsWithChildren} from 'react';
+import {ConnectKitButton} from 'connectkit';
 import NonSSRWrapper from './NonSSRWrapper';
 import Image from "next/image";
 import BurgerMenu from './BurgerMenu';
@@ -19,13 +19,13 @@ export default function Layout({children}: PropsWithChildren) {
       <main className="relative z-10">
         <nav className="text-white w-full py-0">
           <div className="flex flex-row w-full">
-            <ul className="flex items-center px-10 w-full py-1">
+            <ul className={`flex items-center px-3 sm:px-10 w-full py-1`}>
               <div>
                 <Link href='https://bibbycodes.wixsite.com/my-site-3'>
                   <div className={`flex items-center mr-16 w-full`}>
                     <Image height={70} width={70} src="/logo.png" alt="RLD Logo"
-                           className="w-14 mr-1 mr-0 ml-0 rounded-lg p-2 font-bold"></Image>
-                    <p className={`ml-0 text-2xl logo`}>RLD</p>
+                           className="w-14 mr-1 mr-0 ml-0 rounded-lg p-2 sm:pl-0 font-bold"></Image>
+                    <p className={`ml-0 text-3xl logo`}>RLD</p>
                   </div>
                 </Link>
               </div>
@@ -52,7 +52,7 @@ export default function Layout({children}: PropsWithChildren) {
           </div>
         </nav>
 
-        <div className="pt-5 pb-10 px-10">
+        <div className={`pt-2 pb-10 px-3 sm:px-10`}>
           <main>{children}</main>
         </div>
       </main>
