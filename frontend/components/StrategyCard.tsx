@@ -1,15 +1,19 @@
-import {Typography} from '@mui/material';
-import {Strategy} from '../model/strategy';
-import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
+import { Typography } from '@mui/material';
+import { Strategy } from '../model/strategy';
+import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
 import Enable from './Enable';
-import {StrategyLogos} from "./StrategyLogos";
-import {TokenPricesContext} from "../contexts/TokenPricesContext";
-import {useContext} from "react";
-import {APYsContext} from "../contexts/ApyContext";
-import {WithLoader} from "./WithLoader";
-import {BigNumber, ethers} from 'ethers';
+import { StrategyLogos } from "./StrategyLogos";
+import { TokenPricesContext } from "../contexts/TokenPricesContext";
+import { useContext } from "react";
+import { APYsContext } from "../contexts/ApyContext";
+import { WithLoader } from "./WithLoader";
+import { BigNumber, ethers } from 'ethers';
+import NonSSRWrapper from './NonSSRWrapper';
 
-export default function StrategyCard({strategy, openModal}: { strategy: Strategy, openModal: (isOpen: boolean) => void }) {
+export default function StrategyCard({
+                                       strategy,
+                                       openModal
+                                     }: { strategy: Strategy, openModal: (isOpen: boolean) => void }) {
   const {userStaked} = useGetUserDepositedInVault(strategy)
   const {prices} = useContext(TokenPricesContext)
   const {apys, isLoading} = useContext(APYsContext)
@@ -22,7 +26,7 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
     if (!prices[strategy.coinGeckoId] || !isAmountPositive) {
       return 0
     }
-    
+
     const balanceInUsd = ethers.utils.formatUnits(
       amount.mul((prices[strategy.coinGeckoId] * 10000).toFixed(0)).div(10000),
       strategy.decimals);
@@ -40,7 +44,8 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
         <div className={`flex`}>
           <div className="flex flex-col my-6 flex-grow">
             <Typography className="text-xs text-tSecondary">Staked</Typography>
-            <Typography className={`text-2xl text-tPrimary`}>{isActive ? `$${getUserStakedInDollars(userStaked)}`: '-' }</Typography>
+            <Typography
+              className={`text-2xl text-tPrimary`}>{isActive ? `$${getUserStakedInDollars(userStaked)}` : '-'}</Typography>
             <Typography
               className={`text-xs text-tSecondary`}>{isActive ? `${parseFloat(ethers.utils.formatUnits(userStaked, strategy.decimals)).toFixed(4)} ${(strategy.tokenSymbol)}` : '-'}</Typography>
           </div>
@@ -54,12 +59,14 @@ export default function StrategyCard({strategy, openModal}: { strategy: Strategy
           </div>
         </div>
         {isActive ? (
-          <Enable
-            vaultAddress={strategy.vaultAddress}
-            tokenAddress={strategy.tokenAddress}
-            openModal={handleOpenModal}
-            strategy={strategy}
-          ></Enable>
+          <NonSSRWrapper>
+            <Enable
+              vaultAddress={strategy.vaultAddress}
+              tokenAddress={strategy.tokenAddress}
+              openModal={handleOpenModal}
+              strategy={strategy}
+            ></Enable>
+          </NonSSRWrapper>
         ) : (
           <button
             className="w-full text-tPrimary bg-accentPrimary hover:bg-accentSecondary p-3 rounded-lg uppercase"
