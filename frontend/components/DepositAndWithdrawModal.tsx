@@ -199,7 +199,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
                 target="_blank" rel="noopener noreferrer">
                 here.
               </a>
-              </Typography>z
+              </Typography>
             </Box>
           )}
 
