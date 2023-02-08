@@ -46,14 +46,17 @@ export default function StrategyCard({
             <Typography className="text-xs text-tSecondary">Staked</Typography>
             <Typography
               className={`text-2xl text-tPrimary`}>{isActive ? `$${getUserStakedInDollars(userStaked)}` : '-'}</Typography>
-            <Typography
-              className={`text-xs text-tSecondary`}>{isActive ? `${parseFloat(ethers.utils.formatUnits(userStaked, strategy.decimals)).toFixed(4)} ${(strategy.tokenSymbol)}` : '-'}</Typography>
+            <Typography className={`text-xs text-tSecondary`}>
+              {isActive ? `${parseFloat(ethers.utils.formatUnits(userStaked, strategy.decimals)).toFixed(4)} ${(strategy.tokenSymbol)}` : '-'}
+            </Typography>
           </div>
           <div className="flex flex-col my-6">
             <Typography className="text-xs text-tSecondary">APY</Typography>
-            {isActive ? (<WithLoader className={`min-w-[5rem]`} type={`text`} isLoading={isLoading}>
-              <Typography className={`text-2xl text-tPrimary`}>{apy}%</Typography>
-            </WithLoader>) : (
+            {isActive ? (
+              <WithLoader className={`min-w-[5rem]`} type={`text`} isLoading={isLoading}>
+                <Typography className={`text-2xl text-tPrimary`}>{apy}%</Typography>
+              </WithLoader>
+            ) : (
               <Typography className={`text-2xl text-tPrimary`}>-</Typography>
             )}
           </div>

@@ -38,8 +38,8 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const {action, selectedStrategy} = useContext(SelectedStrategyContext)
   const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress, decimals} = selectedStrategy;
   const {address: userAddress} = useAccount();
-  const {data: tokenBalanceData} = useBalance({token: tokenAddress, address: userAddress})
-  const {data: vaultTokenBalanceData} = useBalance({token: vaultAddress, address: userAddress})
+  const {data: tokenBalanceData} = useBalance({token: tokenAddress, address: userAddress, watch: true})
+  const {data: vaultTokenBalanceData} = useBalance({token: vaultAddress, address: userAddress, watch: true})
   const formattedTokenBalance = tokenBalanceData?.formatted
   const tokenBalanceBN = tokenBalanceData?.value
   const vaultTokenBalanceBn = vaultTokenBalanceData?.value
@@ -121,6 +121,17 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
     return value.replace(/^0+(?=\d)/, '')
   }
 
+  const truncateAmount = (value?: string) => {
+    const isNullOrUndefined = value == null || value === '';
+    const isZero = value === '0';
+
+    if (isNullOrUndefined || isZero) {
+      return '0.00'
+    }
+
+    return parseFloat(value).toFixed(6)
+  }
+
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value.match(/^-{0,1}\d*\.?\d{0,18}/)?.join('')
     const isNullOrUndefined = value == null || value === '';
@@ -157,9 +168,15 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
             </IconButton>
           </div>
           <Box className={`bg-backgroundSecondary rounded-lg`}>
-            <div className="pt-5 p-4 text-3xl flex items-center">
+            <div className="pt-5 p-4 flex items-center">
               <Image alt={"Token Logo"} height={45} width={45} src={tokenLogoUrl}/>
-              <span className="ml-3">{selectedStrategy.tokenSymbol}</span>
+              <span className="ml-3 text-3xl">{selectedStrategy.tokenSymbol}</span>
+              <div className={'flex-col items-center flex ml-auto'}>
+                <span className={`text-tSecondary`}>{action === 'deposit' ? `Balance:` : `Staked`}</span>
+                <span>{truncateAmount(
+                  action === 'deposit' ? formattedTokenBalance : ethers.utils.formatUnits(userStaked, decimals)
+                )}</span>
+              </div>
             </div>
             <div className={'flex p-4 flex-row items-center h-20'}>
               <TextField
@@ -193,7 +210,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           {selectedStrategy.hasWithdrawalSchedule && (
             <Box className={`inline-flex mt-4`}>
               <Typography className={`text-yellow-200`}>
-              <WarningIcon fontSize="small" className={`mr-1`} />
+                <WarningIcon fontSize="small" className={`mr-1`}/>
                 This vault operates on a withdrawal schedule. For details, click <a
                 href={'https://rld-1.gitbook.io/rld/withdrawal-schedules'}
                 className={`text-yellow-200 underline`}
