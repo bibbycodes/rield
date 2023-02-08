@@ -172,7 +172,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
               <Image alt={"Token Logo"} height={45} width={45} src={tokenLogoUrl}/>
               <span className="ml-3 text-3xl">{selectedStrategy.tokenSymbol}</span>
               <div className={'flex-col items-center flex ml-auto'}>
-                <span className={`text-tSecondary`}>{action === 'deposit' ? `Balance:` : `Staked`}</span>
+                <span className={`text-tSecondary`}>{action === 'deposit' ? `Balance` : `Staked`}</span>
                 <span>{truncateAmount(
                   action === 'deposit' ? formattedTokenBalance : ethers.utils.formatUnits(userStaked, decimals)
                 )}</span>
