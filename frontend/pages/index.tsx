@@ -38,7 +38,7 @@ export default function Home() {
           </div>
           <div className={``}>
             {availableStrategies.slice(0, 2).map((strategy, index) =>
-              <div className={`m-2 w-full`}>
+              <div key={index} className={`m-2 w-full`}>
                 <StrategyCard
                   key={strategy.vaultAddress}
                   strategy={strategy}
@@ -57,8 +57,8 @@ export default function Home() {
           </div>
 
           <div className={`flex flex-col mt-20 w-full`}>
-            
-            <div className="flex h-full max-h-[12rem] items-center 
+
+            <div className="flex h-full max-h-[12rem] items-center
             justify-center flex-row my-2 gap-10
             [&>*]:h-full [&>*]:w-full">
               <div className="hidden md:visible flex-grow"></div>
@@ -70,8 +70,8 @@ export default function Home() {
               </div>
               <div className="hidden md:visible flex-grow"></div>
             </div>
-            
-            <div className="flex h-full max-h-[12rem] items-center 
+
+            <div className="flex h-full max-h-[12rem] items-center
             justify-center flex-row my-2 gap-10
             [&>*]:h-full [&>*]:w-full">
               <div className="hidden md:visible flex-grow"></div>
