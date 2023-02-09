@@ -10,8 +10,9 @@ import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/cap/ICapETHPool.sol";
 import "../../interfaces/cap/ICapRewards.sol";
 import "hardhat/console.sol";
+import "../../utils/Manager.sol";
 
-contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
+contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
     using SafeERC20 for IERC20;
 
     address public pool;
@@ -42,10 +43,10 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
 
     receive() external payable {}
     fallback() external payable {}
-    
+
     function deposit() public payable whenNotPaused {
         if (address(this).balance > 0) {
-            ICapETHPool(pool).deposit{value : address(this).balance}();
+            ICapETHPool(pool).deposit{value : address(this).balance}(0);
             emit Deposit(balanceOf());
         }
     }
@@ -62,7 +63,7 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
         if (wantTokenBal > _amount) {
             wantTokenBal = _amount;
         }
-        
+
 
         (bool success,) = vault.call{value : wantTokenBal}('');
         require(success, "WITHDRAW_FAILED");
@@ -79,7 +80,7 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
             _harvest();
         }
     }
-    
+
     function harvest() external gasThrottle virtual {
         _harvest();
     }
@@ -96,19 +97,19 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
             emit StratHarvest(msg.sender, wantTokenHarvested, balanceOf());
         }
     }
-    
+
     // performance fees
     function chargeFees() internal {
         uint256 devFeeAmount = address(this).balance * DEV_FEE / DIVISOR;
         uint256 protocolTokenFeeAmount = address(this).balance * STAKING_CONTRACT_FEE / DIVISOR;
         (bool ownerTransferSuccess,) = owner().call{value : devFeeAmount}('');
         require(ownerTransferSuccess, "OWNER_FEE_TRANSFER_FAILED");
-         
+
         if (protocolTokenFeeAmount > 0) {
             (bool protocolTransferSuccess,) = protocolTokenAddress.call{value : protocolTokenFeeAmount}('');
             require(protocolTransferSuccess, "PROTOCOL_TOKEN_FEE_TRANSFER_FAILED");
         }
-        
+
         emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
     }
 
@@ -124,7 +125,7 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
 
     // it calculates how much 'wantToken' the strategy has working in the farm.
     function balanceOfPool() public view returns (uint256) {
-        return ICapETHPool(pool).getBalance(address(this));
+        return ICapETHPool(pool).getCurrencyBalance(address(this));
     }
 
     // returns rewards unharvested
@@ -135,11 +136,11 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
     // native reward amount for calling harvest
     // function callReward() public view returns (uint256) {}
 
-    function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyOwner {
+    function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyManagerAndOwner {
         harvestOnDeposit = _harvestOnDeposit;
     }
 
-    function setDevFee(uint fee) external onlyOwner {
+    function setDevFee(uint fee) external onlyManagerAndOwner {
         require(fee + STAKING_CONTRACT_FEE <= 5 * 10 ** 17, "fee too high");
         DEV_FEE = fee;
     }
@@ -183,11 +184,11 @@ contract CapSingleStakeStrategyETH is Ownable, Pausable, GasFeeThrottler {
         ICapETHPool(pool).withdraw(balanceOfPool());
     }
 
-    function pause() public onlyOwner {
+    function pause() public onlyManagerAndOwner {
         _pause();
     }
 
-    function unpause() external onlyOwner {
+    function unpause() external onlyManagerAndOwner {
         _unpause();
         deposit();
     }

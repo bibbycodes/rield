@@ -1,12 +1,15 @@
-import {Address, useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction} from "wagmi";
+import { Address, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from "wagmi";
 import { BigNumber } from "ethers";
-import { useEffect, useState } from "react";
 import ERC20Abi from '../resources/abis/erc20.json';
+import { Strategy } from '../model/strategy';
 
-export function useApproveToken(tokenAddress: string, contractAddress: string, userAddress: string | undefined) {
+export function useApproveToken(tokenAddress: string,
+                                contractAddress: string,
+                                userAddress: Address | undefined,
+                                strategy: Strategy,
+                                refetchForStrategy: (strategy: Strategy, userAddress: Address) => Promise<void>) {
   const abi = Array.from(ERC20Abi)
   const maxInt = BigNumber.from(2).pow(BigNumber.from(255))
-  const [isApproved, setIsApproved] = useState(false);
   const {config} = usePrepareContractWrite({
     address: tokenAddress as Address,
     args: [contractAddress, maxInt],
@@ -17,35 +20,17 @@ export function useApproveToken(tokenAddress: string, contractAddress: string, u
   const {isSuccess} = useWaitForTransaction({
     hash: approveRes?.hash,
   })
-  const {data, refetch}: any = useContractRead({
-    abi,
-    address: tokenAddress as Address,
-    functionName: 'allowance',
-    args: [userAddress, contractAddress]
-  });
-
-  const fetchAllowance = async () => {
-    const {data} = await refetch()
-    setIsApproved(data?.gt(0))
-  }
-
-  useEffect(() => {
-    const fetch = async () => {
-      await fetchAllowance()
-    }
-    fetch()
-  }, [data])
 
   async function handleApprove() {
     const tx = await writeAsync?.()
     await tx?.wait()
-    await fetchAllowance()
+    if (userAddress) {
+      await refetchForStrategy(strategy, userAddress)
+    }
   }
 
   return {
-    isApproved,
     approve: handleApprove,
     isSuccess,
-    fetchAllowance
   }
 }

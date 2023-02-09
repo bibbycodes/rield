@@ -3,17 +3,16 @@ import hre from "hardhat";
 async function main() {
 
   await hre.run("verify:verify", {
-    address: '0xa3680fE3BDD26DE08D101dc58eCa6d63A2d1Aa0c',
+    address: '0x6e6c69997B0000CbF3661102152E432695c6D97C',
     constructorArguments: []
   });
 
   await hre.run("verify:verify", {
-    address: '0x23DdD269c5c95989cA6ce688574F9b7E018989fF',
+    address: '0x470AAE9c435B1C7189d1497D749e7C4916cF32F9',
     constructorArguments: [
-      '0xa3680fE3BDD26DE08D101dc58eCa6d63A2d1Aa0c',
-      '0x958cc92297e6F087f41A86125BA8E121F0FbEcF2',
-      '0x10f2f3B550d98b6E51461a83AD3FE27123391029',
-      '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
+      '0x6e6c69997B0000CbF3661102152E432695c6D97C',
+      '0xE0cCd451BB57851c1B2172c07d8b4A7c6952a54e', // capETHPool
+      '0x29163356bBAF0a3bfeE9BA5a52a5C6463114Cb5f', // capETHRewards
     ]
   });
 }

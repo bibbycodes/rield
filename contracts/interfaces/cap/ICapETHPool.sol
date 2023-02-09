@@ -3,7 +3,7 @@ pragma solidity ^0.8.12;
 interface ICapETHPool {
     function UNIT (  ) external view returns ( uint256 );
     function creditUserProfit ( address destination, uint256 amount ) external;
-    function deposit () external payable;
+    function deposit (uint amount) external payable;
     function getBalance ( address account ) external view returns ( uint256 );
     function getCurrencyBalance ( address account ) external view returns ( uint256 );
     function getUtilization (  ) external view returns ( uint256 );

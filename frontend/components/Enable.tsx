@@ -7,6 +7,7 @@ import { arbitrum } from 'wagmi/chains'
 import { InjectedConnector } from 'wagmi/connectors/injected'
 import { useGetUserDepositedInVault } from '../hooks/useGetUserDepositedInVault';
 import { ConnectKitButton } from 'connectkit';
+import { VaultDataContext } from '../contexts/vault-data-context/VaultDataContext';
 
 interface StrategyDetailsModalProps {
   tokenAddress: Address,
@@ -18,11 +19,12 @@ interface StrategyDetailsModalProps {
 export default function Enable({tokenAddress, vaultAddress, openModal, strategy}: StrategyDetailsModalProps) {
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
   const {address} = useAccount();
-  const {approve, isApproved} = useApproveToken(tokenAddress, vaultAddress, address);
   const {userStaked} = useGetUserDepositedInVault(strategy)
   const {setAction, setSelectedStrategy} = useContext(SelectedStrategyContext)
+  const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
+  const {approve} = useApproveToken(tokenAddress, vaultAddress, address, strategy, refetchForStrategy);
+  const isApproved = vaultsData[vaultAddress]?.allowance?.gt(0)
   const {isConnected} = useAccount()
-  const {connect} = useConnect({connector: new InjectedConnector({chains: [arbitrum]})})
   const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
 
   const handleClick = (action: TransactionAction) => {

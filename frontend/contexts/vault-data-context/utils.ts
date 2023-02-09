@@ -71,7 +71,7 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
   ]
 }
 
-export const getMultiCallDataForEthVault = (strategy: Strategy) => {
+export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Address) => {
   const vault = {
     abi: RldEthVault.abi,
     address: strategy.vaultAddress,
@@ -80,6 +80,7 @@ export const getMultiCallDataForEthVault = (strategy: Strategy) => {
   const vaultBalance = {
     ...vault,
     functionName: 'balanceOf',
+    args: [userAddress]
   }
 
   const vaultPricePerFullShare = {
@@ -114,7 +115,7 @@ export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Addre
   const ethVaultCallData = strategies
     .filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
     .map((strategy) => {
-      const calls = getMultiCallDataForEthVault(strategy)
+      const calls = getMultiCallDataForEthVault(strategy, userAddress)
       return {
         calls,
         tokenAddress: strategy.tokenAddress,

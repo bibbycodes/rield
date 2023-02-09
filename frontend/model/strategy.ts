@@ -3,6 +3,7 @@ import * as capUSDC from "../resources/vault-details/deploy_cap_usdc-output.json
 import * as gmx from "../resources/vault-details/deploy_gmx-output.json";
 import * as glp from "../resources/vault-details/deploy_glp-output.json";
 import {abi} from '../resources/abis/BeefyVaultV7.json';
+import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
 import crypto from 'crypto'
 
@@ -25,7 +26,6 @@ export interface Strategy {
   description: string;
   isActive: boolean;
   protocolUrl: string;
-  apy: number;
   tokenUrl: string;
   abi: any;
   coinGeckoId: string;
@@ -48,7 +48,6 @@ export const availableStrategies: Strategy[] = [
     tokenLogoUrl: "/gmx-logo.svg",
     description: "GMX Token is a governance token for the GMD protocol. It is used to vote on protocol changes and to earn rewards from the GMD protocol.",
     protocolUrl: "https://gmx.io/#/",
-    apy: 13,
     tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=${gmx.tokenAddress}`,
     decimals: 18,
     isActive: true,
@@ -69,7 +68,6 @@ export const availableStrategies: Strategy[] = [
     tokenLogoUrl: "/glp-logo.svg",
     description: "GLP is an index token consisting of multiple blue-chip cryptos that is used as liquidity on GMX.",
     protocolUrl: "https://gmx.io/#/",
-    apy: 13,
     tokenUrl: `https://app.gmx.io/#/buy_glp/`,
     decimals: 18,
     isActive: true,
@@ -90,7 +88,6 @@ export const availableStrategies: Strategy[] = [
     tokenLogoUrl: "/usdc-logo.svg",
     description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
     protocolUrl: "https://www.cap.finance",
-    apy: 13,
     tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${capUSDC.tokenAddress}`,
     decimals: 6,
     isActive: true,
@@ -100,28 +97,27 @@ export const availableStrategies: Strategy[] = [
     performanceFee: 5,
     hasWithdrawalSchedule: true,
   },
-  // {
-  //   id: 3,
-  //   name: "Cap ETH",
-  //   protocol: "Cap.finance",
-  //   tokenSymbol: "ETH",
-  //   tokenAddress: randomAddress() as Address,
-  //   vaultAddress: randomAddress() as Address,
-  //   strategyAddress: randomAddress() as Address,
-  //   protocolLogoUrl: "/cap-logo.svg",
-  //   tokenLogoUrl: "/eth-token.svg",
-  //   description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
-  //   protocolUrl: "https://www.cap.finance",
-  //   apy: 13,
-  //   tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=eth`,
-  //   decimals: 18,
-  //   isActive: false,
-  //   abi: abi,
-  //   coinGeckoId: "ethereum",
-  //   type: "Auto Compound",
-  //   performanceFee: 5,
-  //   hasWithdrawalSchedule: true,
-  // },
+  {
+    id: 3,
+    name: "Cap ETH",
+    protocol: "Cap.finance",
+    tokenSymbol: "ETH",
+    tokenAddress: capEth.tokenAddress as Address,
+    vaultAddress: capEth.vaultAddress as Address,
+    strategyAddress: capEth.strategyAddress as Address,
+    protocolLogoUrl: "/cap-logo.svg",
+    tokenLogoUrl: "/eth-token.svg",
+    description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
+    protocolUrl: "https://www.cap.finance",
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=eth`,
+    decimals: 18,
+    isActive: true,
+    abi: ethVaultAbi,
+    coinGeckoId: "ethereum",
+    type: "Auto Compound",
+    performanceFee: 5,
+    hasWithdrawalSchedule: true,
+  },
   // {
   //   id: 0,
   //   name: "GNS",

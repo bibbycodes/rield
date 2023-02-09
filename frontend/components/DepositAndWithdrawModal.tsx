@@ -1,22 +1,23 @@
 import * as React from 'react';
-import {useContext, useState} from 'react';
+import { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import {TextField} from '@mui/material';
-import {useAccount, useBalance} from 'wagmi';
-import {useContractActions} from '../hooks/useContractActions';
-import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
-import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
+import { TextField } from '@mui/material';
+import { useAccount, useBalance } from 'wagmi';
+import { useContractActions } from '../hooks/useContractActions';
+import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
+import { SelectedStrategyContext, TransactionAction } from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
-import {APYsContext} from "../contexts/ApyContext";
-import {ethers} from "ethers";
-import {ToastContext, ToastSeverity} from "../contexts/ToastContext";
+import { APYsContext } from "../contexts/ApyContext";
+import { ethers } from "ethers";
+import { ToastContext, ToastSeverity } from "../contexts/ToastContext";
 import Image from 'next/image'
-import {useCalculateSendAmount} from '../hooks/useCalculateSendAmount';
-import {WithLoader} from './WithLoader';
+import { useCalculateSendAmount } from '../hooks/useCalculateSendAmount';
+import { WithLoader } from './WithLoader';
 import IconButton from '@mui/material/IconButton';
 import WarningIcon from '@mui/icons-material/Warning';
+import { ADDRESS_ZERO } from '../lib/apy-getter-functions/cap';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -38,7 +39,11 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const {action, selectedStrategy} = useContext(SelectedStrategyContext)
   const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress, decimals} = selectedStrategy;
   const {address: userAddress} = useAccount();
-  const {data: tokenBalanceData} = useBalance({token: tokenAddress, address: userAddress, watch: true})
+  const {data: tokenBalanceData} = useBalance({
+    token: tokenAddress !== ADDRESS_ZERO ? tokenAddress : undefined,
+    address: userAddress,
+    watch: true
+  })
   const {data: vaultTokenBalanceData} = useBalance({token: vaultAddress, address: userAddress, watch: true})
   const formattedTokenBalance = tokenBalanceData?.formatted
   const tokenBalanceBN = tokenBalanceData?.value
@@ -49,7 +54,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const apy = apys?.[strategyAddress]
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
   const amount = useCalculateSendAmount(visibleAmount, action, decimals, userStaked, vaultTokenBalanceBn)
-  const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals})
+  const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals, tokenAddress})
 
   const handleClose = () => {
     setVisibleAmount('0')

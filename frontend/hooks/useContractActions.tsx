@@ -1,22 +1,25 @@
-import {Address, useContractWrite, usePrepareContractWrite, useWaitForTransaction} from 'wagmi'
-import {AbiItem} from "web3-utils";
-import {BigNumber} from 'ethers';
-import { useDebounce } from 'usehooks-ts';
+import { Address, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from 'wagmi'
+import { AbiItem } from "web3-utils";
+import { BigNumber } from 'ethers';
+import { ADDRESS_ZERO } from '../lib/apy-getter-functions/cap';
 
 export interface useContractActionsProps {
   vaultAddress: Address,
   amount: BigNumber,
   abi: AbiItem[],
-  decimals: number
+  decimals: number,
+  tokenAddress: Address
 }
 
-export function useContractActions({vaultAddress, amount, abi}: useContractActionsProps) {
+export function useContractActions({vaultAddress, amount, abi, tokenAddress}: useContractActionsProps) {
+
   const {config: depositConfig} = usePrepareContractWrite({
     address: vaultAddress,
-    args: [amount],
     functionName: "deposit",
     abi,
-    enabled: amount.gt(0)
+    enabled: amount.gt(0),
+    args: tokenAddress === ADDRESS_ZERO ? [] : [amount],
+    overrides: tokenAddress === ADDRESS_ZERO ? {value: amount} : undefined
   })
 
   const {data: depositData, writeAsync: depositIntoVault} = useContractWrite(depositConfig)

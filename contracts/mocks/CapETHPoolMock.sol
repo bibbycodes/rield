@@ -24,7 +24,7 @@ contract CapETHPoolMock is ICapETHPool {
 
     function creditUserProfit ( address destination, uint256 amount ) external {}
 
-    function deposit () external payable override {
+    function deposit (uint amount) external payable override {
         deposits[msg.sender] += msg.value;
         emit Deposit(msg.sender, msg.value);
     }

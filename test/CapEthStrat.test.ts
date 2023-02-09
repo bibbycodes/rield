@@ -73,12 +73,13 @@ describe("Cap Eth Strategy", () => {
     it("Depositing into vault sends want amount to strategy and stakes into Cap under the strategy's address, mints token to alice", async () => {
       const {alice, vault, strategy, capPool} = await loadFixture(setupFixture);
       expect(await vault.totalSupply()).to.equal(0);
-      await vault.connect(alice)
+      const tx = await vault.connect(alice)
         .deposit({value: ONE_ETHER})
 
       expect(await vault.totalSupply()).to.equal(ONE_ETHER);
       expect(await capPool.deposits(strategy.address)).to.equal(ONE_ETHER);
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
+      expect(tx).to.emit(capPool, 'Deposit');
     })
 
     it("Mints token for bob and alice in proportion to their deposits", async () => {

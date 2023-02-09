@@ -42,7 +42,7 @@ const VaultDataContextProvider = ({children}: {
 
   const refetchForStrategy = async (strategy: Strategy, userAddress: Address) => {
     const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
-    const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy) : getMultiCallDataForErc20Vault(strategy, userAddress)
+    const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy, userAddress) : getMultiCallDataForErc20Vault(strategy, userAddress)
     const data = await multicall({contracts: multiCallData})
     let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance
 
