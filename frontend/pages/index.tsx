@@ -8,6 +8,7 @@ import Image from "next/image";
 
 export default function Home() {
   const bgGradient = `bg-gradient-to-tr from-green-300 via-blue-500 to-purple-600`
+  const textGradient = `${bgGradient} text-transparent`
   return (
     <>
       <Head>
@@ -16,13 +17,13 @@ export default function Home() {
         <div
           className={`${bgGradient} w-full flex flex-col items-center justify-center m-0 h-screen`}>
           <div>
-            <Typography className={"text-center text-white text-7xl"}>
+            <Typography className={`text-center text-white text-7xl`}>
               Compound More #RealYield
             </Typography>
           </div>
           <div className={`mt-96`}>
             <Link href='/strategies'>
-              <button className={`p-10 text-white rounded-xl p-2 text-7xl bg-gray-900`}>
+              <button className={`p-8 text-white rounded-xl text-7xl bg-gray-900`}>
                 Enter App
               </button>
             </Link>
@@ -54,16 +55,36 @@ export default function Home() {
               Curated List of Real Yield Pools, Always on AutoPilot
             </Typography>
           </div>
-        
-          <div className={`flex flex-col mt-20`}>
-            <div className={`flex items-center justify-center flex-row my-2`}>
-              <Image alt={"Token Logo"} height={190} width={190} src={'/eth-token.svg'} className={`mx-10`}/>              
-              <Image alt={"Token Logo"} height={190} width={190} src={'/usdc-logo.svg'} className={`mx-10`}/>
+
+          <div className={`flex flex-col mt-20 w-full`}>
+            
+            <div className="flex h-full max-h-[12rem] items-center 
+            justify-center flex-row my-2 gap-10
+            [&>*]:h-full [&>*]:w-full">
+              <div className="hidden md:visible flex-grow"></div>
+              <div className="max-w-[12rem]">
+                <img alt={"Token Logo"} className={`h-full w-full`} src={'/eth-token.svg'}/>
+              </div>
+              <div className="max-w-[12rem]">
+                <img alt={"Token Logo"} className={`h-full w-full`} src={'/usdc-logo.svg'}/>
+              </div>
+              <div className="hidden md:visible flex-grow"></div>
             </div>
-            <div className={`flex items-center justify-center flex-row my-2`}>
-              <Image alt={"Token Logo"} height={190} width={190} className={`mx-12`} src={'/cap.svg'}/>
-              <Image alt={"Token Logo"} height={190} width={190} className={`mx-12`} src={'/gmx-logo.svg'}/>
-              <Image alt={"Token Logo"} height={190} width={190} className={`mx-12`} src={'/dai-logo.png'}/>
+            
+            <div className="flex h-full max-h-[12rem] items-center 
+            justify-center flex-row my-2 gap-10
+            [&>*]:h-full [&>*]:w-full">
+              <div className="hidden md:visible flex-grow"></div>
+              <div className="max-w-[12rem]">
+                <img alt={"Token Logo"} className={`h-full w-full`} src={'/cap.svg'}/>
+              </div>
+              <div className="max-w-[12rem]">
+                <img alt={"Token Logo"} className={`h-full w-full`} src={'/gmx-logo.svg'}/>
+              </div>
+              <div className="max-w-[12rem]">
+                <img alt={"Token Logo"} className={`h-full w-full`} src={'/dai-logo.png'}/>
+              </div>
+              <div className="hidden md:visible flex-grow"></div>
             </div>
           </div>
         </div>
