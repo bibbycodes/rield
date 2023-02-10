@@ -34,7 +34,7 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
   }
 
   return <div>
-    {(!showApprove) && (
+    {(isConnected && !showApprove) && (
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => handleClick("deposit")}
