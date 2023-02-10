@@ -19,6 +19,7 @@ export default function StrategyCard({
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys[strategy.strategyAddress]
   const {isActive} = strategy
+  const primaryToSecondary = 'bg-gradient-to-r from-backgroundSecondaryGradient to-backgroundSecondary'
 
   // TODO: Move this to a useGetUserStaked
   const getUserStakedInDollars = (amount: BigNumber) => {
@@ -38,7 +39,7 @@ export default function StrategyCard({
   }
 
   return (
-    <div className={`bg-backgroundSecondary rounded-lg p-2`}>
+    <div className={`${primaryToSecondary} rounded-lg p-2`}>
       <div className="p-4">
         <StrategyLogos strategy={strategy}></StrategyLogos>
         <div className={`flex`}>

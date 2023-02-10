@@ -13,8 +13,14 @@ const theme = {
   tSecondary: '#9597A0',
   backgroundSecondary: '#37373d',
   backgroundPrimary: '#2c2c2e',
+  backgroundPrimaryGradient: '#272728',
+  backgroundSecondaryGradient: '#3c3c3f',
   accentPrimary: '#607EDE',
+  accentPrimaryGradient: '#5372ca',
   accentSecondary: '#7a92df',
+  accentSecondaryGradient: '#7e93da',
+  navGray: '#121528',
+  navGrayGradient: '#0d1221',
 }
 
 const muiTheme = createTheme(

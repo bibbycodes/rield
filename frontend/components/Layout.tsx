@@ -12,6 +12,7 @@ export default function Layout({children}: PropsWithChildren) {
   const isLandingPage = router.pathname === '/'
   const navHeight = isLandingPage ? 'h-16' : 'h-64'
   const outerDivStyle = isLandingPage ? 'bg-backgroundPrimary' : `pt-2 pb-10 px-3 sm:px-10`
+  const navGradient = "bg-gradient-to-br from-navGray to-navGrayGradient"
   return (
     <>
       <Head>
@@ -20,7 +21,7 @@ export default function Layout({children}: PropsWithChildren) {
         <link rel="icon" href="/favicon.ico"/>
       </Head>
 
-      <div className={`text-white w-full bg-gray-900 ${navHeight} absolute`}></div>
+      <div className={`text-white w-full ${navGradient} ${navHeight} absolute`}></div>
       <main className="relative z-10">
         <nav className="text-white w-full py-0">
           <div className="flex flex-row w-full">
