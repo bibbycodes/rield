@@ -1,14 +1,12 @@
 import Head from 'next/head'
 import Link from "next/link";
 import React from "react";
-import { Typography } from "@mui/material";
-import { availableStrategies } from "../model/strategy";
+import {Typography} from "@mui/material";
+import {availableStrategies} from "../model/strategy";
 import StrategyCard from "../components/StrategyCard";
-import Image from "next/image";
 
 export default function Home() {
-  const bgGradient = `bg-gradient-to-tr from-green-300 via-blue-500 to-purple-600`
-  const textGradient = `${bgGradient} text-transparent`
+  const bgGradient = `bg-gradient-to-tl from-fuchsia-500 to-cyan-500`
   return (
     <>
       <Head>
@@ -40,14 +38,14 @@ export default function Home() {
             <div className={`m-2 w-full`}>
               <StrategyCard
                 key={availableStrategies[0].vaultAddress}
-                strategy={availableStrategies[0]}
+                strategy={availableStrategies[1]}
                 openModal={() => false}
               />
             </div>
 
             <div className={`m-2 w-full hidden md:block`}>
               <StrategyCard
-                key={availableStrategies[0].vaultAddress}
+                key={availableStrategies[1].vaultAddress}
                 strategy={availableStrategies[0]}
                 openModal={() => false}
               />
