@@ -31,7 +31,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className={`bg-white w-full flex items-center justify-center p-8 min-h-screen flex-col md:flex-row`}>
+        <div className={`bg-white w-full flex items-center justify-center p-8 min-h-screen flex-col md:flex-row gap-4`}>
           <div className={`md:w-1/2 flex flex-col items-center justify-center`}>
             <Typography className={"text-center text-black text-6xl md:text-7xl leading-relaxed md:mb-0"}>
               High Yield, Low Fees.
@@ -41,15 +41,15 @@ export default function Home() {
               Investing in crypto made simple, affordable and rewarding for all. High yield and low fees, always on autopilot.
             </Typography>
           </div>
-          <div className={``}>
-            <div className={`m-8 w-full shadow-2xl`}>
+          <div className={`max-w-[400px] w-[90vw]`}>
+            <div className={`w-full shadow-2xl mb-4`}>
               <ApyCard
                 key={availableStrategies[0].vaultAddress}
                 strategy={availableStrategies[1]}
               />
             </div>
 
-            <div className={`m-8 w-full shadow-2xl md:block `}>
+            <div className={`w-full shadow-2xl md:block `}>
               <ApyCard
                 key={availableStrategies[1].vaultAddress}
                 strategy={availableStrategies[0]}
@@ -70,11 +70,15 @@ export default function Home() {
           </div>
 
           {/*<div className={'h-20'}>*/}
-            <img src="/compound.png" alt="compounding illustration"/>
+          <div className="max-w-[600px] relative">
+            <img className="absolute h-full w-auto right-[7%] animate-spin"
+                 src="/arrow-rotating.png" alt="arrow illustration"/>
+            <img className="relative z-10" src="/compound-illustration.png" alt="compounding illustration"/>
+          </div>
           {/*</div>*/}
 
           {/*<div className={`flex flex-col mt-20 w-full`}>*/}
-          
+
           {/*  <div className="flex h-full max-h-[12rem] items-center*/}
           {/*  justify-center flex-row my-2*/}
           {/*  [&>*]:h-full [&>*]:w-full">*/}
@@ -89,7 +93,7 @@ export default function Home() {
           {/*    <div className="max-w-[6rem]"/>*/}
           {/*    <div className="hidden md:visible flex-grow"></div>*/}
           {/*  </div>*/}
-          
+
           {/*  <div className="flex h-full max-h-[12rem] items-center*/}
           {/*  justify-center flex-row my-2 gap-10*/}
           {/*  [&>*]:h-full [&>*]:w-full">*/}
