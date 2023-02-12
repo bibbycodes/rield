@@ -44,14 +44,14 @@ const VaultDataContextProvider = ({children}: {
     const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy, userAddress) : getMultiCallDataForErc20Vault(strategy, userAddress)
     const data = await multicall({contracts: multiCallData})
-    let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance
+    let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest
 
     if (isEthVault) {
-      ([vaultBalance, vaultPricePerFullShare, vaultWantBalance] = data as BigNumber[])
+      ([vaultBalance, vaultPricePerFullShare, vaultWantBalance, paused, lastHarvest] = data as BigNumber[])
     } else {
-      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance] = data as BigNumber[])
+      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest] = data as BigNumber[])
     }
-
+    
     setVaultsData({
       ...vaultsData,
       [strategy.vaultAddress]: {
@@ -60,7 +60,9 @@ const VaultDataContextProvider = ({children}: {
         vaultBalance,
         vaultWantBalance,
         allowance,
-        tokenBalance
+        tokenBalance,
+        paused,
+        lastHarvest
       }
     })
   }
@@ -82,7 +84,7 @@ const VaultDataContextProvider = ({children}: {
 
       Promise.all([erc20DVaultDataCalls, ethVaultDataCalls]).then(data => {
         const erc20VaultData = erc20Vaults.reduce((acc, strategy, index) => {
-          const strategyData = data[0].slice(index * 5, index * 5 + 5)
+          const strategyData = data[0].slice(index * 7, index * 7 + 7)
           return {
             ...acc,
             [strategy.vaultAddress]: {
@@ -92,12 +94,14 @@ const VaultDataContextProvider = ({children}: {
               allowance: strategyData[2],
               tokenBalance: strategyData[3],
               vaultWantBalance: strategyData[4],
+              paused: strategyData[5],
+              lastHarvest: strategyData[6]
             }
           }
         }, {} as any)
 
         const ethVaultData = ethVaults.reduce((acc, strategy, index) => {
-          const strategyData = data[1].slice(index * 3, index * 3 + 3)
+          const strategyData = data[1].slice(index * 5, index * 5 + 5)
           return {
             ...acc,
             [strategy.vaultAddress]: {
@@ -105,6 +109,8 @@ const VaultDataContextProvider = ({children}: {
               vaultBalance: strategyData[0],
               vaultPricePerFullShare: strategyData[1],
               vaultWantBalance: strategyData[2],
+              paused: strategyData[3],
+              lastHarvest: strategyData[4]
             }
           }
         }, {} as any)

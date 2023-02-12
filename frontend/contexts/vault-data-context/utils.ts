@@ -3,8 +3,8 @@ import {Address} from "wagmi";
 import * as RldVault from "../../resources/abis/BeefyVaultV7.json";
 import {ADDRESS_ZERO} from "../../lib/apy-getter-functions/cap";
 import * as RldEthVault from "../../resources/abis/BeefyETHVault.json";
+import * as genericStrategy from "../../resources/abis/CapSingleStakeStrategy.json";
 import * as erc20 from "../../resources/abis/erc20.json";
-import {multicall} from "@wagmi/core";
 import {BigNumber} from "ethers";
 
 const erc20Abi = Array.from(erc20)
@@ -15,6 +15,8 @@ export interface VaultData {
   allowance?: BigNumber
   tokenBalance?: BigNumber
   vaultWantBalance: BigNumber
+  paused: boolean
+  lastHarvest: BigNumber
 }
 
 export type MultiCallInput = {
@@ -27,6 +29,11 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
   const vault = {
     abi: RldVault.abi,
     address: strategy.vaultAddress,
+  }
+  
+  const strategyContract = {
+    abi: genericStrategy.abi,
+    address: strategy.strategyAddress,
   }
 
   const erc20Contract = {
@@ -61,6 +68,16 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
     ...vault,
     functionName: 'balance',
   }
+  
+  const paused = {
+    ...strategyContract,
+    functionName: 'paused',
+  }
+  
+  const lastHarvest = {
+    ...strategyContract,
+    functionName: 'lastHarvest',
+  }
 
   return [
     vaultBalance,
@@ -68,6 +85,8 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
     allowance,
     tokenBalance,
     vaultWantBalance,
+    paused,
+    lastHarvest
   ]
 }
 
@@ -75,6 +94,11 @@ export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Add
   const vault = {
     abi: RldEthVault.abi,
     address: strategy.vaultAddress,
+  }
+
+  const strategyContract = {
+    abi: genericStrategy.abi,
+    address: strategy.strategyAddress,
   }
 
   const vaultBalance = {
@@ -92,11 +116,23 @@ export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Add
     ...vault,
     functionName: 'balance',
   }
+  
+  const paused = {
+    ...strategyContract,
+    functionName: 'paused',
+  }
+  
+  const lastHarvest = {
+    ...strategyContract,
+    functionName: 'lastHarvest',
+  }
 
   return [
     vaultBalance,
     vaultPricePerFullShare,
-    vaultWantBalance
+    vaultWantBalance,
+    paused,
+    lastHarvest
   ]
 }
 
@@ -110,7 +146,6 @@ export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Addre
         tokenAddress: strategy.tokenAddress,
       }
     })
-
 
   const ethVaultCallData = strategies
     .filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)

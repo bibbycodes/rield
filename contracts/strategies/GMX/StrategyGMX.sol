@@ -24,6 +24,7 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
 
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
+    uint256 public lastDepositTime;
 
     event StratHarvest(address indexed harvester, uint256 wantTokenHarvested, uint256 tvl);
     event Deposit(uint256 tvl);
@@ -49,7 +50,8 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
 
         if (wantTokenBal > 0) {
             IGMXRouter(chef).stakeGmx(wantTokenBal);
-            emit Deposit(balanceOf());
+            lastDepositTime = block.timestamp;
+            emit Deposit(wantTokenBal);
         }
     }
 
@@ -66,7 +68,7 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
         }
 
         IERC20(wantToken).safeTransfer(vault, wantTokenBal);
-        emit Withdraw(balanceOf());
+        emit Withdraw(wantTokenBal);
     }
 
     function beforeDeposit() external virtual override {

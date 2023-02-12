@@ -10,7 +10,7 @@ export const StrategyLogos = ({strategy}: { strategy: Strategy }) => {
       <div className={`flex flex-grow flex-row items-center`}>
         <Image alt={'Token Logo'} width={50} height={50} src={tokenLogoUrl} className="inline mr-3 h-12 w-12"/>
         <Typography
-          className="inline text-2xl font-bold text-tPrimary hover:text-accentPrimary hover:underline">{tokenSymbol}
+          className="inline text-2xl font-bold text-tPrimary">{tokenSymbol}
         </Typography>
       </div>
       <div>

@@ -31,7 +31,7 @@ export default function BurgerMenu() {
         </ListItem>
 
         <ListItem disablePadding>
-          <Link href='https://rld-1.gitbook.io/rld/' className="w-full">
+          <Link href='https://rld-1.gitbook.io/rld/' target="_blank" rel="noopener noreferrer" className="w-full">
             <ListItemButton>
               <ListItemText primary={'Docs'}/>
             </ListItemButton>

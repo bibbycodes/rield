@@ -36,7 +36,7 @@ export default function Layout({children}: PropsWithChildren) {
                 </Link>
               </div>
               <div className={`flex flex-row justify-center items-center ml-auto`}>
-                <div className="px-5 hidden md:block"><Link href='https://rld-1.gitbook.io/rld/'>Docs</Link></div>
+                <div className="px-5 hidden md:block"><Link target="_blank" rel="noopener noreferrer" href='https://rld-1.gitbook.io/rld/'>Docs</Link></div>
                 <div className="px-5 hidden md:block"><Link href='/strategies'>Strategies</Link></div>
                 <div className="ml-auto">
                   {!isLandingPage ? (<NonSSRWrapper>

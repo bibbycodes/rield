@@ -20,8 +20,12 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
   const {userStaked} = useGetUserDepositedInVault(strategy)
   const {setAction, setSelectedStrategy} = useContext(SelectedStrategyContext)
   const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
+  const vaultData = vaultsData[vaultAddress]
   const {approve} = useApproveToken(tokenAddress, vaultAddress, address, strategy, refetchForStrategy);
   const isApproved = vaultsData[vaultAddress]?.allowance?.gt(0)
+  const paused = vaultData?.paused
+  const lastHarvest = vaultData?.lastHarvest.toNumber() * 1000
+  console.log(lastHarvest, paused)
   const {isConnected} = useAccount()
   const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
   const accentPrimaryGradient = 'bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient'
@@ -31,17 +35,27 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
     setSelectedStrategy(strategy)
     openModal()
   }
+  
+  const isWithdrawDisabled = ()  => {
+    const isLastHarvestMoreThanOneHourAgo = Date.now() - lastHarvest > 3600000
+    return userStaked?.lte(0) || (strategy.hasWithdrawalSchedule && !isLastHarvestMoreThanOneHourAgo)
+  }
+  
+  const isDepositDisabled = () => {
+    return paused
+  }
 
   return <div>
     {(isConnected && !showApprove) && (
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => handleClick("deposit")}
-          className={`text-tPrimary ${accentPrimaryGradient} hover:bg-accentSecondary p-3 rounded-lg uppercase`}
+          disabled={isDepositDisabled()}
+          className={`text-tPrimary ${accentPrimaryGradient} hover:bg-accentSecondary p-3 rounded-lg uppercase disabled:text-tSecondary disabled:border-tSecondary`}
         >Deposit
         </button>
         <button
-          disabled={userStaked?.lte(0)}
+          disabled={isWithdrawDisabled()}
           className={`disabled:text-tSecondary disabled:border-tSecondary p-3 rounded-lg border-2 text-accentPrimary border-accentPrimary hover:text-accentSecondary hover:border-accentSecondary uppercase`}
           onClick={() => handleClick('withdraw')}
         >Withdraw

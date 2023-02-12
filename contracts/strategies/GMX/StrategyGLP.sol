@@ -38,6 +38,7 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
 
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
+    uint256 public lastDepositTime;
 
     event StratHarvest(address indexed harvester, uint256 tokenHarvested, uint256 tvl);
     event Deposit(uint256 tvl);
@@ -71,6 +72,7 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
 
     // puts the funds to work
     function deposit() public whenNotPaused {
+        lastDepositTime = block.timestamp;
         emit Deposit(balanceOf());
     }
 
