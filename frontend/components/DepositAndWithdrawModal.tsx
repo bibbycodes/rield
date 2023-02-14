@@ -205,16 +205,16 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
                 className={`text-tSecondary w-1/3 bg-none ml-auto hover:text-accentPrimary`}
                 onClick={handleSetMax}
               >
-                <Typography className={`w-4 ml-auto mt-2 mr-8`}>
+                <p className={`w-4 ml-auto mt-2 mr-8`}>
                   MAX
-                </Typography>
+                </p>
               </div>
             </div>
           </Box>
 
           {selectedStrategy.hasWithdrawalSchedule && (
             <Box className={`inline-flex mt-4`}>
-              <Typography className={`text-yellow-200`}>
+              <p className={`text-yellow-200`}>
                 <WarningIcon fontSize="small" className={`mr-1`}/>
                 This vault operates on a withdrawal schedule. For details, click <a
                 href={'https://rld-1.gitbook.io/rld/withdrawal-schedules'}
@@ -222,7 +222,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
                 target="_blank" rel="noopener noreferrer">
                 here.
               </a>
-              </Typography>
+              </p>
             </Box>
           )}
 

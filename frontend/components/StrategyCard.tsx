@@ -1,4 +1,3 @@
-import { Typography } from '@mui/material';
 import { Strategy } from '../model/strategy';
 import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
 import Enable from './Enable';
@@ -44,21 +43,21 @@ export default function StrategyCard({
         <StrategyLogos strategy={strategy}></StrategyLogos>
         <div className={`flex`}>
           <div className="flex flex-col my-6 flex-grow">
-            <Typography className="text-xs text-tSecondary">Staked</Typography>
-            <Typography
-              className={`text-2xl text-tPrimary`}>{isActive ? `$${getUserStakedInDollars(userStaked)}` : '-'}</Typography>
-            <Typography className={`text-xs text-tSecondary`}>
+            <p className="text-xs text-tSecondary">Staked</p>
+            <p
+              className={`text-2xl text-tPrimary`}>{isActive ? `$${getUserStakedInDollars(userStaked)}` : '-'}</p>
+            <p className={`text-xs text-tSecondary`}>
               {isActive ? `${parseFloat(ethers.utils.formatUnits(userStaked, strategy.decimals)).toFixed(4)} ${(strategy.tokenSymbol)}` : '-'}
-            </Typography>
+            </p>
           </div>
           <div className="flex flex-col my-6">
-            <Typography className="text-xs text-tSecondary">APY</Typography>
+            <p className="text-xs text-tSecondary">APY</p>
             {isActive ? (
               <WithLoader className={`min-w-[5rem]`} type={`text`} isLoading={isLoading}>
-                <Typography className={`text-2xl text-tPrimary`}>{apy}%</Typography>
+                <p className={`text-2xl text-tPrimary`}>{apy}%</p>
               </WithLoader>
             ) : (
-              <Typography className={`text-2xl text-tPrimary`}>-</Typography>
+              <p className={`text-2xl text-tPrimary`}>-</p>
             )}
           </div>
         </div>

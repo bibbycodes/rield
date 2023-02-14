@@ -1,4 +1,3 @@
-import {Typography} from '@mui/material';
 import {Strategy} from '../model/strategy';
 import {StrategyLogos} from "./StrategyLogos";
 import React, {useContext} from "react";
@@ -16,7 +15,7 @@ export default function ApyCard({strategy}: { strategy: Strategy }) {
         <div className={`flex items-center justify-center`}>
           <div className="flex my-6">
             <WithLoader className={`min-w-[5rem]`} height={'8rem'} width={'20rem'} type={`text`} isLoading={isLoading}>
-              <Typography className={`text-4xl sm:text-5xl text-tPrimary`}>{apy}% APY</Typography>
+              <p className={`text-4xl sm:text-5xl text-tPrimary`}>{apy}% APY</p>
             </WithLoader>
           </div>
         </div>

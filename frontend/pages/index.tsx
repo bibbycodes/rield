@@ -69,7 +69,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className={`${bgGradient} w-full flex flex-col items-center p-8 min-h-screen justify-center`}>
+        <div className={`${bgGradient} w-full flex flex-col items-center px-2 py-8 min-h-screen justify-center`}>
           <div className={`flex flex-col items-center`}>
             <p className={"text-center text-white text-5xl sm:text-7xl leading-snug"}>
               Key Features
@@ -78,7 +78,7 @@ export default function Home() {
           <div className={`grid mt-11 grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-10`}>
             <KeyFeatureCard
               title={'Real Yield'}
-              description={'Stake the most promising tokens offering real yield'}
+              description={'Stake the most promising tokens offering real yield.'}
               IconComponent={AttachMoneyIcon}
             />
 
@@ -90,7 +90,7 @@ export default function Home() {
 
             <KeyFeatureCard
               title={'Single Stake'}
-              description={'Forget impermanent loss, simple yields on low risk strategies. '}
+              description={'Forget impermanent loss, simple yields on low risk strategies.'}
               IconComponent={AssuredWorkloadOutlinedIcon}
             />
 
