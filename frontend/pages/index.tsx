@@ -4,9 +4,13 @@ import React from "react";
 import {Typography} from "@mui/material";
 import {availableStrategies} from "../model/strategy";
 import ApyCard from "../components/ApyCard";
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import AssuredWorkloadOutlinedIcon from '@mui/icons-material/AssuredWorkloadOutlined';
+import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
+import {KeyFeatureCard} from "../components/KeyFeatureCard";
 
+export const bgGradient = `bg-gradient-to-tl from-fuchsia-500 to-cyan-500`
 export default function Home() {
-  const bgGradient = `bg-gradient-to-tl from-fuchsia-500 to-cyan-500`
   return (
     <>
       <Head>
@@ -23,7 +27,8 @@ export default function Home() {
             </div>
             <div className={`mt-[20vh]`}>
               <Link href='/strategies'>
-                <button className={`p-8 text-white rounded-xl text-4xl md:text-7xl shadow-2xl bg-gray-900 hover:bg-backgroundPrimaryGradient`}>
+                <button
+                  className={`p-8 text-white rounded-xl text-4xl md:text-7xl shadow-2xl bg-gray-900 hover:bg-backgroundPrimaryGradient`}>
                   Get Started
                 </button>
               </Link>
@@ -38,7 +43,8 @@ export default function Home() {
             </Typography>
 
             <Typography className={"text-center mt-4 text-tSecondary text-xl w-90 leading-relaxed"}>
-              Investing in crypto made simple, affordable and rewarding for all. High yield and low fees, always on autopilot.
+              Investing in crypto made simple, affordable and rewarding for all. High yield and low fees, always on
+              autopilot.
             </Typography>
           </div>
           <div className={`max-w-[400px] w-[90vw]`}>
@@ -58,58 +64,32 @@ export default function Home() {
           </div>
         </div>
 
-        <div className={`${bgGradient} w-full flex flex-col items-center justify-center p-8 min-h-screen`}>
-          <div className={`flex flex-col items-center`}>
+        <div className={`${bgGradient} w-full flex flex-col items-center p-8 min-h-screen`}>
+          <div className={`flex flex-col mt-30 items-center`}>
             <Typography className={"text-center text-white text-4xl md:text-7xl leading-relaxed"}>
-              Real Yield, Passive Earnings.
-            </Typography>
-
-            <Typography className={"text-center mt-4 text-stone-200 text-xl max-w-2xl leading-relaxed"}>
-              Sit back and relax while your tokens work for you. Enjoy a curated selection of high yield strategies. Always with blue chip and #RealYield earning tokens.
+              Key Features
             </Typography>
           </div>
 
-          {/*<div className={'h-20'}>*/}
-          <div className="max-w-[600px] relative">
-            <img className="absolute h-full w-auto right-[7%] animate-spin"
-                 src="/arrow-rotating.png" alt="arrow illustration"/>
-            <img className="relative z-10" src="/compound-illustration.png" alt="compounding illustration"/>
+          <div className={`flex mt-8`}>
+            <KeyFeatureCard
+              title={'Real Yield'}
+              description={'Stake the most promising tokens offering real yield'}
+              IconComponent={AttachMoneyIcon}
+            ></KeyFeatureCard>
+
+            <KeyFeatureCard
+              title={'Auto Compounding'}
+              description={'Passive earnings, just connect, deposit and earn.'}
+              IconComponent={TrendingUpOutlinedIcon}
+            ></KeyFeatureCard>
+
+            <KeyFeatureCard
+              title={'Single Stake Vaults'}
+              description={'Forget about impermanent loss, simple yields on low risk strategies. '}
+              IconComponent={AssuredWorkloadOutlinedIcon}
+            ></KeyFeatureCard>
           </div>
-          {/*</div>*/}
-
-          {/*<div className={`flex flex-col mt-20 w-full`}>*/}
-
-          {/*  <div className="flex h-full max-h-[12rem] items-center*/}
-          {/*  justify-center flex-row my-2*/}
-          {/*  [&>*]:h-full [&>*]:w-full">*/}
-          {/*    <div className="hidden md:visible flex-grow"></div>*/}
-          {/*    <div className="max-w-[6rem]"/>*/}
-          {/*    <div className="max-w-[12rem] mr-5">*/}
-          {/*      <img alt={"Token Logo"} className={`h-full w-full`} src={'/eth-token.svg'}/>*/}
-          {/*    </div>*/}
-          {/*    <div className="max-w-[12rem] ml-5">*/}
-          {/*      <img alt={"Token Logo"} className={`h-full w-full`} src={'/usdc-logo.svg'}/>*/}
-          {/*    </div>*/}
-          {/*    <div className="max-w-[6rem]"/>*/}
-          {/*    <div className="hidden md:visible flex-grow"></div>*/}
-          {/*  </div>*/}
-
-          {/*  <div className="flex h-full max-h-[12rem] items-center*/}
-          {/*  justify-center flex-row my-2 gap-10*/}
-          {/*  [&>*]:h-full [&>*]:w-full">*/}
-          {/*    <div className="hidden md:visible flex-grow"></div>*/}
-          {/*    <div className="max-w-[12rem]">*/}
-          {/*      <img alt={"Token Logo"} className={`h-full w-full`} src={'/cap.svg'}/>*/}
-          {/*    </div>*/}
-          {/*    <div className="max-w-[12rem]">*/}
-          {/*      <img alt={"Token Logo"} className={`h-full w-full`} src={'/gmx-logo.svg'}/>*/}
-          {/*    </div>*/}
-          {/*    <div className="max-w-[12rem]">*/}
-          {/*      <img alt={"Token Logo"} className={`h-full w-full`} src={'/dai-logo.png'}/>*/}
-          {/*    </div>*/}
-          {/*    <div className="hidden md:visible flex-grow"></div>*/}
-          {/*  </div>*/}
-          {/*</div>*/}
         </div>
 
         <div className={`bg-white w-full flex  flex-col items-center justify-center p-8 min-h-screen`}>

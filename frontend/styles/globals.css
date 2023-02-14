@@ -108,6 +108,10 @@ a {
   text-decoration: none;
 }
 
+#slim-text {
+    font-family: 'rld-light', sans-serif;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;

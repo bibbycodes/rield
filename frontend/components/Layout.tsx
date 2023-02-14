@@ -29,7 +29,7 @@ export default function Layout({children}: PropsWithChildren) {
               <div>
                 <Link href='/'>
                   <div className={`flex items-center mr-16 w-full`}>
-                    <Image height={70} width={70} src="/logo.png" alt="RLD Logo"
+                    <Image height={70} width={80} src="/rld-logo-2.png" alt="RLD Logo"
                            className="w-14 mr-1 mr-0 ml-0 rounded-lg p-2 sm:pl-0 font-bold"></Image>
                     <p className={`ml-0 text-3xl logo`}>RLD</p>
                   </div>
