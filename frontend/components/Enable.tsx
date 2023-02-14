@@ -25,7 +25,6 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
   const isApproved = vaultsData[vaultAddress]?.allowance?.gt(0)
   const paused = vaultData?.paused
   const lastHarvest = vaultData?.lastHarvest.toNumber() * 1000
-  console.log(lastHarvest, paused)
   const {isConnected} = useAccount()
   const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
   const accentPrimaryGradient = 'bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient'
@@ -35,12 +34,12 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
     setSelectedStrategy(strategy)
     openModal()
   }
-  
+
   const isWithdrawDisabled = ()  => {
     const isLastHarvestMoreThanOneHourAgo = Date.now() - lastHarvest > 3600000
     return userStaked?.lte(0) || (strategy.hasWithdrawalSchedule && !isLastHarvestMoreThanOneHourAgo)
   }
-  
+
   const isDepositDisabled = () => {
     return paused
   }

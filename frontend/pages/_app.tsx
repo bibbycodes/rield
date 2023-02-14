@@ -1,34 +1,31 @@
 import '../styles/globals.css'
-import type {AppProps} from 'next/app'
-import {ConnectKitProvider, getDefaultClient} from 'connectkit';
-import {createClient, WagmiConfig} from 'wagmi';
-import {arbitrum, hardhat} from "wagmi/chains";
+import type { AppProps } from 'next/app'
 import Layout from '../components/Layout';
-import {Providers} from "../lib/Providers";
+import { Providers } from "../lib/Providers";
+import { ReactElement } from 'react';
+import { NextPage } from 'next';
 
-const alchemyId = process.env.ALCHEMY_ID;
-let chains = process.env.ENV === 'dev' ? [arbitrum, hardhat] : [arbitrum];
+export type NextPageWithProviders<P = {}, IP = P> = NextPage<P, IP> & {
+  getLayoutAndProvider?: (page: ReactElement) => ReactElement<any, any> | null
+}
 
-const client = createClient(
-  getDefaultClient({
-    appName: "RLD",
-    alchemyId,
-    chains
-  }),
-);
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithProviders
+}
 
-export default function App({Component, pageProps}: AppProps) {
+function getDefaultLayoutAndProvider(page: ReactElement) {
+  return <Providers>
+    <Layout>
+      {page}
+    </Layout>
+  </Providers>;
+}
+
+export default function App({Component, pageProps}: AppPropsWithLayout) {
+  const getProviders = Component.getLayoutAndProvider ?? getDefaultLayoutAndProvider
   return (
     <div className={`bg-backgroundPrimary h-full`}>
-      <WagmiConfig client={client}>
-        <ConnectKitProvider>
-          <Providers>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-          </Providers>
-        </ConnectKitProvider>
-      </WagmiConfig>
+      {getProviders(<Component {...pageProps} />)}
     </div>
   )
 }

@@ -1,13 +1,18 @@
 import Head from 'next/head'
 import Link from "next/link";
-import React from "react";
-import {Typography} from "@mui/material";
-import {availableStrategies} from "../model/strategy";
+import React, { ReactElement } from "react";
+import { availableStrategies } from "../model/strategy";
 import ApyCard from "../components/ApyCard";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AssuredWorkloadOutlinedIcon from '@mui/icons-material/AssuredWorkloadOutlined';
+import VerifiedIcon from '@mui/icons-material/VerifiedOutlined';
 import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
-import {KeyFeatureCard} from "../components/KeyFeatureCard";
+import { KeyFeatureCard } from "../components/KeyFeatureCard";
+import Layout from '../components/Layout';
+import { WagmiConfig } from 'wagmi';
+import { APYsContextProvider } from '../contexts/ApyContext';
+import { client } from '../lib/Providers';
+import { TokenPricesContextProvider } from '../contexts/TokenPricesContext';
 
 export const bgGradient = `bg-gradient-to-tl from-fuchsia-500 to-cyan-500`
 export default function Home() {
@@ -21,14 +26,14 @@ export default function Home() {
           <div
             className={`w-full min-h-screen flex flex-col items-center justify-center z-10 relative`}>
             <div>
-              <Typography className={`text-center text-white text-5xl md:text-7xl leading-relaxed`}>
+              <p className={`text-center text-white text-5xl sm:text-7xl leading-snug`}>
                 Yield Generation, <br/> Automated.
-              </Typography>
+              </p>
             </div>
             <div className={`mt-[20vh]`}>
               <Link href='/strategies'>
                 <button
-                  className={`p-8 text-white rounded-xl text-4xl md:text-7xl shadow-2xl bg-gray-900 hover:bg-backgroundPrimaryGradient`}>
+                  className={`p-8 text-white rounded-xl text-4xl sm:text-7xl shadow-2xl bg-gray-900 hover:bg-backgroundPrimaryGradient`}>
                   Get Started
                 </button>
               </Link>
@@ -38,14 +43,14 @@ export default function Home() {
 
         <div className={`bg-white w-full flex items-center justify-center p-8 min-h-screen flex-col md:flex-row gap-4`}>
           <div className={`md:w-1/2 flex flex-col items-center justify-center`}>
-            <Typography className={"text-center text-black text-6xl md:text-7xl leading-relaxed md:mb-0"}>
+            <p className={"text-center text-black text-5xl sm:text-7xl leading-snug sm:mb-0"}>
               High Yield, Low Fees.
-            </Typography>
+            </p>
 
-            <Typography className={"text-center mt-4 text-tSecondary text-xl w-90 leading-relaxed"}>
+            <p className={"text-center mt-4 text-tSecondary text-xl w-90 leading-snug"}>
               Investing in crypto made simple, affordable and rewarding for all. High yield and low fees, always on
               autopilot.
-            </Typography>
+            </p>
           </div>
           <div className={`max-w-[400px] w-[90vw]`}>
             <div className={`w-full shadow-2xl mb-4`}>
@@ -64,39 +69,44 @@ export default function Home() {
           </div>
         </div>
 
-        <div className={`${bgGradient} w-full flex flex-col items-center p-8 min-h-screen`}>
-          <div className={`flex flex-col mt-30 items-center`}>
-            <Typography className={"text-center text-white text-4xl md:text-7xl leading-relaxed"}>
+        <div className={`${bgGradient} w-full flex flex-col items-center p-8 min-h-screen justify-center`}>
+          <div className={`flex flex-col items-center`}>
+            <p className={"text-center text-white text-5xl sm:text-7xl leading-snug"}>
               Key Features
-            </Typography>
+            </p>
           </div>
-
-          <div className={`flex mt-8`}>
+          <div className={`grid mt-11 grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-10`}>
             <KeyFeatureCard
               title={'Real Yield'}
               description={'Stake the most promising tokens offering real yield'}
               IconComponent={AttachMoneyIcon}
-            ></KeyFeatureCard>
+            />
 
             <KeyFeatureCard
-              title={'Auto Compounding'}
+              title={'Compounding'}
               description={'Passive earnings, just connect, deposit and earn.'}
               IconComponent={TrendingUpOutlinedIcon}
-            ></KeyFeatureCard>
+            />
 
             <KeyFeatureCard
-              title={'Single Stake Vaults'}
-              description={'Forget about impermanent loss, simple yields on low risk strategies. '}
+              title={'Single Stake'}
+              description={'Forget impermanent loss, simple yields on low risk strategies. '}
               IconComponent={AssuredWorkloadOutlinedIcon}
+            />
+
+            <KeyFeatureCard
+              title={'Trustless'}
+              description={'Fully Decentralized, transparent and verifiable.'}
+              IconComponent={VerifiedIcon}
             ></KeyFeatureCard>
           </div>
         </div>
 
         <div className={`bg-white w-full flex  flex-col items-center justify-center p-8 min-h-screen`}>
           <div className="md:w-1/2 mb-[10vh]">
-            <Typography className={"text-center text-black text-4xl md:text-7xl"}>
+            <p className={"text-center text-black text-4xl sm:text-7xl"}>
               Join The Community
-            </Typography>
+            </p>
           </div>
 
           <div className="flex h-full max-h-[12rem] items-center
@@ -118,4 +128,14 @@ export default function Home() {
       </main>
     </>
   )
+}
+
+Home.getLayoutAndProvider = function getLayoutAndProvider(page: ReactElement) {
+  return <WagmiConfig client={client}>
+    <TokenPricesContextProvider>
+      <APYsContextProvider>
+        <Layout>{page}</Layout>
+      </APYsContextProvider>
+    </TokenPricesContextProvider>
+  </WagmiConfig>
 }
