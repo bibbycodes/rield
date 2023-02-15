@@ -16,7 +16,7 @@ export default function Layout({children}: PropsWithChildren) {
   return (
     <>
       <Head>
-        <title>Real Yield Dashboard</title>
+        <title>RLD Finance</title>
         <meta name="description" content="Real Yield Auto Compounder"/>
         <link rel="icon" href="/favicon.ico"/>
       </Head>
