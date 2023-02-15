@@ -96,7 +96,7 @@ export default function Home() {
 
             <KeyFeatureCard
               title={'Trustless'}
-              description={'Fully Decentralized, transparent and verifiable.'}
+              description={'Decentralized, transparent and verifiable.'}
               IconComponent={VerifiedIcon}
             ></KeyFeatureCard>
           </div>
@@ -114,14 +114,16 @@ export default function Home() {
             [&>*]:h-full [&>*]:w-full">
             <div className="hidden md:visible flex-grow"></div>
             <div className="max-w-[12rem]">
-              <img alt={"Token Logo"} className={`h-full w-full`} src={'/telegram-logo.png'}/>
+              <a target="_blank" rel="noopener noreferrer" href={'https://t.me/+ubUR0yfc_HRjZTg0'}>
+                <img alt={"Token Logo"} className={`h-full w-full`} src={'/telegram-logo.png'}/>
+              </a>
             </div>
-            <div className="max-w-[12rem]">
-              <img alt={"Token Logo"} className={`h-full w-full`} src={'/discord-logo.png'}/>
-            </div>
-            <div className="max-w-[12rem]">
-              <img alt={"Token Logo"} className={`h-full w-full`} src={'/github-logo.png'}/>
-            </div>
+            {/*<div className="max-w-[12rem]">*/}
+            {/*  <img alt={"Token Logo"} className={`h-full w-full`} src={'/discord-logo.png'}/>*/}
+            {/*</div>*/}
+            {/*<div className="max-w-[12rem]">*/}
+            {/*  <img alt={"Token Logo"} className={`h-full w-full`} src={'/github-logo.png'}/>*/}
+            {/*</div>*/}
           </div>
           <div className="hidden md:visible flex-grow"></div>
         </div>
