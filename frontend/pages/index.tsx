@@ -118,9 +118,11 @@ export default function Home() {
                 <img alt={"Token Logo"} className={`h-full w-full`} src={'/telegram-logo.png'}/>
               </a>
             </div>
-            {/*<div className="max-w-[12rem]">*/}
-            {/*  <img alt={"Token Logo"} className={`h-full w-full`} src={'/discord-logo.png'}/>*/}
-            {/*</div>*/}
+            <div className="max-w-[12rem]">
+              <a target="_blank" rel="noopener noreferrer" href={'https://discord.gg/mbbFQ5wc'}>
+                <img alt={"Token Logo"} className={`h-full w-full`} src={'/discord-logo.png'}/>
+              </a>
+            </div>
             {/*<div className="max-w-[12rem]">*/}
             {/*  <img alt={"Token Logo"} className={`h-full w-full`} src={'/github-logo.png'}/>*/}
             {/*</div>*/}
