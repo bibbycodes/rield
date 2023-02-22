@@ -285,7 +285,7 @@ describe("GLP", () => {
       await strategy.harvest()
 
       const glpPoolBalanceOfStrategyAfterHarvest = parseEther("3").sub(ownerFee);
-      const expectedGlpBalanceForAliceAndBob = (ONE_ETHER.add(parseEther("0.485")).div(2));
+      const expectedGlpBalanceForAliceAndBob = (ONE_ETHER.add(parseEther("0.475")).div(2));
 
       // NB after harvest, one LP token is worth 1.35 ETH for each party
       await vault.connect(alice).withdraw(parseEther("0.5"))

@@ -1,18 +1,18 @@
 import Head from 'next/head'
 import Link from "next/link";
-import React, { ReactElement } from "react";
-import { availableStrategies } from "../model/strategy";
+import React, {ReactElement} from "react";
+import {availableStrategies} from "../model/strategy";
 import ApyCard from "../components/ApyCard";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AssuredWorkloadOutlinedIcon from '@mui/icons-material/AssuredWorkloadOutlined';
 import VerifiedIcon from '@mui/icons-material/VerifiedOutlined';
 import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
-import { KeyFeatureCard } from "../components/KeyFeatureCard";
+import {KeyFeatureCard} from "../components/KeyFeatureCard";
 import Layout from '../components/Layout';
-import { WagmiConfig } from 'wagmi';
-import { APYsContextProvider } from '../contexts/ApyContext';
-import { client } from '../lib/Providers';
-import { TokenPricesContextProvider } from '../contexts/TokenPricesContext';
+import {WagmiConfig} from 'wagmi';
+import {APYsContextProvider} from '../contexts/ApyContext';
+import {client} from '../lib/Providers';
+import {TokenPricesContextProvider} from '../contexts/TokenPricesContext';
 
 export const bgGradient = `bg-gradient-to-tl from-fuchsia-500 to-cyan-500`
 export default function Home() {
@@ -27,7 +27,13 @@ export default function Home() {
             className={`w-full min-h-screen flex flex-col items-center justify-center z-10 relative`}>
             <div>
               <p className={`text-center text-white text-5xl sm:text-7xl leading-snug`}>
-                Yield Generation, <br/> Automated.
+                Yield Generation <br/> Automated
+              </p>
+            </div>
+
+            <div>
+              <p className={`text-center mt-12 text-zinc-300 text-3xl sm:text-3xl leading-snug`}>
+                RLD is a yield optimizer with a focus on tokens generating #RealYield.
               </p>
             </div>
             <div className={`mt-[20vh]`}>

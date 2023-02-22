@@ -6,11 +6,6 @@ contract GLPManager is IGLPManager, ERC20 {
     constructor() ERC20("GLP", "GLP") {}
 
     function addLiquidityForAccount(address _fundingAccount, address _account, address _token, uint256 _amount, uint256 _minUsdg, uint256 _minGlp) external returns (uint256) {
-        console.log("fundingAccount", _fundingAccount);
-        console.log("account", _account);
-        console.log("token", _token);
-        console.log("_amount", _amount);
-        console.log("sender", msg.sender);
         ERC20(_token).transferFrom(_fundingAccount, address(this), _amount);
         _mint(_fundingAccount, _amount);
         return _amount;

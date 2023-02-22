@@ -18,9 +18,7 @@ contract StrategyGMXUniV3 is StrategyGMX {
     ) StrategyGMX(_chef, _commonAddresses) {
         native = _nativeToWantRoute[0];
         wantToken = _nativeToWantRoute[_nativeToWantRoute.length - 1];
-
         nativeToWantPath = UniswapV3Utils.routeToPath(_nativeToWantRoute, _nativeToWantFees);
-
         _giveAllowances();
     }
 

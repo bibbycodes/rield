@@ -3,7 +3,7 @@ import {ethers} from "hardhat";
 import {BigNumber, BigNumberish} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import type {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
-import {BeefyETHVault, CapETHPoolMock, CapETHRewardsMock} from "../typechain-types";
+import {CapETHPoolMock, CapETHRewardsMock, RldEthVault} from "../typechain-types";
 import {parseEther} from "ethers/lib/utils";
 
 const closeTo = async (
@@ -35,7 +35,7 @@ describe("Cap Eth Strategy", () => {
     await capRewardsMock.init(capPoolMock.address);
 
     const Vault = await ethers.getContractFactory("RldEthVault");
-    const vault: BeefyETHVault = (await Vault.deploy()) as BeefyETHVault;
+    const vault: RldEthVault = (await Vault.deploy()) as BeefyETHVault;
     await vault.deployed();
 
     const SingleStakeStrategy = await ethers.getContractFactory("CapSingleStakeStrategyETH");
@@ -189,7 +189,7 @@ describe("Cap Eth Strategy", () => {
       ).to.changeEtherBalance(deployer, ownerFee);
 
       const capPoolBalanceOfStrategyAfterHarvest = parseEther("3").sub(ownerFee);
-      const expectedEthBalanceForAliceAndBob = (ONE_ETHER.add(parseEther("0.35")).div(2));
+      const expectedEthBalanceForAliceAndBob = (ONE_ETHER.add(parseEther("0.475")).div(2));
 
       // NB after harvest, one LP token is worth 1.35 ETH for each party
       await expect(vault.connect(alice).withdraw(parseEther("0.5"))).to.changeEtherBalance(alice, expectedEthBalanceForAliceAndBob);

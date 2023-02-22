@@ -3,7 +3,7 @@ import {ethers} from "hardhat";
 import {BigNumber, BigNumberish} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import type {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
-import {RldTokenVault, GMXRouterMock, TokenMock, UniswapV2RouterMock} from "../typechain-types";
+import {GMXRouterMock, RldTokenVault, TokenMock, UniswapV3RouterMock} from "../typechain-types";
 import {parseEther} from "ethers/lib/utils";
 
 const closeTo = async (
@@ -30,8 +30,8 @@ describe("GMX", () => {
     const ethToken = await Token.deploy("WETH", "WETH", 18);
     await ethToken.deployed();
 
-    const UniSwapMock = await ethers.getContractFactory("UniswapV2RouterMock");
-    const uniSwapMock: UniswapV2RouterMock = (await UniSwapMock.deploy()) as UniswapV2RouterMock;
+    const UniSwapMock = await ethers.getContractFactory("UniswapV3RouterMock");
+    const uniSwapMock: UniswapV3RouterMock = (await UniSwapMock.deploy()) as UniswapV3RouterMock;
     await uniSwapMock.deployed();
 
     const GMXRouterMock = await ethers.getContractFactory("GMXRouterMock");
@@ -125,7 +125,7 @@ describe("GMX", () => {
   })
 
   describe("Harvest", () => {
-    it("Compounds, claims and restakes, owner takes 30% of pf, rest goes back into strategy", async () => {
+    it("Compounds, claims and restakes, owner takes 5% of pf, rest goes back into strategy", async () => {
       const {alice, vault, strategy, gmx, gmxRouter, ethToken, deployer} = await loadFixture(setupFixture);
       await gmx.connect(alice).approve(vault.address, TEN_ETHER);
       await vault.connect(alice).deposit(ONE_ETHER);

@@ -9,7 +9,7 @@ contract UniswapV3RouterMock is IUniswapRouterV3 {
     }
 
     function exactInput(IUniswapRouterV3.ExactInputParams memory params) external payable override returns (uint256 amountOut) {
-        return 0;
+        return params.amountIn;
     }
 
     function exactInputSingle(IUniswapRouterV3.ExactInputSingleParams memory params) external payable override returns (uint256 amountOut) {

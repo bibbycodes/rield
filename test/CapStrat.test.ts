@@ -3,7 +3,7 @@ import {ethers} from "hardhat";
 import {BigNumber, BigNumberish} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import type {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
-import {RldTokenVault, CapPoolMock, CapRewardsMock, TokenMock} from "../typechain-types";
+import {CapPoolMock, CapRewardsMock, RldTokenVault} from "../typechain-types";
 import {parseEther, parseUnits} from "ethers/lib/utils";
 
 const closeTo = async (
@@ -88,7 +88,6 @@ describe("Cap ERC20 Strategy", () => {
 
   describe("Deposit", () => {
     it("Depositing into vault sends want amount to strategy and stakes into pool under the strategy's address, mints token to alice", async () => {
-      console.log({ONE_USDC});
       const {alice, vault, strategy, capPool, usdcToken} = await loadFixture(setupFixture);
       expect(await vault.totalSupply()).to.equal(0);
       await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
@@ -110,22 +109,6 @@ describe("Cap ERC20 Strategy", () => {
       await usdcToken.connect(bob).approve(vault.address, TEN_USDC);
       await vault.connect(bob)
         .deposit(ONE_USDC);
-
-      const vaultTokenSupply = await vault.totalSupply()
-      const capPoolDeposits = await capPool.deposits(strategy.address)
-      const aliceUsdcBal = await usdcToken.balanceOf(alice.address)
-      const bobUsdcBal = await usdcToken.balanceOf(bob.address)
-      const aliceVaultTokenBal = await vault.balanceOf(alice.address)
-      const bobVaultTokenBal = await vault.balanceOf(bob.address)
-
-      console.log({
-        vaultTokenSupply,
-        capPoolDeposits,
-        aliceUsdcBal,
-        bobUsdcBal,
-        aliceVaultTokenBal,
-        bobVaultTokenBal,
-      })
 
       expect(await vault.totalSupply()).to.equal(parseUnits("2", 6));
       expect(await capPool.deposits(strategy.address)).to.equal(parseUnits("2", 6));
@@ -283,7 +266,7 @@ describe("Cap ERC20 Strategy", () => {
       await strategy.harvest()
 
       const capPoolBalanceOfStrategyAfterHarvest = parseUnits("3", 6).sub(ownerFee);
-      const expectedEthBalanceForAliceAndBob = (ONE_USDC.add(parseUnits("0.35",  6)).div(2));
+      const expectedEthBalanceForAliceAndBob = (ONE_USDC.add(parseUnits("0.475",  6)).div(2));
 
       // NB after harvest, one LP token is worth 1.35 ETH for each party
       await vault.connect(alice).withdraw(parseUnits("0.5", 6))
