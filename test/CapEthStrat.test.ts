@@ -35,7 +35,7 @@ describe("Cap Eth Strategy", () => {
     await capRewardsMock.init(capPoolMock.address);
 
     const Vault = await ethers.getContractFactory("RldEthVault");
-    const vault: RldEthVault = (await Vault.deploy()) as BeefyETHVault;
+    const vault: RldEthVault = (await Vault.deploy()) as RldEthVault;
     await vault.deployed();
 
     const SingleStakeStrategy = await ethers.getContractFactory("CapSingleStakeStrategyETH");

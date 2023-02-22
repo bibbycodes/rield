@@ -164,8 +164,8 @@ describe("GMX", () => {
 
       const compoundAmount = parseEther("0.1");
       const claimAmount = parseEther("1");
-      const claimAmountUserPart = claimAmount.sub(parseEther("0.3"));
-      const ownerFee = claimAmount.sub(parseEther("0.7"));
+      const claimAmountUserPart = claimAmount.sub(parseEther("0.05"));
+      const ownerFee = claimAmount.sub(parseEther("0.95"));
 
       const expectedAliceGmx = ONE_THOUSAND_ETH.add(claimAmountUserPart).add(compoundAmount);
 
