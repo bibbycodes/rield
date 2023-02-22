@@ -6,7 +6,6 @@ import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../interfaces/gmx/IGMXRouter.sol";
 import "../../interfaces/gmx/IGMXTracker.sol";
-import "../../interfaces/gmx/IBeefyVault.sol";
 import "../../interfaces/gmx/IGMXStrategy.sol";
 import "../Common/StratFeeManager.sol";
 import "../../utils/GasFeeThrottler.sol";
@@ -25,6 +24,12 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
     uint256 public lastDepositTime;
+
+    address public protocolStakingAddress;
+    uint256 STAKING_CONTRACT_FEE = 0;
+    uint DEV_FEE = 5 * 10 ** 16;
+    uint DIVISOR = 10 ** 18;
+    uint MAX_FEE = 5 * 10 ** 17;
 
     event StratHarvest(address indexed harvester, uint256 wantTokenHarvested, uint256 tvl);
     event Deposit(uint256 tvl);
@@ -100,9 +105,15 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
 
     // performance fees
     function chargeFees() internal {
-        uint256 feeAmount = IERC20(native).balanceOf(address(this)) * FEE / DIVISOR;
-        IERC20(native).safeTransfer(owner(), feeAmount);
-        emit ChargedFees(FEE, feeAmount);
+        uint256 devFeeAmount = IERC20(native).balanceOf(address(this)) * DEV_FEE / DIVISOR;
+        uint256 protocolTokenFeeAmount = IERC20(native).balanceOf(address(this)) * STAKING_CONTRACT_FEE / DIVISOR;
+        IERC20(native).safeTransfer(owner(), devFeeAmount);
+
+        if (protocolTokenFeeAmount > 0) {
+            IERC20(native).safeTransfer(protocolStakingAddress, protocolTokenFeeAmount);
+        }
+
+        emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
     }
 
     // Adds liquidity to AMM and gets more LP tokens.
@@ -149,22 +160,30 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
         harvestOnDeposit = _harvestOnDeposit;
     }
 
-    function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {
-        shouldGasThrottle = _shouldGasThrottle;
+    function setDevFee(uint fee) external onlyOwner {
+        require(fee + STAKING_CONTRACT_FEE <= MAX_FEE, "fee too high");
+        DEV_FEE = fee;
     }
 
-    // called as part of strat migration. Sends all the available funds back to the vault.
-    function retireStrat() external {
-        require(msg.sender == vault, "!vault");
+    function setStakingFee(uint fee) external onlyOwner {
+        require(fee + DEV_FEE <= MAX_FEE, "fee too high");
+        STAKING_CONTRACT_FEE = fee;
+    }
 
-        IBeefyVault.StratCandidate memory candidate = IBeefyVault(vault).stratCandidate();
-        address stratAddress = candidate.implementation;
+    function getDevFee() external view returns (uint256) {
+        return DEV_FEE;
+    }
 
-        IGMXRouter(chef).signalTransfer(stratAddress);
-        IGMXStrategy(stratAddress).acceptTransfer();
+    function getStakingFee() external view returns (uint256) {
+        return STAKING_CONTRACT_FEE;
+    }
 
-        uint256 wantTokenBal = IERC20(wantToken).balanceOf(address(this));
-        IERC20(wantToken).transfer(vault, wantTokenBal);
+    function setStakingAddress(address _protocolStakingAddress) external onlyOwner {
+        protocolStakingAddress = _protocolStakingAddress;
+    }
+
+    function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {
+        shouldGasThrottle = _shouldGasThrottle;
     }
 
     // pauses deposits and withdraws all funds from third party systems.
@@ -196,9 +215,4 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
 
     function nativeToWant() external view virtual returns (address[] memory) {}
 
-    function acceptTransfer() external {
-        address prevStrat = IBeefyVault(vault).strategy();
-        require(msg.sender == prevStrat, "!prevStrat");
-        IGMXRouter(chef).acceptTransfer(prevStrat);
-    }
 }

@@ -3,7 +3,7 @@ import {ethers} from "hardhat";
 import {BigNumber, BigNumberish} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import type {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
-import {BeefyVaultV7, GLPManager, GMXRouter, GMXTracker} from "../typechain-types";
+import {RldTokenVault, GLPManager, GMXRouter, GMXTracker} from "../typechain-types";
 import {parseEther} from "ethers/lib/utils";
 
 const closeTo = async (
@@ -42,7 +42,7 @@ describe("GLP", () => {
     const GLPManager = await ethers.getContractFactory("GLPManager");
     const glpManager: GLPManager = (await GLPManager.deploy()) as GLPManager;
     await glpManager.deployed();
-    
+
     const glpToken = glpManager;
 
     const GMXRouter = await ethers.getContractFactory("GMXRouter");
@@ -53,7 +53,7 @@ describe("GLP", () => {
       ethToken.address,
       gmxToken.address,
     )) as GMXRouter;
-    
+
     await gmxRouter.deployed();
 
     const minter: GMXRouter = (await GMXRouter.deploy(
@@ -64,8 +64,8 @@ describe("GLP", () => {
       gmxToken.address,
     )) as GMXRouter;
 
-    const Vault = await ethers.getContractFactory("BeefyVaultV7");
-    const vault: BeefyVaultV7 = (await Vault.deploy()) as BeefyVaultV7;
+    const Vault = await ethers.getContractFactory("RldTokenVault");
+    const vault: RldTokenVault = (await Vault.deploy()) as RldTokenVault;
     await vault.deployed();
 
     const Strategy = await ethers.getContractFactory("StrategyGLP");
@@ -111,7 +111,7 @@ describe("GLP", () => {
     expect(await vault.want()).to.equal(glp.address);
     expect(await strategy.want()).to.equal(glp.address);
   })
-  
+
   it("Vault decimals is the same as the token decimals", async () => {
     const {vault, ethToken} = await loadFixture(setupFixture);
     expect(await vault.decimals()).to.equal(await ethToken.decimals());
@@ -146,7 +146,7 @@ describe("GLP", () => {
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
       expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETHER);
     })
-    
+
     it("Deposits are disabled when the strat is paused", async () => {
       const {alice, vault, strategy, glp} = await loadFixture(setupFixture);
       await strategy.pause();
@@ -160,14 +160,14 @@ describe("GLP", () => {
       const {alice, vault, strategy, glp, ethToken,  deployer} = await loadFixture(setupFixture);
       await glp.connect(alice).approve(vault.address, TEN_ETHER);
       await vault.connect(alice).deposit(ONE_ETHER);
-      
+
       expect(await vault.totalSupply()).to.equal(ONE_ETHER);
       expect(await glp.balanceOf(alice.address)).to.equal(parseEther("9"));
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
 
       await strategy.harvest();
-      expect(await ethToken.balanceOf(deployer.address)).to.equal(parseEther("0.03"));
-      expect(await glp.balanceOf(strategy.address)).to.equal(parseEther("1.97"));
+      expect(await ethToken.balanceOf(deployer.address)).to.equal(parseEther("0.05"));
+      expect(await glp.balanceOf(strategy.address)).to.equal(parseEther("1.95"));
     })
   })
 
@@ -189,9 +189,9 @@ describe("GLP", () => {
       await vault.connect(alice).withdraw(aliceShares);
 
       const claimAmount = parseEther("1");
-      const claimAmountUserPart = claimAmount.sub(parseEther("0.03"));
+      const claimAmountUserPart = claimAmount.sub(parseEther("0.05"));
       // 3% fee to deployer
-      const ownerFee = claimAmount.sub(parseEther("0.97"));
+      const ownerFee = claimAmount.sub(parseEther("0.95"));
 
       const expectedAliceGLP = TEN_ETHER.add(claimAmountUserPart);
 
@@ -218,9 +218,9 @@ describe("GLP", () => {
       await vault.connect(alice).withdraw(aliceShares.div(2));
 
       const claimAmount = parseEther("1");
-      const claimAmountUserPart = claimAmount.sub(parseEther("0.03"));
+      const claimAmountUserPart = claimAmount.sub(parseEther("0.05"));
       // 3% fee to deployer
-      const ownerFee = claimAmount.sub(parseEther("0.97"));
+      const ownerFee = claimAmount.sub(parseEther("0.95"));
       const expectedAliceWithdrawAmount = parseEther("9.5").add(claimAmountUserPart.div(2));
 
       expect(await vault.totalSupply()).to.equal(parseEther("0.5"));
@@ -228,20 +228,20 @@ describe("GLP", () => {
       expect(await vault.balanceOf(alice.address)).to.equal(parseEther("0.5"));
       expect(await ethToken.balanceOf(deployer.address)).to.equal(ownerFee);
     })
-    
+
     it("Returns want amounts requested for withdrawal by multiple parties", async () => {
       const {alice, bob, vault, strategy, glp} = await loadFixture(setupFixture);
       expect(await vault.totalSupply()).to.equal(0);
       await glp.connect(alice).approve(vault.address, TEN_ETHER);
       expect(await vault.totalSupply()).to.equal(0);
       await glp.connect(bob).approve(vault.address, TEN_ETHER);
-      
+
       await vault.connect(alice)
         .deposit(ONE_ETHER);
 
       await vault.connect(bob)
         .deposit(ONE_ETHER);
-      
+
 
       expect(await vault.totalSupply()).to.equal(parseEther("2"));
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
@@ -261,7 +261,7 @@ describe("GLP", () => {
       expect(await vault.balanceOf(bob.address)).to.equal(parseEther("0.5"));
       expect(await glp.balanceOf(strategy.address)).to.equal(parseEther("1"));
     })
-    
+
     it("Returns want amounts requested for withdrawal by multiple parties with additional harvest", async () => {
       const {alice, bob, vault, strategy, glp, ethToken} = await loadFixture(setupFixture);
       await glp.connect(alice).approve(vault.address, TEN_ETHER);
@@ -280,7 +280,7 @@ describe("GLP", () => {
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
       expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETHER);
 
-      const ownerFee = parseEther("0.03");
+      const ownerFee = parseEther("0.05");
 
       await strategy.harvest()
 

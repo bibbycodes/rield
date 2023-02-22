@@ -3,9 +3,8 @@ import {ethers} from "hardhat";
 import {BigNumber, BigNumberish} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import type {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
-import {BeefyVaultV7, GMXRouterMock, TokenMock, UniswapV2RouterMock} from "../typechain-types";
+import {RldTokenVault, GMXRouterMock, TokenMock, UniswapV2RouterMock} from "../typechain-types";
 import {parseEther} from "ethers/lib/utils";
-import {deploy} from "@openzeppelin/hardhat-upgrades/dist/utils";
 
 const closeTo = async (
   a: BigNumberish,
@@ -39,8 +38,8 @@ describe("GMX", () => {
     const gmxRouterMock: GMXRouterMock = (await GMXRouterMock.deploy(gmxToken.address, ethToken.address)) as GMXRouterMock;
     await gmxRouterMock.deployed();
 
-    const Vault = await ethers.getContractFactory("BeefyVaultV7");
-    const vault: BeefyVaultV7 = (await Vault.deploy()) as BeefyVaultV7;
+    const Vault = await ethers.getContractFactory("RldTokenVault");
+    const vault: RldTokenVault = (await Vault.deploy()) as RldTokenVault;
     await vault.deployed();
 
     const commonAddresses = {
@@ -137,7 +136,7 @@ describe("GMX", () => {
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
 
       const txReceipt = await strategy.harvest();
-      expect(await ethToken.balanceOf(deployer.address)).to.equal(parseEther("0.3"));
+      expect(await ethToken.balanceOf(deployer.address)).to.equal(parseEther("0.05"));
       expect(await gmxRouter.gmxBalances(strategy.address)).to.equal(parseEther("1.8"));
       await expect(txReceipt).to.emit(gmxRouter, "Compound")
       await expect(txReceipt).to.emit(gmxRouter, "Staked")

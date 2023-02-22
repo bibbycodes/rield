@@ -1,6 +1,6 @@
 import {Strategy} from "../../model/strategy";
 import {Address} from "wagmi";
-import * as RldVault from "../../resources/abis/BeefyVaultV7.json";
+import * as RldVault from "../../resources/abis/RldTokenVault.json";
 import {ADDRESS_ZERO} from "../../lib/apy-getter-functions/cap";
 import * as RldEthVault from "../../resources/abis/BeefyETHVault.json";
 import * as genericStrategy from "../../resources/abis/CapSingleStakeStrategy.json";

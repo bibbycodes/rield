@@ -6,18 +6,13 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../../interfaces/gmx/IGMXRouter.sol";
-import "../../interfaces/gmx/IGMXTracker.sol";
-import "../../interfaces/gmx/IBeefyVault.sol";
-import "../../interfaces/gmx/IGMXStrategy.sol";
 import "../Common/StratFeeManager.sol";
 import "../../utils/GasFeeThrottler.sol";
-import "../../interfaces/common/IUniswapRouterV3.sol";
 import "../../interfaces/cap/ICapPool.sol";
 import "../../interfaces/cap/ICapRewards.sol";
-import "hardhat/console.sol";
+import "../../utils/Manager.sol";
 
-contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
+contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
     using SafeERC20 for IERC20;
 
     address public token;
@@ -50,7 +45,7 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         rewards = _rewards;
         token = _token;
         _giveAllowances();
-        DEV_FEE = 3 * 10 ** (ERC20(token).decimals() - 1);
+        DEV_FEE = 5 * 10 ** (ERC20(token).decimals() - 2);
         DIVISOR = 10 ** ERC20(token).decimals();
     }
 
@@ -150,16 +145,16 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
     }
 
 
-    function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyOwner {
+    function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyManagerAndOwner {
         harvestOnDeposit = _harvestOnDeposit;
     }
 
-    function setDevFee(uint fee) external onlyOwner {
+    function setDevFee(uint fee) external onlyManagerAndOwner {
         require(fee + STAKING_CONTRACT_FEE <= 5 * 10 ** 17, "fee too high");
         DEV_FEE = fee;
     }
 
-    function setStakingFee(uint fee) external onlyOwner {
+    function setStakingFee(uint fee) external onlyManagerAndOwner {
         require(fee + DEV_FEE <= 5 * 10 ** 17, "fee too high");
         STAKING_CONTRACT_FEE = fee;
     }
@@ -180,16 +175,6 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         shouldGasThrottle = _shouldGasThrottle;
     }
 
-    // called as part of strat migration. Sends all the available funds back to the vault.
-    function retireStrat() external {
-        require(msg.sender == vault, "!vault");
-        _harvest();
-        uint256 tokenBal = IERC20(token).balanceOf(address(this));
-        uint256 poolBal = balanceOfPool();
-        _withdraw(poolBal);
-        IERC20(token).transfer(vault, tokenBal + poolBal);
-    }
-
     // pauses deposits and withdraws all funds from third party systems.
     function panic() public onlyOwner {
         pause();
@@ -197,12 +182,12 @@ contract CapSingleStakeStrategy is Ownable, Pausable, GasFeeThrottler {
         ICapPool(pool).withdraw(balanceOfPool());
     }
 
-    function pause() public onlyOwner {
+    function pause() public onlyManagerAndOwner {
         _pause();
         _removeAllowances();
     }
 
-    function unpause() external onlyOwner {
+    function unpause() external onlyManagerAndOwner {
         _unpause();
         _giveAllowances();
         deposit();

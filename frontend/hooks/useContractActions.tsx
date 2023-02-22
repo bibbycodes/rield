@@ -35,8 +35,7 @@ export function useContractActions({vaultAddress, amount, abi, tokenAddress}: us
   const {config: withdrawConfig} = usePrepareContractWrite({
     address: vaultAddress,
     args: [
-      amount,
-      {gasLimit: 1300000}
+      amount
     ],
     functionName: "withdraw",
     abi,

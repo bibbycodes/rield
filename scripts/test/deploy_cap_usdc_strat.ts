@@ -1,6 +1,6 @@
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {ethers} from "hardhat";
-import {BeefyVaultV7, CapPoolMock, CapRewardsMock, TokenMock} from "../../typechain-types";
+import {RldTokenVault, CapPoolMock, CapRewardsMock, TokenMock} from "../../typechain-types";
 import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
 import fs from "fs";
@@ -28,8 +28,8 @@ async function main() {
   await capPoolMock.deployed();
   await capRewardsMock.init(capPoolMock.address);
 
-  const Vault = await ethers.getContractFactory("BeefyVaultV7");
-  const vault: BeefyVaultV7 = (await Vault.deploy()) as BeefyVaultV7;
+  const Vault = await ethers.getContractFactory("RldTokenVault");
+  const vault: RldTokenVault = (await Vault.deploy()) as RldTokenVault;
   await vault.deployed();
 
   const SingleStakeStrategy = await ethers.getContractFactory("CapSingleStakeStrategy");

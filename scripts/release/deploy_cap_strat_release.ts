@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import fs from "fs";
-import { BeefyVaultV7 } from '../../typechain-types';
+import { RldTokenVault } from '../../typechain-types';
 
 async function main() {
   const [deployer]: SignerWithAddress[] =
@@ -9,8 +9,8 @@ async function main() {
 
   console.log("Deploying contracts with the account:", deployer.address);
   //
-  const Vault = await ethers.getContractFactory("BeefyVaultV7");
-  const vault: BeefyVaultV7 = (await Vault.deploy()) as BeefyVaultV7;
+  const Vault = await ethers.getContractFactory("RldTokenVault");
+  const vault: RldTokenVault = (await Vault.deploy()) as RldTokenVault;
   await vault.deployed();
 
   const SingleStakeStrategy = await ethers.getContractFactory("CapSingleStakeStrategy");

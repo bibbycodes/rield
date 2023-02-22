@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.9.0;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
-interface IStrategy {
+interface ITokenStrategy {
     function vault() external view returns (address);
-    function want() external view returns (IERC20);
+    function want() external view returns (IERC20Upgradeable);
     function beforeDeposit() external;
     function deposit() external;
     function withdraw(uint256) external;
@@ -21,3 +21,4 @@ interface IStrategy {
     function paused() external view returns (bool);
     function unirouter() external view returns (address);
 }
+

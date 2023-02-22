@@ -4,23 +4,21 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../../interfaces/gmx/IBeefyVault.sol";
 import "../Common/StratFeeManager.sol";
 import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/cap/ICapETHPool.sol";
 import "../../interfaces/cap/ICapRewards.sol";
-import "hardhat/console.sol";
 import "../../utils/Manager.sol";
 
 contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
     using SafeERC20 for IERC20;
 
-    address public pool;
     address public vault;
+    address public pool;
     address public rewards;
     address public protocolTokenAddress;
     uint256 constant DIVISOR = 1 ether;
-    uint256 DEV_FEE = 3 * 10 ** 17;
+    uint256 DEV_FEE = 5 * 10 ** 16;
     uint256 STAKING_CONTRACT_FEE = 0;
     uint256 public lastDepositTime;
 
@@ -147,7 +145,7 @@ contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
         DEV_FEE = fee;
     }
 
-    function setStakingFee(uint fee) external onlyOwner {
+    function setStakingFee(uint fee) external onlyManagerAndOwner {
         require(fee + DEV_FEE <= 5 * 10 ** 17, "fee too high");
         STAKING_CONTRACT_FEE = fee;
     }
@@ -166,17 +164,6 @@ contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
 
     function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {
         shouldGasThrottle = _shouldGasThrottle;
-    }
-
-    // called as part of strat migration. Sends all the available funds back to the vault.
-    function retireStrat() external {
-        require(msg.sender == vault, "!vault");
-        _harvest();
-        uint256 tokenBal = address(this).balance;
-        uint256 poolBal = balanceOfPool();
-        _withdraw(poolBal);
-        (bool success,) = vault.call{value : tokenBal + poolBal}('');
-        require(success, "TRANSFER FAILED");
     }
 
     // pauses deposits and withdraws all funds from third party systems.

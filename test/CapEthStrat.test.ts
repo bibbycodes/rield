@@ -34,7 +34,7 @@ describe("Cap Eth Strategy", () => {
     await capPoolMock.deployed();
     await capRewardsMock.init(capPoolMock.address);
 
-    const Vault = await ethers.getContractFactory("BeefyETHVault");
+    const Vault = await ethers.getContractFactory("RldEthVault");
     const vault: BeefyETHVault = (await Vault.deploy()) as BeefyETHVault;
     await vault.deployed();
 
@@ -115,9 +115,9 @@ describe("Cap Eth Strategy", () => {
 
       await expect(() =>
         strategy.harvest()
-      ).to.changeEtherBalance(deployer, parseEther("0.3"));
+      ).to.changeEtherBalance(deployer, parseEther("0.05"));
 
-      expect(await capPool.deposits(strategy.address)).to.equal(parseEther("1.7"));
+      expect(await capPool.deposits(strategy.address)).to.equal(parseEther("1.95"));
     })
   })
 
@@ -182,7 +182,7 @@ describe("Cap Eth Strategy", () => {
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
       expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETHER);
 
-      const ownerFee = parseEther("0.3");
+      const ownerFee = parseEther("0.05");
 
       await expect(() =>
         strategy.harvest()
@@ -256,7 +256,7 @@ describe("Cap Eth Strategy", () => {
 
       it("Only the owner can modify fees", async () => {
         const {strategy, alice} = await loadFixture(setupFixture);
-        await expect(strategy.connect(alice).setDevFee(parseEther("0.5"))).to.be.revertedWith("Ownable: caller is not the owner");
+        await expect(strategy.connect(alice).setDevFee(parseEther("0.5"))).to.be.revertedWith("Manageable: caller is not the manager or owner");
       })
 
       it("Combined fees cannot exceed 50%", async () => {

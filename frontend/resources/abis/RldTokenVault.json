@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "BeefyVaultV7",
-  "sourceName": "contracts/vaults/BeefyVaultV7.sol",
+  "contractName": "RldTokenVault",
+  "sourceName": "contracts/vaults/RldTokenVault.sol",
   "abi": [
     {
       "anonymous": false,

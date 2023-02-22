@@ -21,7 +21,7 @@ async function main() {
   const gmxRouterMock = await GMXRouterMock.deploy(gmxToken.address, ethToken.address);
   await gmxRouterMock.deployed();
 
-  const Vault = await ethers.getContractFactory("BeefyVaultV7");
+  const Vault = await ethers.getContractFactory("RldTokenVault");
   const vault = await Vault.deploy();
   await vault.deployed();
 

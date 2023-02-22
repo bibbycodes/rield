@@ -6,18 +6,15 @@ import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../interfaces/gmx/IGMXRouter.sol";
 import "../../interfaces/gmx/IGMXTracker.sol";
-import "../../interfaces/gmx/IGLPManager.sol";
-import "../../interfaces/gmx/IBeefyVault.sol";
 import "../../interfaces/gmx/IGMXStrategy.sol";
 import "../../utils/GasFeeThrottler.sol";
 import "@openzeppelin-4/contracts/access/Ownable.sol";
 import "@openzeppelin-4/contracts/security/Pausable.sol";
-import "hardhat/console.sol";
+import "../../utils/Manager.sol";
 
-contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
+contract StrategyGLP is Manager, Pausable, GasFeeThrottler  {
     using SafeERC20 for IERC20;
 
-    // Tokens used
     address public token;
     address public rewardToken;
 
@@ -61,11 +58,11 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
         gmxRewardStorage = IGMXRouter(chef).feeGmxTracker();
         glpManager = IGMXRouter(minter).glpManager();
         _giveAllowances();
-        DEV_FEE = 3 * 10 ** (ERC20(token).decimals() - 2);
-        DIVISOR = 10 ** ERC20(token).decimals();
-        MAX_FEE = 5 * 10 ** (ERC20(token).decimals() - 1);
+        DEV_FEE = 5 * 10 ** (ERC20(rewardToken).decimals() - 2);
+        DIVISOR = 10 ** ERC20(rewardToken).decimals();
+        MAX_FEE = 5 * 10 ** (ERC20(rewardToken).decimals() - 1);
     }
-    
+
     function want() external view returns (address) {
         return token;
     }
@@ -118,12 +115,11 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
     // performance fees
     function chargeFees() internal {
         uint256 devFeeAmount = IERC20(rewardToken).balanceOf(address(this)) * DEV_FEE / DIVISOR;
-        console.log("devFeeAmount: %s", devFeeAmount);
         uint256 protocolTokenFeeAmount = IERC20(rewardToken).balanceOf(address(this)) * STAKING_CONTRACT_FEE / DIVISOR;
         IERC20(rewardToken).safeTransfer(owner(), devFeeAmount);
 
         if (protocolTokenFeeAmount > 0) {
-            IERC20(token).safeTransfer(protocolStakingAddress, protocolTokenFeeAmount);
+            IERC20(rewardToken).safeTransfer(protocolStakingAddress, protocolTokenFeeAmount);
         }
 
         emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
@@ -190,20 +186,6 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
         shouldGasThrottle = _shouldGasThrottle;
     }
 
-    // called as part of strat migration. Transfers all token, GLP, esGMX and MP to new strat.
-    function retireStrat() external {
-        require(msg.sender == vault, "!vault");
-
-        IBeefyVault.StratCandidate memory candidate = IBeefyVault(vault).stratCandidate();
-        address stratAddress = candidate.implementation;
-
-        IGMXRouter(chef).signalTransfer(stratAddress);
-        IGMXStrategy(stratAddress).acceptTransfer();
-
-        uint256 tokenBal = IERC20(token).balanceOf(address(this));
-        IERC20(token).transfer(vault, tokenBal);
-    }
-
     // pauses deposits and withdraws all funds from third party systems.
     function panic() public onlyOwner {
         pause();
@@ -220,21 +202,10 @@ contract StrategyGLP is Ownable, Pausable, GasFeeThrottler  {
     }
 
     function _giveAllowances() internal {
-        console.log("glpManager", glpManager);
-        console.log("rewardToken", rewardToken);
         IERC20(rewardToken).safeApprove(glpManager, type(uint).max);
     }
 
     function _removeAllowances() internal {
         IERC20(rewardToken).safeApprove(glpManager, 0);
-    }
-
-    function acceptTransfer() external {
-        address prevStrat = IBeefyVault(vault).strategy();
-        require(msg.sender == prevStrat, "!prevStrat");
-        IGMXRouter(chef).acceptTransfer(prevStrat);
-
-        // send back 1 wei to complete upgrade
-        IERC20(token).safeTransfer(prevStrat, 1);
     }
 }
