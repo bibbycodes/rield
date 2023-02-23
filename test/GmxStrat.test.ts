@@ -129,15 +129,19 @@ describe("GMX", () => {
       const {alice, vault, strategy, gmx, gmxRouter, ethToken, deployer} = await loadFixture(setupFixture);
       await gmx.connect(alice).approve(vault.address, TEN_ETHER);
       await vault.connect(alice).deposit(ONE_ETHER);
-
       expect(await vault.totalSupply()).to.equal(ONE_ETHER);
       expect(await gmxRouter.gmxBalances(strategy.address)).to.equal(ONE_ETHER);
       expect(await gmx.balanceOf(alice.address)).to.equal(parseEther("999"));
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
-
+      
+      const claimAmount = ONE_ETHER.div(10);
+      const compoundAmount = ONE_ETHER.sub(parseEther("0.05"));
       const txReceipt = await strategy.harvest();
+      
       expect(await ethToken.balanceOf(deployer.address)).to.equal(parseEther("0.05"));
-      expect(await gmxRouter.gmxBalances(strategy.address)).to.equal(parseEther("1.8"));
+      expect(await gmxRouter.gmxBalances(strategy.address)).to.equal(
+        ONE_ETHER.add(claimAmount).add(compoundAmount))
+      
       await expect(txReceipt).to.emit(gmxRouter, "Compound")
       await expect(txReceipt).to.emit(gmxRouter, "Staked")
       await expect(txReceipt).to.emit(gmxRouter, "Claimed")
