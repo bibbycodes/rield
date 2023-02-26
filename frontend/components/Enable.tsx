@@ -11,10 +11,11 @@ interface StrategyDetailsModalProps {
   tokenAddress: Address,
   vaultAddress: Address,
   openModal: () => void,
-  strategy: Strategy
+  strategy: Strategy,
+  coolDownPeriod: number
 }
 
-export default function Enable({tokenAddress, vaultAddress, openModal, strategy}: StrategyDetailsModalProps) {
+export default function Enable({tokenAddress, vaultAddress, openModal, strategy, coolDownPeriod}: StrategyDetailsModalProps) {
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
   const {address} = useAccount();
   const {userStaked} = useGetUserDepositedInVault(strategy)
@@ -24,7 +25,8 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
   const {approve} = useApproveToken(tokenAddress, vaultAddress, address, strategy, refetchForStrategy);
   const isApproved = vaultsData[vaultAddress]?.allowance?.gt(0)
   const paused = vaultData?.paused
-  const lastHarvest = vaultData?.lastHarvest.toNumber() * 1000
+  const lastDepositTime = vaultData?.lastDepositTime.toNumber() * 1000
+  const lastPausedTime = 1667443702886
   const {isConnected} = useAccount()
   const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
   const accentPrimaryGradient = 'bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient'
@@ -35,13 +37,15 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
     openModal()
   }
 
-  const isWithdrawDisabled = ()  => {
-    const isLastHarvestMoreThanOneHourAgo = Date.now() - lastHarvest > 3600000
-    return userStaked?.lte(0) || (strategy.hasWithdrawalSchedule && !isLastHarvestMoreThanOneHourAgo)
-  }
-
-  const isDepositDisabled = () => {
-    return paused
+  const isWithdrawEnabled = ()  => {
+    const isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod = Date.now() - lastDepositTime > coolDownPeriod
+    const isTimeElapsedSinceLastPausedGreaterThanCoolDown =  Date.now() - lastPausedTime > coolDownPeriod
+    console.log({isTimeElapsedSinceLastPausedGreaterThanCoolDown, isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod})
+    const userHasBalance = userStaked?.gte(0)
+    if (strategy.hasWithdrawalSchedule) {
+      return userHasBalance && (isTimeElapsedSinceLastPausedGreaterThanCoolDown && isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod)
+    }
+    return userHasBalance
   }
 
   return <div>
@@ -49,12 +53,12 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy}
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => handleClick("deposit")}
-          disabled={isDepositDisabled()}
+          disabled={paused}
           className={`text-tPrimary ${accentPrimaryGradient} hover:bg-accentSecondary p-3 rounded-lg uppercase disabled:text-tSecondary disabled:border-tSecondary`}
         >Deposit
         </button>
         <button
-          disabled={isWithdrawDisabled()}
+          disabled={!isWithdrawEnabled()}
           className={`disabled:text-tSecondary disabled:border-tSecondary p-3 rounded-lg border-2 text-accentPrimary border-accentPrimary hover:text-accentSecondary hover:border-accentSecondary uppercase`}
           onClick={() => handleClick('withdraw')}
         >Withdraw

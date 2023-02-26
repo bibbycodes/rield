@@ -34,22 +34,22 @@ const VaultDataContextProvider = ({children}: {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const erc20Vaults = availableStrategies
     .filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)
-    .filter(strategy => strategy.isActive)
+    .filter(strategy => strategy.status !== 'DISABLED')
   const ethVaults = availableStrategies
     .filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
-    .filter(strategy => strategy.isActive)
+    .filter(strategy => strategy.status !== 'DISABLED')
 
 
   const refetchForStrategy = async (strategy: Strategy, userAddress: Address) => {
     const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy, userAddress) : getMultiCallDataForErc20Vault(strategy, userAddress)
     const data = await multicall({contracts: multiCallData})
-    let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest
+    let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPausedTime
 
     if (isEthVault) {
-      ([vaultBalance, vaultPricePerFullShare, vaultWantBalance, paused, lastHarvest] = data as BigNumber[])
+      ([vaultBalance, vaultPricePerFullShare, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPausedTime] = data as BigNumber[])
     } else {
-      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest] = data as BigNumber[])
+      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPausedTime] = data as BigNumber[])
     }
     
     setVaultsData({
@@ -62,7 +62,9 @@ const VaultDataContextProvider = ({children}: {
         allowance,
         tokenBalance,
         paused,
-        lastHarvest
+        lastHarvest,
+        lastDepositTime,
+        lastPausedTime
       }
     })
   }
@@ -84,7 +86,7 @@ const VaultDataContextProvider = ({children}: {
 
       Promise.all([erc20DVaultDataCalls, ethVaultDataCalls]).then(data => {
         const erc20VaultData = erc20Vaults.reduce((acc, strategy, index) => {
-          const strategyData = data[0].slice(index * 7, index * 7 + 7)
+          const strategyData = data[0].slice(index * 9, index * 9 + 9)
           return {
             ...acc,
             [strategy.vaultAddress]: {
@@ -95,13 +97,15 @@ const VaultDataContextProvider = ({children}: {
               tokenBalance: strategyData[3],
               vaultWantBalance: strategyData[4],
               paused: strategyData[5],
-              lastHarvest: strategyData[6]
+              lastHarvest: strategyData[6],
+              lastDepositTime: strategyData[7],
+              lastPausedTime: strategyData[8]
             }
           }
         }, {} as any)
 
         const ethVaultData = ethVaults.reduce((acc, strategy, index) => {
-          const strategyData = data[1].slice(index * 5, index * 5 + 5)
+          const strategyData = data[1].slice(index * 7, index * 7 + 7)
           return {
             ...acc,
             [strategy.vaultAddress]: {
@@ -110,7 +114,9 @@ const VaultDataContextProvider = ({children}: {
               vaultPricePerFullShare: strategyData[1],
               vaultWantBalance: strategyData[2],
               paused: strategyData[3],
-              lastHarvest: strategyData[4]
+              lastHarvest: strategyData[4],
+              lastDepositTime: strategyData[5],
+              lastPausedTime: strategyData[6],
             }
           }
         }, {} as any)

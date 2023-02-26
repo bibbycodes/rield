@@ -33,7 +33,7 @@ const APYsContextProvider = ({children}: {
         }
       )
       : setApys(availableStrategies
-        .filter(strategy => strategy.isActive)
+        .filter(strategy => strategy.status !== 'DISABLED')
         .reduce((acc, strategy) => {
         return {...acc, [strategy.strategyAddress]: 0}
       }, {}))
