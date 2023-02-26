@@ -44,12 +44,12 @@ const VaultDataContextProvider = ({children}: {
     const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy, userAddress) : getMultiCallDataForErc20Vault(strategy, userAddress)
     const data = await multicall({contracts: multiCallData})
-    let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPausedTime
+    let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPauseTime
 
     if (isEthVault) {
-      ([vaultBalance, vaultPricePerFullShare, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPausedTime] = data as BigNumber[])
+      ([vaultBalance, vaultPricePerFullShare, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPauseTime] = data as BigNumber[])
     } else {
-      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPausedTime] = data as BigNumber[])
+      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPauseTime] = data as BigNumber[])
     }
     
     setVaultsData({
@@ -64,7 +64,7 @@ const VaultDataContextProvider = ({children}: {
         paused,
         lastHarvest,
         lastDepositTime,
-        lastPausedTime
+        lastPauseTime
       }
     })
   }
@@ -99,7 +99,7 @@ const VaultDataContextProvider = ({children}: {
               paused: strategyData[5],
               lastHarvest: strategyData[6],
               lastDepositTime: strategyData[7],
-              lastPausedTime: strategyData[8]
+              lastPauseTime: strategyData[8]
             }
           }
         }, {} as any)
@@ -116,7 +116,7 @@ const VaultDataContextProvider = ({children}: {
               paused: strategyData[3],
               lastHarvest: strategyData[4],
               lastDepositTime: strategyData[5],
-              lastPausedTime: strategyData[6],
+              lastPauseTime: strategyData[6],
             }
           }
         }, {} as any)
