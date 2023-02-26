@@ -22,7 +22,7 @@ async function main() {
   );
 
   await strategy.deployed();
-  await vault.initialize(strategy.address, "RLD_CAP_ETH", "RLD_CAP_ETH")
+  await vault.initialize(strategy.address, "RLD_CAP_USDC", "RLD_CAP_USDC")
 
   console.log("Vault address:", vault.address);
   console.log("Strategy address:", strategy.address);

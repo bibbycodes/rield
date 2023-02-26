@@ -11,8 +11,9 @@ import "../../utils/GasFeeThrottler.sol";
 import "@openzeppelin-4/contracts/access/Ownable.sol";
 import "@openzeppelin-4/contracts/security/Pausable.sol";
 import "../../utils/Manager.sol";
+import "../Common/PausableTimed.sol";
 
-contract StrategyGLP is Manager, Pausable, GasFeeThrottler  {
+contract StrategyGLP is Manager, PausableTimed, GasFeeThrottler  {
     using SafeERC20 for IERC20;
 
     address public token;
@@ -36,7 +37,6 @@ contract StrategyGLP is Manager, Pausable, GasFeeThrottler  {
     bool public harvestOnDeposit;
     uint256 public lastHarvestTime;
     uint256 public lastDepositTime;
-    uint256 public lastPauseTime;
 
     event StratHarvest(address indexed harvester, uint256 tokenHarvested, uint256 tvl);
     event Deposit(uint256 tvl);

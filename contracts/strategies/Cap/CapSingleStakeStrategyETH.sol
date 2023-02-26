@@ -9,8 +9,9 @@ import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/cap/ICapETHPool.sol";
 import "../../interfaces/cap/ICapRewards.sol";
 import "../../utils/Manager.sol";
+import "../Common/PausableTimed.sol";
 
-contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
+contract CapSingleStakeStrategyETH is Manager, PausableTimed, GasFeeThrottler {
     using SafeERC20 for IERC20;
 
     address public vault;
@@ -21,7 +22,7 @@ contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
     uint256 DEV_FEE = 5 * 10 ** 16;
     uint256 STAKING_FEE = 0;
     uint256 MAX_FEE = 5 * 10 ** 17;
-    
+
     uint256 public lastDepositTime;
     bool public harvestOnDeposit;
     uint256 public lastHarvest;

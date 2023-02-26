@@ -11,8 +11,9 @@ import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/cap/ICapPool.sol";
 import "../../interfaces/cap/ICapRewards.sol";
 import "../../utils/Manager.sol";
+import "../Common/PausableTimed.sol";
 
-contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
+contract CapSingleStakeStrategy is Manager, PausableTimed, GasFeeThrottler {
     using SafeERC20 for IERC20;
 
     address public token;
@@ -20,14 +21,14 @@ contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
     address public vault;
     address public rewards;
     address public stakingAddress;
-    
+
     uint256 DIVISOR;
     uint256 CAP_MULTIPLIER = 10 ** 12;
-    
+
     uint256 public DEV_FEE;
     uint256 STAKING_FEE = 0;
     uint MAX_FEE;
-    
+
     uint256 public lastDepositTime;
     bool public harvestOnDeposit;
     uint256 public lastHarvest;

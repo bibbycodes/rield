@@ -6,8 +6,9 @@ import "@openzeppelin-4/contracts/access/Ownable.sol";
 import "@openzeppelin-4/contracts/security/Pausable.sol";
 import "../../interfaces/common/IFeeConfig.sol";
 import "../../utils/Manager.sol";
+import "./PausableTimed.sol";
 
-contract StrategyManager is Manager, Pausable {
+contract StrategyManager is Manager, PausableTimed {
 
     struct CommonAddresses {
         address vault;

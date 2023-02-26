@@ -327,8 +327,8 @@ describe("Cap ERC20 Strategy", () => {
 
       it("Can change the fee for the staking contract", async () => {
         const {strategy} = await loadFixture(setupFixture);
-        await strategy.setStakingFee(parseEther("0.1"));
-        expect(await strategy.getStakingFee()).to.equal(parseEther("0.1"));
+        await strategy.setStakingFee(parseUnits("0.1", 6));
+        expect(await strategy.getStakingFee()).to.equal(parseUnits("0.1", 6));
       })
 
       it("Only the owner can modify fees", async () => {
@@ -338,8 +338,8 @@ describe("Cap ERC20 Strategy", () => {
 
       it("Combined fees cannot exceed 50%", async () => {
         const {strategy} = await loadFixture(setupFixture);
-        await strategy.setDevFee(parseEther("0.5"));
-        await expect(strategy.setStakingFee(parseEther("0.5"))).to.be.revertedWith("fee too high")
+        await strategy.setDevFee(parseUnits("0.5", 6));
+        await expect(strategy.setStakingFee(parseUnits("0.001", 6))).to.be.revertedWith("fee too high")
       })
     })
   })
