@@ -149,8 +149,8 @@ contract RldEthVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpg
     function proposeStrat(address payable _implementation) public onlyOwner {
         require(address(this) == CapSingleStakeStrategyETH(_implementation).vault(), "Proposal not valid for this Vault");
         stratCandidate = StratCandidate({
-        implementation : _implementation,
-        proposedTime : block.timestamp
+            implementation : _implementation,
+            proposedTime : block.timestamp
         });
 
         emit NewStratCandidate(_implementation);

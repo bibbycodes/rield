@@ -25,8 +25,8 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
     uint256 public lastHarvest;
     uint256 public lastDepositTime;
 
-    address public protocolStakingAddress;
-    uint256 STAKING_CONTRACT_FEE = 0;
+    address public stakingAddress;
+    uint256 STAKING_FEE = 0;
     uint DEV_FEE = 5 * 10 ** 16;
     uint DIVISOR = 10 ** 18;
     uint MAX_FEE = 5 * 10 ** 17;
@@ -106,14 +106,14 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
     // performance fees
     function chargeFees() internal {
         uint256 devFeeAmount = IERC20(native).balanceOf(address(this)) * DEV_FEE / DIVISOR;
-        uint256 protocolTokenFeeAmount = IERC20(native).balanceOf(address(this)) * STAKING_CONTRACT_FEE / DIVISOR;
+        uint256 stakingFeeAmount = IERC20(native).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
         IERC20(native).safeTransfer(owner(), devFeeAmount);
 
-        if (protocolTokenFeeAmount > 0) {
-            IERC20(native).safeTransfer(protocolStakingAddress, protocolTokenFeeAmount);
+        if (stakingFeeAmount > 0) {
+            IERC20(native).safeTransfer(stakingAddress, stakingFeeAmount);
         }
 
-        emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
+        emit ChargedFees(DEV_FEE, devFeeAmount + stakingFeeAmount);
     }
 
     // Adds liquidity to AMM and gets more LP tokens.
@@ -161,13 +161,13 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
     }
 
     function setDevFee(uint fee) external onlyOwner {
-        require(fee + STAKING_CONTRACT_FEE <= MAX_FEE, "fee too high");
+        require(fee + STAKING_FEE <= MAX_FEE, "fee too high");
         DEV_FEE = fee;
     }
 
     function setStakingFee(uint fee) external onlyOwner {
         require(fee + DEV_FEE <= MAX_FEE, "fee too high");
-        STAKING_CONTRACT_FEE = fee;
+        STAKING_FEE = fee;
     }
 
     function getDevFee() external view returns (uint256) {
@@ -175,11 +175,11 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
     }
 
     function getStakingFee() external view returns (uint256) {
-        return STAKING_CONTRACT_FEE;
+        return STAKING_FEE;
     }
 
-    function setStakingAddress(address _protocolStakingAddress) external onlyOwner {
-        protocolStakingAddress = _protocolStakingAddress;
+    function setStakingAddress(address _stakingAddress) external onlyOwner {
+        stakingAddress = _stakingAddress;
     }
 
     function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {

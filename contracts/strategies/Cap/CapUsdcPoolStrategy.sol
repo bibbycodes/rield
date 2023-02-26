@@ -19,14 +19,16 @@ contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
     address public pool;
     address public vault;
     address public rewards;
-    address public protocolStakingAddress;
+    address public stakingAddress;
+    
     uint256 DIVISOR;
-    uint256 public DEV_FEE;
-    uint256 STAKING_CONTRACT_FEE = 0;
     uint256 CAP_MULTIPLIER = 10 ** 12;
+    
+    uint256 public DEV_FEE;
+    uint256 STAKING_FEE = 0;
+    uint MAX_FEE;
+    
     uint256 public lastDepositTime;
-    uint256 public lastPausedTime;
-
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
 
@@ -47,6 +49,7 @@ contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
         token = _token;
         _giveAllowances();
         DEV_FEE = 5 * 10 ** (ERC20(token).decimals() - 2);
+        MAX_FEE = 5 * 10 ** (ERC20(rewardToken).decimals() - 1);
         DIVISOR = 10 ** ERC20(token).decimals();
     }
 
@@ -114,14 +117,14 @@ contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
     // performance fees
     function chargeFees() internal {
         uint256 devFeeAmount = IERC20(token).balanceOf(address(this)) * DEV_FEE / DIVISOR;
-        uint256 protocolTokenFeeAmount = IERC20(token).balanceOf(address(this)) * STAKING_CONTRACT_FEE / DIVISOR;
+        uint256 stakingFeeAmount = IERC20(token).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
         IERC20(token).safeTransfer(owner(), devFeeAmount);
 
-        if (protocolTokenFeeAmount > 0) {
-            IERC20(token).safeTransfer(protocolStakingAddress, protocolTokenFeeAmount);
+        if (stakingFeeAmount > 0) {
+            IERC20(token).safeTransfer(stakingAddress, stakingFeeAmount);
         }
 
-        emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
+        emit ChargedFees(DEV_FEE, devFeeAmount + stakingFeeAmount);
     }
 
     // calculate the total underlying 'wantToken' held by the strat.
@@ -151,13 +154,13 @@ contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
     }
 
     function setDevFee(uint fee) external onlyManagerAndOwner {
-        require(fee + STAKING_CONTRACT_FEE <= 5 * 10 ** 17, "fee too high");
+        require(fee + STAKING_FEE <= MAX_FEE, "fee too high");
         DEV_FEE = fee;
     }
 
     function setStakingFee(uint fee) external onlyManagerAndOwner {
-        require(fee + DEV_FEE <= 5 * 10 ** 17, "fee too high");
-        STAKING_CONTRACT_FEE = fee;
+        require(fee + DEV_FEE <= MAX_FEE, "fee too high");
+        STAKING_FEE = fee;
     }
 
     function getDevFee() external view returns (uint256) {
@@ -165,11 +168,11 @@ contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
     }
 
     function getStakingFee() external view returns (uint256) {
-        return STAKING_CONTRACT_FEE;
+        return STAKING_FEE;
     }
 
-    function setProtocolStakingAddress(address _protocolStakingAddress) external onlyOwner {
-        protocolStakingAddress = _protocolStakingAddress;
+    function setStakingAddress(address _stakingAddress) external onlyOwner {
+        stakingAddress = _stakingAddress;
     }
 
     function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {
@@ -181,13 +184,11 @@ contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
         pause();
         ICapRewards(rewards).collectReward();
         ICapPool(pool).withdraw(balanceOfPool());
-        lastPausedTime = block.timestamp;
     }
 
     function pause() public onlyManagerAndOwner {
         _pause();
         _removeAllowances();
-        lastPausedTime = block.timestamp;
     }
 
     function unpause() external onlyManagerAndOwner {

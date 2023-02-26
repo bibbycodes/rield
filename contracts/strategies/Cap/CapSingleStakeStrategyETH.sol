@@ -16,13 +16,13 @@ contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
     address public vault;
     address public pool;
     address public rewards;
-    address public protocolTokenAddress;
+    address public stakingAddress;
     uint256 constant DIVISOR = 1 ether;
     uint256 DEV_FEE = 5 * 10 ** 16;
-    uint256 STAKING_CONTRACT_FEE = 0;
+    uint256 STAKING_FEE = 0;
+    uint256 MAX_FEE = 5 * 10 ** 17;
     
     uint256 public lastDepositTime;
-    uint256 public lastPausedTime;
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
 
@@ -65,7 +65,6 @@ contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
             wantTokenBal = _amount;
         }
 
-
         (bool success,) = vault.call{value : wantTokenBal}('');
         require(success, "WITHDRAW_FAILED");
         emit Withdraw(balanceOf());
@@ -102,16 +101,16 @@ contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
     // performance fees
     function chargeFees() internal {
         uint256 devFeeAmount = address(this).balance * DEV_FEE / DIVISOR;
-        uint256 protocolTokenFeeAmount = address(this).balance * STAKING_CONTRACT_FEE / DIVISOR;
+        uint256 stakingFeeAmount = address(this).balance * STAKING_FEE / DIVISOR;
         (bool ownerTransferSuccess,) = owner().call{value : devFeeAmount}('');
         require(ownerTransferSuccess, "OWNER_FEE_TRANSFER_FAILED");
 
-        if (protocolTokenFeeAmount > 0) {
-            (bool protocolTransferSuccess,) = protocolTokenAddress.call{value : protocolTokenFeeAmount}('');
+        if (stakingFeeAmount > 0) {
+            (bool protocolTransferSuccess,) = stakingAddress.call{value : stakingFeeAmount}('');
             require(protocolTransferSuccess, "PROTOCOL_TOKEN_FEE_TRANSFER_FAILED");
         }
 
-        emit ChargedFees(DEV_FEE, devFeeAmount + protocolTokenFeeAmount);
+        emit ChargedFees(DEV_FEE, devFeeAmount + stakingFeeAmount);
     }
 
     // calculate the total underlying 'wantToken' held by the strat.
@@ -136,19 +135,18 @@ contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
 
     // native reward amount for calling harvest
     // function callReward() public view returns (uint256) {}
-
     function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyManagerAndOwner {
         harvestOnDeposit = _harvestOnDeposit;
     }
 
     function setDevFee(uint fee) external onlyManagerAndOwner {
-        require(fee + STAKING_CONTRACT_FEE <= 5 * 10 ** 17, "fee too high");
+        require(fee + STAKING_FEE <= MAX_FEE, "fee too high");
         DEV_FEE = fee;
     }
 
     function setStakingFee(uint fee) external onlyManagerAndOwner {
-        require(fee + DEV_FEE <= 5 * 10 ** 17, "fee too high");
-        STAKING_CONTRACT_FEE = fee;
+        require(fee + DEV_FEE <= MAX_FEE, "fee too high");
+        STAKING_FEE = fee;
     }
 
     function getDevFee() external view returns (uint256) {
@@ -156,11 +154,11 @@ contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
     }
 
     function getStakingFee() external view returns (uint256) {
-        return STAKING_CONTRACT_FEE;
+        return STAKING_FEE;
     }
 
-    function setProtocolTokenAddress(address _protocolTokenAddress) external onlyOwner {
-        protocolTokenAddress = _protocolTokenAddress;
+    function setStakingAddress(address _stakingAddress) external onlyOwner {
+        stakingAddress = _stakingAddress;
     }
 
     function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {
@@ -172,12 +170,10 @@ contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
         pause();
         ICapRewards(rewards).collectReward();
         ICapETHPool(pool).withdraw(balanceOfPool());
-        lastPausedTime = block.timestamp;
     }
 
     function pause() public onlyManagerAndOwner {
         _pause();
-        lastPausedTime = block.timestamp;
     }
 
     function unpause() external onlyManagerAndOwner {

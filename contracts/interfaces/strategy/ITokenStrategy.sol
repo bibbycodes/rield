@@ -19,6 +19,5 @@ interface ITokenStrategy {
     function pause() external;
     function unpause() external;
     function paused() external view returns (bool);
-    function unirouter() external view returns (address);
 }
 

@@ -29,12 +29,12 @@ contract StrategyGLP is Manager, Pausable, GasFeeThrottler  {
 
     address public protocolStakingAddress;
     uint256 STAKING_CONTRACT_FEE = 0;
-    uint MAX_FEE; // 0.50%
+    uint MAX_FEE;
     uint DEV_FEE;
     uint DIVISOR;
 
     bool public harvestOnDeposit;
-    uint256 public lastHarvest;
+    uint256 public lastHarvestTime;
     uint256 public lastDepositTime;
     uint256 public lastPauseTime;
 
@@ -108,7 +108,7 @@ contract StrategyGLP is Manager, Pausable, GasFeeThrottler  {
             uint256 before = balanceOfWant();
             mintGlp();
             uint256 tokenHarvested = balanceOfWant() - before;
-            lastHarvest = block.timestamp;
+            lastHarvestTime = block.timestamp;
             emit StratHarvest(msg.sender, tokenHarvested, balanceOf());
         }
     }
@@ -190,13 +190,11 @@ contract StrategyGLP is Manager, Pausable, GasFeeThrottler  {
     // pauses deposits and withdraws all funds from third party systems.
     function panic() public onlyOwner {
         pause();
-        lastPauseTime = block.timestamp;
     }
 
     function pause() public onlyOwner {
         _pause();
         _removeAllowances();
-        lastPauseTime = block.timestamp;
     }
 
     function unpause() external onlyOwner {
