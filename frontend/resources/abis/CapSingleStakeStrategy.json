@@ -316,7 +316,7 @@
     },
     {
       "inputs": [],
-      "name": "lastPausedTime",
+      "name": "lastPauseTime",
       "outputs": [
         {
           "internalType": "uint256",

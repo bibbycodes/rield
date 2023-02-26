@@ -26,7 +26,7 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy,
   const isApproved = vaultsData[vaultAddress]?.allowance?.gt(0)
   const paused = vaultData?.paused
   const lastDepositTime = vaultData?.lastDepositTime.toNumber() * 1000
-  const lastPausedTime = 1667443702886
+  const lastPauseTime = 1667443702886
   const {isConnected} = useAccount()
   const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
   const accentPrimaryGradient = 'bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient'
@@ -39,7 +39,7 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy,
 
   const isWithdrawEnabled = ()  => {
     const isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod = Date.now() - lastDepositTime > coolDownPeriod
-    const isTimeElapsedSinceLastPausedGreaterThanCoolDown =  Date.now() - lastPausedTime > coolDownPeriod
+    const isTimeElapsedSinceLastPausedGreaterThanCoolDown =  Date.now() - lastPauseTime > coolDownPeriod
     console.log({isTimeElapsedSinceLastPausedGreaterThanCoolDown, isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod})
     const userHasBalance = userStaked?.gte(0)
     if (strategy.hasWithdrawalSchedule) {
