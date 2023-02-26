@@ -25,6 +25,7 @@ contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
     uint256 STAKING_CONTRACT_FEE = 0;
     uint256 CAP_MULTIPLIER = 10 ** 12;
     uint256 public lastDepositTime;
+    uint256 public lastPausedTime;
 
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
@@ -180,11 +181,13 @@ contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
         pause();
         ICapRewards(rewards).collectReward();
         ICapPool(pool).withdraw(balanceOfPool());
+        lastPausedTime = block.timestamp;
     }
 
     function pause() public onlyManagerAndOwner {
         _pause();
         _removeAllowances();
+        lastPausedTime = block.timestamp;
     }
 
     function unpause() external onlyManagerAndOwner {

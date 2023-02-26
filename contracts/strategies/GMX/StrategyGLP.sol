@@ -36,6 +36,7 @@ contract StrategyGLP is Manager, Pausable, GasFeeThrottler  {
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
     uint256 public lastDepositTime;
+    uint256 public lastPauseTime;
 
     event StratHarvest(address indexed harvester, uint256 tokenHarvested, uint256 tvl);
     event Deposit(uint256 tvl);
@@ -189,11 +190,13 @@ contract StrategyGLP is Manager, Pausable, GasFeeThrottler  {
     // pauses deposits and withdraws all funds from third party systems.
     function panic() public onlyOwner {
         pause();
+        lastPauseTime = block.timestamp;
     }
 
     function pause() public onlyOwner {
         _pause();
         _removeAllowances();
+        lastPauseTime = block.timestamp;
     }
 
     function unpause() external onlyOwner {

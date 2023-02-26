@@ -20,8 +20,9 @@ contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
     uint256 constant DIVISOR = 1 ether;
     uint256 DEV_FEE = 5 * 10 ** 16;
     uint256 STAKING_CONTRACT_FEE = 0;
+    
     uint256 public lastDepositTime;
-
+    uint256 public lastPausedTime;
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
 
@@ -171,10 +172,12 @@ contract CapSingleStakeStrategyETH is Manager, Pausable, GasFeeThrottler {
         pause();
         ICapRewards(rewards).collectReward();
         ICapETHPool(pool).withdraw(balanceOfPool());
+        lastPausedTime = block.timestamp;
     }
 
     function pause() public onlyManagerAndOwner {
         _pause();
+        lastPausedTime = block.timestamp;
     }
 
     function unpause() external onlyManagerAndOwner {

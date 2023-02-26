@@ -200,7 +200,6 @@ describe("Cap ERC20 Strategy", () => {
 
       const claimAmount = parseUnits("1", 6);
       const claimAmountUserPart = claimAmount.sub(parseUnits("0.05", 6));
-      // 30% fee to deployer
       const ownerFee = claimAmount.sub(parseUnits("0.95", 6));
       const expectedAliceWithdrawAmount = parseUnits("999.5", 6).add(claimAmountUserPart.div(2));
 
