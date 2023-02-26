@@ -49,7 +49,7 @@ contract CapSingleStakeStrategy is Manager, Pausable, GasFeeThrottler {
         token = _token;
         _giveAllowances();
         DEV_FEE = 5 * 10 ** (ERC20(token).decimals() - 2);
-        MAX_FEE = 5 * 10 ** (ERC20(rewardToken).decimals() - 1);
+        MAX_FEE = 5 * 10 ** (ERC20(token).decimals() - 1);
         DIVISOR = 10 ** ERC20(token).decimals();
     }
 
