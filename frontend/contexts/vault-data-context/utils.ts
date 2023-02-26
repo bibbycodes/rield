@@ -17,6 +17,8 @@ export interface VaultData {
   vaultWantBalance: BigNumber
   paused: boolean
   lastHarvest: BigNumber
+  lastDepositTime: BigNumber
+  lastPausedTime: BigNumber
 }
 
 export type MultiCallInput = {
@@ -79,6 +81,15 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
     functionName: 'lastHarvest',
   }
 
+  const lastDepositTime = {
+    ...strategyContract,
+    functionName: 'lastDepositTime',
+  }
+
+  const lastPausedTime = {
+    ...strategyContract,
+    functionName: 'lastPausedTime',
+  }
   return [
     vaultBalance,
     vaultPricePerFullShare,
@@ -86,7 +97,9 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
     tokenBalance,
     vaultWantBalance,
     paused,
-    lastHarvest
+    lastHarvest,
+    lastDepositTime,
+    lastPausedTime
   ]
 }
 
@@ -126,13 +139,25 @@ export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Add
     ...strategyContract,
     functionName: 'lastHarvest',
   }
+  
+  const lastDepositTime = {
+    ...strategyContract,
+    functionName: 'lastDepositTime',
+  }
+  
+  const lastPausedTime = {
+    ...strategyContract,
+    functionName: 'lastPausedTime',
+  }
 
   return [
     vaultBalance,
     vaultPricePerFullShare,
     vaultWantBalance,
     paused,
-    lastHarvest
+    lastHarvest,
+    lastDepositTime,
+    lastPausedTime
   ]
 }
 

@@ -17,7 +17,10 @@ export default function StrategyCard({
   const {prices} = useContext(TokenPricesContext)
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys[strategy.strategyAddress]
-  const {isActive} = strategy
+  const {status} = strategy
+  const paused = true
+  const lastPaused = Date.now()
+  const canWithdraw = lastPaused - strategy.coolDownPeriod > 0
   const primaryToSecondary = 'bg-gradient-to-r from-backgroundSecondaryGradient to-backgroundSecondary'
 
   // TODO: Move this to a useGetUserStaked
@@ -45,14 +48,14 @@ export default function StrategyCard({
           <div className="flex flex-col my-6 flex-grow">
             <p className="text-xs text-tSecondary">Staked</p>
             <p
-              className={`text-2xl text-tPrimary`}>{isActive ? `$${getUserStakedInDollars(userStaked)}` : '-'}</p>
+              className={`text-2xl text-tPrimary`}>{status === 'ACTIVE' ? `$${getUserStakedInDollars(userStaked)}` : '-'}</p>
             <p className={`text-xs text-tSecondary`}>
-              {isActive ? `${parseFloat(ethers.utils.formatUnits(userStaked, strategy.decimals)).toFixed(4)} ${(strategy.tokenSymbol)}` : '-'}
+              {status === 'ACTIVE' ? `${parseFloat(ethers.utils.formatUnits(userStaked, strategy.decimals)).toFixed(4)} ${(strategy.tokenSymbol)}` : '-'}
             </p>
           </div>
           <div className="flex flex-col my-6">
             <p className="text-xs text-tSecondary">APY</p>
-            {isActive ? (
+            {status === 'ACTIVE' ? (
               <WithLoader className={`min-w-[5rem]`} type={`text`} isLoading={isLoading}>
                 <p className={`text-2xl text-tPrimary`}>{apy}%</p>
               </WithLoader>
@@ -61,13 +64,15 @@ export default function StrategyCard({
             )}
           </div>
         </div>
-        {isActive ? (
+        {status !== 'SOON' ? (
           <NonSSRWrapper>
             <Enable
               vaultAddress={strategy.vaultAddress}
               tokenAddress={strategy.tokenAddress}
               openModal={handleOpenModal}
               strategy={strategy}
+              paused={paused}
+              lastPaused={lastPaused}
             ></Enable>
           </NonSSRWrapper>
         ) : (

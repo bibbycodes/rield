@@ -1,7 +1,5 @@
 {
-  "vaultAddress": "0xa3680fE3BDD26DE08D101dc58eCa6d63A2d1Aa0c",
+  "vaultAddress": "0x6F24552d0b523dEFB39B5Dd924B2d9EED3F7917E",
   "tokenAddress": "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
-  "strategyAddress": "0x23DdD269c5c95989cA6ce688574F9b7E018989fF"
+  "strategyAddress": "0xe2173AC584Be6bc2b5BAe864e91D799B4f5484fe"
 }
-
-

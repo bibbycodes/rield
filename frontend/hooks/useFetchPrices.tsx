@@ -15,7 +15,7 @@ export const useFetchPrices = () => {
     if (shouldUpdate(priceData)) {
       const glpPrice = await getGlpPrice(staticArbProvider)
       const coinGeckoIds = availableStrategies
-        .filter(strategy => strategy.isActive)
+        .filter(strategy => strategy.status !== 'DISABLED')
         .map(strategy => strategy.coinGeckoId)
       coinGeckoIds.push('ethereum')
       const coinGeckoIdsString = coinGeckoIds.join(',')
