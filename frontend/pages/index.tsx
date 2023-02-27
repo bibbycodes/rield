@@ -33,7 +33,7 @@ export default function Home() {
 
             <div>
               <p className={`text-center mt-12 text-zinc-300 text-3xl sm:text-3xl leading-snug`}>
-                RLD is a yield optimizer with a focus projects generating #RealYield.
+                RLD is a yield optimizer with a focus on projects generating #RealYield.
               </p>
             </div>
             <div className={`mt-[20vh]`}>

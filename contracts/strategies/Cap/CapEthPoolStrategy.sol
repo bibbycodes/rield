@@ -10,8 +10,9 @@ import "../../interfaces/cap/ICapETHPool.sol";
 import "../../interfaces/cap/ICapRewards.sol";
 import "../../utils/Manager.sol";
 import "../Common/PausableTimed.sol";
+import "../Common/Stoppable.sol";
 
-contract CapSingleStakeStrategyETH is Manager, PausableTimed, GasFeeThrottler {
+contract CapEthPoolStrategy is Manager, PausableTimed, GasFeeThrottler, Stoppable {
     using SafeERC20 for IERC20;
 
     address public vault;
@@ -23,12 +24,13 @@ contract CapSingleStakeStrategyETH is Manager, PausableTimed, GasFeeThrottler {
     uint256 STAKING_FEE = 0;
     uint256 MAX_FEE = 5 * 10 ** 17;
 
-    uint256 public lastDepositTime;
+    uint256 public lastPoolDepositTime;
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
 
     event StratHarvest(address indexed harvester, uint256 wantTokenHarvested, uint256 tvl);
     event Deposit(uint256 tvl);
+    event PendingDeposit(uint256 totalPending);
     event Withdraw(uint256 tvl);
     event ChargedFees(uint256 fees, uint256 amount);
 
@@ -45,10 +47,14 @@ contract CapSingleStakeStrategyETH is Manager, PausableTimed, GasFeeThrottler {
     receive() external payable {}
     fallback() external payable {}
 
-    function deposit() public payable whenNotPaused {
+    function deposit() public payable whenNotStopped {
+        if (paused()) {
+            emit PendingDeposit(balanceOf());
+            return;
+        }
         if (address(this).balance > 0) {
             ICapETHPool(pool).deposit{value : address(this).balance}(0);
-            lastDepositTime = block.timestamp;
+            lastPoolDepositTime = block.timestamp;
             emit Deposit(balanceOf());
         }
     }
@@ -76,7 +82,7 @@ contract CapSingleStakeStrategyETH is Manager, PausableTimed, GasFeeThrottler {
     }
 
     function beforeDeposit() external virtual {
-        if (harvestOnDeposit) {
+        if (harvestOnDeposit && !paused()) {
             require(msg.sender == vault, "!vault");
             _harvest();
         }
@@ -87,7 +93,7 @@ contract CapSingleStakeStrategyETH is Manager, PausableTimed, GasFeeThrottler {
     }
 
     // compounds earnings and charges performance fee
-    function _harvest() internal whenNotPaused {
+    function _harvest() internal whenNotPaused whenNotStopped {
         ICapRewards(rewards).collectReward();
         uint256 tokenBal = address(this).balance;
         if (tokenBal > 0) {
@@ -174,6 +180,7 @@ contract CapSingleStakeStrategyETH is Manager, PausableTimed, GasFeeThrottler {
     }
 
     function pause() public onlyManagerAndOwner {
+        _harvest();
         _pause();
     }
 
@@ -181,4 +188,15 @@ contract CapSingleStakeStrategyETH is Manager, PausableTimed, GasFeeThrottler {
         _unpause();
         deposit();
     }
+
+    function stop() public onlyOwner {
+        _harvest();
+        _stop();
+    }
+
+    function resume() public onlyOwner {
+        _resume();
+        deposit();
+    }
+
 }

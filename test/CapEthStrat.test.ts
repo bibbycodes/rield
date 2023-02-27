@@ -3,8 +3,9 @@ import {ethers} from "hardhat";
 import {BigNumber, BigNumberish} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import type {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
-import {CapETHPoolMock, CapETHRewardsMock, RldEthVault} from "../typechain-types";
-import {parseEther} from "ethers/lib/utils";
+import { CapETHPoolMock, CapEthPoolStrategy, CapETHRewardsMock, RldEthVault } from "../typechain-types";
+import { parseEther, parseUnits } from "ethers/lib/utils";
+import { getBalance } from '../frontend/lib/apy-getter-functions/cap';
 
 const closeTo = async (
   a: BigNumberish,
@@ -38,12 +39,12 @@ describe("Cap Eth Strategy", () => {
     const vault: RldEthVault = (await Vault.deploy()) as RldEthVault;
     await vault.deployed();
 
-    const SingleStakeStrategy = await ethers.getContractFactory("CapSingleStakeStrategyETH");
+    const SingleStakeStrategy = await ethers.getContractFactory("CapEthPoolStrategy");
     const strategy = await SingleStakeStrategy.deploy(
       vault.address,
       capPoolMock.address,
       capRewardsMock.address,
-    );
+    ) as CapEthPoolStrategy;
 
     await strategy.deployed();
 
@@ -96,10 +97,20 @@ describe("Cap Eth Strategy", () => {
       expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETHER);
     })
 
-    it("Deposits are disabled when the strat is paused", async () => {
+    it("Deposits are disabled when the strat is stopped", async () => {
       const {alice, vault, strategy} = await loadFixture(setupFixture);
-      await strategy.pause();
-      await expect(vault.connect(alice).deposit({value: ONE_ETHER})).to.be.revertedWith("Pausable: paused");
+      const stopTx = await strategy.stop();
+      await expect(vault.connect(alice).deposit({value: ONE_ETHER})).to.be.revertedWith("Stoppable: stopped");
+      await expect(stopTx).to.emit(strategy, "Stopped");
+    })
+
+    it("Deposits are enabled when the strat is resumed", async () => {
+      const {alice, vault, strategy} = await loadFixture(setupFixture);
+      await strategy.stop();
+      const resumeTx = await strategy.resume();
+      await vault.connect(alice).deposit({value: ONE_ETHER})
+      await expect(resumeTx).to.emit(strategy, "Resumed");
+      expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
     })
   })
 
@@ -210,8 +221,40 @@ describe("Cap Eth Strategy", () => {
 
   describe("Utils", () => {
     describe("Pausing and un-pausing", () => {
-      it("Sets the strategy as paused and unpaused", async () => {
+      it("Deposits are enabled when the strat is paused", async () => {
+        const {alice, vault, strategy} = await loadFixture(setupFixture);
+        const pauseTx = await strategy.pause();
+        const depositTx = await vault.connect(alice).deposit({value: ONE_ETHER});
+        await expect(pauseTx).to.emit(strategy, 'StratHarvest');
+        await expect(depositTx).to.emit(strategy, 'PendingDeposit');
+        await expect(await ethers.provider.getBalance(strategy.address)).to.equal(ONE_ETHER);
+      })
 
+      it("Gives allowances for the Cap Pools when un-paused", async () => {
+        const {alice, vault, strategy, capPool} = await loadFixture(setupFixture);
+        await strategy.pause();
+        const depositTx = await vault.connect(alice).deposit({value: ONE_ETHER})
+        const unpauseTx = await strategy.unpause();
+        await expect(depositTx).to.emit(strategy, 'PendingDeposit');
+        await expect(unpauseTx).to.emit(strategy, 'Deposit');
+        await expect(await ethers.provider.getBalance(strategy.address)).to.equal(0);
+        await expect(await capPool.getCurrencyBalance(strategy.address)).to.equal(ONE_ETHER.add(parseUnits('0.95', 18)));
+      })
+
+      it("Gives right amounts of USDC to each depositor between pauses", async () => {
+        const {alice, bob, vault, strategy, capPool} = await loadFixture(setupFixture);
+        const bobStartBalance = await ethers.provider.getBalance(bob.address);
+        const aliceStartBalance = await ethers.provider.getBalance(alice.address);
+        await vault.connect(alice).deposit({value: ONE_ETHER})
+        await strategy.pause();
+        await vault.connect(bob).deposit({value: ONE_ETHER})
+        await vault.connect(bob).withdrawAll()
+        await vault.connect(alice).withdrawAll()
+        await expect(await ethers.provider.getBalance(strategy.address)).to.equal(0);
+        await expect(await capPool.getCurrencyBalance(strategy.address)).to.equal(0);
+        await closeTo(bobStartBalance, await ethers.provider.getBalance(bob.address), ethers.utils.parseUnits('0.05', 18))
+        const reward = parseUnits('0.95', 18);
+        await closeTo(reward.add(aliceStartBalance), await ethers.provider.getBalance(alice.address), ethers.utils.parseUnits('0.05', 18))
       })
 
       it("Removes allowances for the Cap Pools when paused", async () => {

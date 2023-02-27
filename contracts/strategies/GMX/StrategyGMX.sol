@@ -50,7 +50,7 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
     }
 
     // puts the funds to work
-    function deposit() public whenNotPaused {
+    function deposit() public whenNotStopped {
         uint256 wantTokenBal = IERC20(wantToken).balanceOf(address(this));
 
         if (wantTokenBal > 0) {
@@ -88,7 +88,7 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
     }
 
     // compounds earnings and charges performance fee
-    function _harvest() internal whenNotPaused {
+    function _harvest() internal whenNotStopped {
         IGMXRouter(chef).compound();
         // Claim and re-stake esGMX and multiplier points
         IGMXTracker(rewardStorage).claim(address(this));
@@ -186,19 +186,20 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
         shouldGasThrottle = _shouldGasThrottle;
     }
 
-    // pauses deposits and withdraws all funds from third party systems.
+    // stops deposits and withdraws all funds from third party systems.
     function panic() public onlyOwner {
-        pause();
+        stop();
         IGMXRouter(chef).unstakeGmx(balanceOfPool());
     }
 
-    function pause() public onlyOwner {
-        _pause();
+    function stop() public onlyOwner {
+        _harvest();
+        _stop();
         _removeAllowances();
     }
 
-    function unpause() external onlyOwner {
-        _unpause();
+    function resume() external onlyOwner {
+        _resume();
         _giveAllowances();
         deposit();
     }

@@ -122,6 +122,25 @@ describe("GMX", () => {
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
       expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETHER);
     })
+
+    it("Deposits are disabled when the strat is stopped", async () => {
+      const {alice, vault, strategy, gmx, gmxRouter} = await loadFixture(setupFixture);
+      const stopTx = await strategy.stop();
+      await gmx.connect(alice).approve(vault.address, TEN_ETHER);
+      await expect(vault.connect(alice).deposit(ONE_ETHER)).to.be.revertedWith("Stoppable: stopped");
+      await expect(stopTx).to.emit(strategy, "Stopped");
+      await expect(await gmx.allowance(strategy.address, gmxRouter.address)).to.equal(0);
+    })
+
+    it("Deposits are enabled when the strat is resumed", async () => {
+      const {alice, vault, strategy, gmx} = await loadFixture(setupFixture);
+      await strategy.stop();
+      const resumeTx = await strategy.resume();
+      await gmx.connect(alice).approve(vault.address, TEN_ETHER);
+      await vault.connect(alice).deposit(ONE_ETHER)
+      await expect(resumeTx).to.emit(strategy, "Resumed");
+      expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
+    })
   })
 
   describe("Harvest", () => {
@@ -133,15 +152,15 @@ describe("GMX", () => {
       expect(await gmxRouter.gmxBalances(strategy.address)).to.equal(ONE_ETHER);
       expect(await gmx.balanceOf(alice.address)).to.equal(parseEther("999"));
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
-      
+
       const claimAmount = ONE_ETHER.div(10);
       const compoundAmount = ONE_ETHER.sub(parseEther("0.05"));
       const txReceipt = await strategy.harvest();
-      
+
       expect(await ethToken.balanceOf(deployer.address)).to.equal(parseEther("0.05"));
       expect(await gmxRouter.gmxBalances(strategy.address)).to.equal(
         ONE_ETHER.add(claimAmount).add(compoundAmount))
-      
+
       await expect(txReceipt).to.emit(gmxRouter, "Compound")
       await expect(txReceipt).to.emit(gmxRouter, "Staked")
       await expect(txReceipt).to.emit(gmxRouter, "Claimed")

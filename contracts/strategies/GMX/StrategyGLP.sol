@@ -8,12 +8,10 @@ import "../../interfaces/gmx/IGMXRouter.sol";
 import "../../interfaces/gmx/IGMXTracker.sol";
 import "../../interfaces/gmx/IGMXStrategy.sol";
 import "../../utils/GasFeeThrottler.sol";
-import "@openzeppelin-4/contracts/access/Ownable.sol";
-import "@openzeppelin-4/contracts/security/Pausable.sol";
 import "../../utils/Manager.sol";
-import "../Common/PausableTimed.sol";
+import "../Common/Stoppable.sol";
 
-contract StrategyGLP is Manager, PausableTimed, GasFeeThrottler  {
+contract StrategyGLP is Manager, GasFeeThrottler, Stoppable {
     using SafeERC20 for IERC20;
 
     address public token;
@@ -36,7 +34,7 @@ contract StrategyGLP is Manager, PausableTimed, GasFeeThrottler  {
 
     bool public harvestOnDeposit;
     uint256 public lastHarvestTime;
-    uint256 public lastDepositTime;
+    uint256 public lastPoolDepositTime;
 
     event StratHarvest(address indexed harvester, uint256 tokenHarvested, uint256 tvl);
     event Deposit(uint256 tvl);
@@ -69,8 +67,8 @@ contract StrategyGLP is Manager, PausableTimed, GasFeeThrottler  {
     }
 
     // puts the funds to work
-    function deposit() public whenNotPaused {
-        lastDepositTime = block.timestamp;
+    function deposit() public whenNotStopped {
+        lastPoolDepositTime = block.timestamp;
         emit Deposit(balanceOf());
     }
 
@@ -99,7 +97,7 @@ contract StrategyGLP is Manager, PausableTimed, GasFeeThrottler  {
     }
 
     // compounds earnings and charges performance fee
-    function _harvest() internal whenNotPaused {
+    function _harvest() internal whenNotStopped {
         IGMXRouter(chef).compound();   // Claim and re-stake esGMX and multiplier points
         IGMXRouter(chef).claimFees();
         uint256 rewardTokenBal = IERC20(rewardToken).balanceOf(address(this));
@@ -187,19 +185,21 @@ contract StrategyGLP is Manager, PausableTimed, GasFeeThrottler  {
         shouldGasThrottle = _shouldGasThrottle;
     }
 
-    // pauses deposits and withdraws all funds from third party systems.
+    // stops deposits and withdraws all funds from third party systems.
     function panic() public onlyOwner {
-        pause();
+        stop();
     }
 
-    function pause() public onlyOwner {
-        _pause();
+    function stop() public onlyOwner {
+        _harvest();
+        _stop();
         _removeAllowances();
     }
 
-    function unpause() external onlyOwner {
-        _unpause();
+    function resume() external onlyOwner {
+        _resume();
         _giveAllowances();
+        deposit();
     }
 
     function _giveAllowances() internal {

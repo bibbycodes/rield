@@ -12,8 +12,9 @@ import "../../interfaces/cap/ICapPool.sol";
 import "../../interfaces/cap/ICapRewards.sol";
 import "../../utils/Manager.sol";
 import "../Common/PausableTimed.sol";
+import "../Common/Stoppable.sol";
 
-contract CapSingleStakeStrategy is Manager, PausableTimed, GasFeeThrottler {
+contract CapUsdcPoolStrategy is Manager, PausableTimed, GasFeeThrottler, Stoppable {
     using SafeERC20 for IERC20;
 
     address public token;
@@ -29,12 +30,13 @@ contract CapSingleStakeStrategy is Manager, PausableTimed, GasFeeThrottler {
     uint256 STAKING_FEE = 0;
     uint MAX_FEE;
 
-    uint256 public lastDepositTime;
+    uint256 public lastPoolDepositTime;
     bool public harvestOnDeposit;
     uint256 public lastHarvest;
 
     event StratHarvest(address indexed harvester, uint256 wantTokenHarvested, uint256 tvl);
     event Deposit(uint256 tvl);
+    event PendingDeposit(uint256 totalPending);
     event Withdraw(uint256 tvl);
     event ChargedFees(uint256 fees, uint256 amount);
 
@@ -60,11 +62,15 @@ contract CapSingleStakeStrategy is Manager, PausableTimed, GasFeeThrottler {
     }
 
     // puts the funds to work
-    function deposit() public whenNotPaused {
+    function deposit() public whenNotStopped {
+        if (paused()) {
+            emit PendingDeposit(balanceOf());
+            return;
+        }
         uint256 tokenBalance = IERC20(token).balanceOf(address(this));
         if (tokenBalance > 0) {
             ICapPool(pool).deposit(tokenBalance * CAP_MULTIPLIER);
-            lastDepositTime = block.timestamp;
+            lastPoolDepositTime = block.timestamp;
             emit Deposit(balanceOf());
         }
     }
@@ -92,7 +98,7 @@ contract CapSingleStakeStrategy is Manager, PausableTimed, GasFeeThrottler {
     }
 
     function beforeDeposit() external virtual {
-        if (harvestOnDeposit) {
+        if (harvestOnDeposit && !paused()) {
             require(msg.sender == vault, "!vault");
             _harvest();
         }
@@ -103,7 +109,7 @@ contract CapSingleStakeStrategy is Manager, PausableTimed, GasFeeThrottler {
     }
 
     // compounds earnings and charges performance fee
-    function _harvest() internal whenNotPaused {
+    function _harvest() internal whenNotPaused whenNotStopped {
         ICapRewards(rewards).collectReward();
         uint256 tokenBal = IERC20(token).balanceOf(address(this));
         if (tokenBal > 0) {
@@ -182,18 +188,29 @@ contract CapSingleStakeStrategy is Manager, PausableTimed, GasFeeThrottler {
 
     // pauses deposits and withdraws all funds from third party systems.
     function panic() public onlyOwner {
-        pause();
+        stop();
         ICapRewards(rewards).collectReward();
         ICapPool(pool).withdraw(balanceOfPool());
     }
 
     function pause() public onlyManagerAndOwner {
+        _harvest();
         _pause();
-        _removeAllowances();
     }
 
     function unpause() external onlyManagerAndOwner {
         _unpause();
+        deposit();
+    }
+
+    function stop() public onlyOwner {
+        _harvest();
+        _stop();
+        _removeAllowances();
+    }
+
+    function resume() public onlyOwner {
+        _resume();
         _giveAllowances();
         deposit();
     }

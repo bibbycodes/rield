@@ -147,11 +147,22 @@ describe("GLP", () => {
       expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETHER);
     })
 
-    it("Deposits are disabled when the strat is paused", async () => {
+    it("Deposits are disabled when the strat is stopped", async () => {
       const {alice, vault, strategy, glp} = await loadFixture(setupFixture);
-      await strategy.pause();
-      await glp.connect(alice).approve(vault.address, ONE_ETHER);
-      await expect(vault.connect(alice).deposit(ONE_ETHER)).to.be.revertedWith("Pausable: paused");
+      const stopTx = await strategy.stop();
+      await glp.connect(alice).approve(vault.address, TEN_ETHER);
+      await expect(vault.connect(alice).deposit(ONE_ETHER)).to.be.revertedWith("Stoppable: stopped");
+      await expect(stopTx).to.emit(strategy, "Stopped");
+    })
+
+    it("Deposits are enabled when the strat is resumed", async () => {
+      const {alice, vault, strategy, glp} = await loadFixture(setupFixture);
+      await strategy.stop();
+      const resumeTx = await strategy.resume();
+      await glp.connect(alice).approve(vault.address, TEN_ETHER);
+      await vault.connect(alice).deposit(ONE_ETHER)
+      await expect(resumeTx).to.emit(strategy, "Resumed");
+      expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
     })
   })
 

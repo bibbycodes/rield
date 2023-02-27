@@ -24,7 +24,6 @@ contract CapRewardsMock is ICapRewards {
     }
 
     function collectReward (  ) external {
-        console.log("rewardsBal", IERC20(token).balanceOf(address(this)));
         IERC20(token).transfer(msg.sender, 10 ** 6);
         emit CollectRewards(msg.sender, 10 ** 6);
     }

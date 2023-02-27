@@ -1,10 +1,10 @@
-import {expect} from "chai";
-import {ethers} from "hardhat";
-import {BigNumber, BigNumberish} from "ethers";
-import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
-import type {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
-import {CapPoolMock, CapRewardsMock, RldTokenVault} from "../typechain-types";
-import {parseEther, parseUnits} from "ethers/lib/utils";
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { BigNumber, BigNumberish } from "ethers";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { CapPoolMock, CapRewardsMock, CapUsdcPoolStrategy, RldTokenVault, TokenMock } from "../typechain-types";
+import { parseEther, parseUnits } from "ethers/lib/utils";
 
 const closeTo = async (
   a: BigNumberish,
@@ -17,6 +17,7 @@ const closeTo = async (
 const ONE_USDC: BigNumber = parseUnits("1", 6);
 const TEN_USDC: BigNumber = parseUnits("10", 6);
 const ONE_THOUSAND_USDC: BigNumber = parseUnits("1000", 6);
+const CAP_MULTIPLIER: BigNumber = parseUnits("1", 12);
 
 describe("Cap ERC20 Strategy", () => {
   async function setupFixture() {
@@ -24,7 +25,7 @@ describe("Cap ERC20 Strategy", () => {
       await ethers.getSigners();
 
     const Token = await ethers.getContractFactory("TokenMock");
-    const usdcToken = await Token.deploy("USDC", "USDC", 6);
+    const usdcToken = await Token.deploy("USDC", "USDC", 6) as TokenMock;
     await usdcToken.deployed();
 
     const CapRewardsMock = await ethers.getContractFactory("CapRewardsMock");
@@ -40,13 +41,13 @@ describe("Cap ERC20 Strategy", () => {
     const vault: RldTokenVault = (await Vault.deploy()) as RldTokenVault;
     await vault.deployed();
 
-    const SingleStakeStrategy = await ethers.getContractFactory("CapSingleStakeStrategy");
+    const SingleStakeStrategy = await ethers.getContractFactory("CapUsdcPoolStrategy");
     const strategy = await SingleStakeStrategy.deploy(
       vault.address,
       capPoolMock.address,
       capRewardsMock.address,
       usdcToken.address,
-    );
+    ) as CapUsdcPoolStrategy;
 
     await strategy.deployed();
 
@@ -118,11 +119,23 @@ describe("Cap ERC20 Strategy", () => {
       expect(await vault.balanceOf(bob.address)).to.equal(ONE_USDC);
     })
 
-    it("Deposits are disabled when the strat is paused", async () => {
-      const {alice, vault, strategy, usdcToken} = await loadFixture(setupFixture);
-      await strategy.pause();
+    it("Deposits are disabled when the strat is stopped", async () => {
+      const {alice, vault, strategy, usdcToken, capPool} = await loadFixture(setupFixture);
+      const stopTx = await strategy.stop();
       await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-      await expect(vault.connect(alice).deposit(ONE_USDC)).to.be.revertedWith("Pausable: paused");
+      await expect(vault.connect(alice).deposit(ONE_USDC)).to.be.revertedWith("Stoppable: stopped");
+      await expect(stopTx).to.emit(strategy, "Stopped");
+      await expect(await usdcToken.allowance(strategy.address, capPool.address)).to.equal(0);
+    })
+
+    it("Deposits are enabled when the strat is resumed", async () => {
+      const {alice, vault, strategy, usdcToken} = await loadFixture(setupFixture);
+      await strategy.stop();
+      const resumeTx = await strategy.resume();
+      await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+      await vault.connect(alice).deposit(ONE_USDC)
+      await expect(resumeTx).to.emit(strategy, "Resumed");
+      expect(await vault.balanceOf(alice.address)).to.equal(ONE_USDC);
     })
   })
 
@@ -265,7 +278,7 @@ describe("Cap ERC20 Strategy", () => {
       await strategy.harvest()
 
       const capPoolBalanceOfStrategyAfterHarvest = parseUnits("3", 6).sub(ownerFee);
-      const expectedEthBalanceForAliceAndBob = (ONE_USDC.add(parseUnits("0.475",  6)).div(2));
+      const expectedEthBalanceForAliceAndBob = (ONE_USDC.add(parseUnits("0.475", 6)).div(2));
 
       // NB after harvest, one LP token is worth 1.35 ETH for each party
       await vault.connect(alice).withdraw(parseUnits("0.5", 6))
@@ -274,7 +287,7 @@ describe("Cap ERC20 Strategy", () => {
 
       const capPoolRemainingBalanceOfStrategyAfterAliceWithdraw = capPoolBalanceOfStrategyAfterHarvest.sub(expectedEthBalanceForAliceAndBob);
 
-      await vault.connect(bob).withdraw(parseUnits("0.5",  6))
+      await vault.connect(bob).withdraw(parseUnits("0.5", 6))
       expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 6));
       expect(await capPool.deposits(strategy.address)).to.equal(capPoolRemainingBalanceOfStrategyAfterAliceWithdraw.sub(expectedEthBalanceForAliceAndBob));
 
@@ -287,15 +300,48 @@ describe("Cap ERC20 Strategy", () => {
 
   describe("Utils", () => {
     describe("Pausing and un-pausing", () => {
-      it("Sets the strategy as paused and unpaused", async () => {
 
-      })
-
-      it("Removes allowances for the Cap Pools when paused", async () => {
-
+      it("Deposits are enabled when the strat is paused", async () => {
+        const {alice, vault, strategy, usdcToken} = await loadFixture(setupFixture);
+        const pauseTx = await strategy.pause();
+        await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+        const depositTx = await vault.connect(alice).deposit(ONE_USDC)
+        await expect(pauseTx).to.emit(strategy, 'StratHarvest');
+        await expect(depositTx).to.emit(strategy, 'PendingDeposit');
+        await expect(await usdcToken.balanceOf(strategy.address)).to.equal(ONE_USDC);
       })
 
       it("Gives allowances for the Cap Pools when un-paused", async () => {
+        const {alice, vault, strategy, usdcToken, capPool} = await loadFixture(setupFixture);
+        await strategy.pause();
+        await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+        const depositTx = await vault.connect(alice).deposit(ONE_USDC)
+        const unpauseTx = await strategy.unpause();
+        await expect(depositTx).to.emit(strategy, 'PendingDeposit');
+        await expect(unpauseTx).to.emit(strategy, 'Deposit');
+        await expect(await usdcToken.balanceOf(strategy.address)).to.equal(0);
+        await expect(await capPool.getCurrencyBalance(strategy.address)).to.equal(ONE_USDC.add(parseUnits('0.95', 6)).mul(CAP_MULTIPLIER));
+      })
+
+      it("Gives right amounts of USDC to each depositor between pauses", async () => {
+        const {alice, bob, vault, strategy, usdcToken, capPool} = await loadFixture(setupFixture);
+        const bobStartBalance = await usdcToken.balanceOf(bob.address);
+        const aliceStartBalance = await usdcToken.balanceOf(alice.address);
+        await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+        await vault.connect(alice).deposit(ONE_USDC)
+        await strategy.pause();
+        await usdcToken.connect(bob).approve(vault.address, TEN_USDC);
+        await vault.connect(bob).deposit(ONE_USDC)
+        await vault.connect(bob).withdrawAll()
+        await vault.connect(alice).withdrawAll()
+        await expect(await usdcToken.balanceOf(strategy.address)).to.equal(0);
+        await expect(await capPool.getCurrencyBalance(strategy.address)).to.equal(0);
+        await closeTo(bobStartBalance, await usdcToken.balanceOf(bob.address), 1)
+        const reward = parseUnits('0.95', 6);
+        await closeTo(reward.add(aliceStartBalance), await usdcToken.balanceOf(alice.address), 1)
+      })
+
+      it("Removes allowances for the Cap Pools when paused", async () => {
 
       })
 
@@ -303,7 +349,7 @@ describe("Cap ERC20 Strategy", () => {
 
       })
 
-      it ("Allows users to withdraw while paused", async () => {
+      it("Allows users to withdraw while paused", async () => {
 
       })
     })
@@ -313,7 +359,7 @@ describe("Cap ERC20 Strategy", () => {
 
       })
 
-      it ("Pauses the strategy", async () => {
+      it("Pauses the strategy", async () => {
 
       })
     })

@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "../strategies/Cap/CapSingleStakeStrategyETH.sol";
+import "../strategies/Cap/CapEthPoolStrategy.sol";
 
 /**
  * @dev Implementation of a vault to deposit funds for yield optimizing.
@@ -24,7 +24,7 @@ contract RldEthVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpg
     // The last proposed strategy to switch to.
     StratCandidate public stratCandidate;
     // The strategy currently in use by the vault.
-    CapSingleStakeStrategyETH public strategy;
+    CapEthPoolStrategy public strategy;
     // The minimum time it has to pass before a strat candidate can be approved.
     uint256 public approvalDelay;
 
@@ -45,7 +45,7 @@ contract RldEthVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpg
      * @param _symbol the symbol of the vault token.
      */
     function initialize(
-        CapSingleStakeStrategyETH _strategy,
+        CapEthPoolStrategy _strategy,
         string memory _name,
         string memory _symbol
     ) public initializer {
@@ -61,7 +61,7 @@ contract RldEthVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpg
      *  and the balance deployed in other contracts as part of the strategy.
      */
     function balance() public view returns (uint) {
-        return address(this).balance + CapSingleStakeStrategyETH(strategy).balanceOf();
+        return address(this).balance + CapEthPoolStrategy(strategy).balanceOf();
     }
 
     /**
@@ -147,7 +147,7 @@ contract RldEthVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpg
      * @param _implementation The address of the candidate strategy.
      */
     function proposeStrat(address payable _implementation) public onlyOwner {
-        require(address(this) == CapSingleStakeStrategyETH(_implementation).vault(), "Proposal not valid for this Vault");
+        require(address(this) == CapEthPoolStrategy(_implementation).vault(), "Proposal not valid for this Vault");
         stratCandidate = StratCandidate({
             implementation : _implementation,
             proposedTime : block.timestamp
