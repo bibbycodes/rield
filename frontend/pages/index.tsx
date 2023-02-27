@@ -32,7 +32,7 @@ export default function Home() {
             </div>
 
             <div>
-              <p className={`text-center mt-20 text-zinc-300 text-3xl sm:text-3xl leading-snug`}>
+              <p className={`text-center mt-24 text-zinc-300 text-3xl sm:text-3xl leading-snug`}>
                 RLD is a yield optimizer with a focus on projects generating #RealYield.
               </p>
             </div>
@@ -61,14 +61,14 @@ export default function Home() {
           <div className={`max-w-[400px] w-[90vw]`}>
             <div className={`w-full shadow-2xl mb-4`}>
               <ApyCard
-                key={availableStrategies[0].vaultAddress}
+                key={availableStrategies[1].vaultAddress}
                 strategy={availableStrategies[1]}
               />
             </div>
 
             <div className={`w-full shadow-2xl md:block `}>
               <ApyCard
-                key={availableStrategies[1].vaultAddress}
+                key={availableStrategies[0].vaultAddress}
                 strategy={availableStrategies[0]}
               />
             </div>
@@ -81,7 +81,7 @@ export default function Home() {
               Key Features
             </p>
           </div>
-          <div className={`grid mt-11 grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-10`}>
+          <div className={`grid mt-11 grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10`}>
             <KeyFeatureCard
               title={'Real Yield'}
               description={'Stake the most promising tokens offering real yield.'}

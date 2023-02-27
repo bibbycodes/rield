@@ -1,6 +1,6 @@
 import {useContext} from 'react';
 import {useApproveToken} from '../hooks/useApproveToken';
-import {Address, useAccount} from 'wagmi';
+import {useAccount} from 'wagmi';
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import {Strategy} from "../model/strategy";
 import {useGetUserDepositedInVault} from '../hooks/useGetUserDepositedInVault';
@@ -8,15 +8,16 @@ import {ConnectKitButton} from 'connectkit';
 import {VaultDataContext} from '../contexts/vault-data-context/VaultDataContext';
 
 interface StrategyDetailsModalProps {
-  tokenAddress: Address,
-  vaultAddress: Address,
   openModal: () => void,
   strategy: Strategy,
-  coolDownPeriod: number
 }
 
-export default function Enable({tokenAddress, vaultAddress, openModal, strategy, coolDownPeriod}: StrategyDetailsModalProps) {
+export default function Enable({
+                                 openModal,
+                                 strategy,
+                               }: StrategyDetailsModalProps) {
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+  const {tokenAddress, vaultAddress, coolDownPeriod} = strategy
   const {address} = useAccount();
   const {userStaked} = useGetUserDepositedInVault(strategy)
   const {setAction, setSelectedStrategy} = useContext(SelectedStrategyContext)
@@ -25,7 +26,7 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy,
   const {approve} = useApproveToken(tokenAddress, vaultAddress, address, strategy, refetchForStrategy);
   const isApproved = vaultsData[vaultAddress]?.allowance?.gt(0)
   const paused = vaultData?.paused
-  const lastDepositTime = vaultData?.lastDepositTime.toNumber() * 1000
+  const lastDepositTime = vaultData?.lastDepositTime?.toNumber() * 1000 ?? 0
   const lastPauseTime = 1667443702886
   const {isConnected} = useAccount()
   const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
@@ -37,12 +38,11 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy,
     openModal()
   }
 
-  const isWithdrawEnabled = ()  => {
-    const isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod = Date.now() - lastDepositTime > coolDownPeriod
-    const isTimeElapsedSinceLastPausedGreaterThanCoolDown =  Date.now() - lastPauseTime > coolDownPeriod
-    console.log({isTimeElapsedSinceLastPausedGreaterThanCoolDown, isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod})
+  const isWithdrawEnabled = () => {
     const userHasBalance = userStaked?.gte(0)
     if (strategy.hasWithdrawalSchedule) {
+      const isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod = Date.now() - lastDepositTime > coolDownPeriod
+      const isTimeElapsedSinceLastPausedGreaterThanCoolDown = Date.now() - lastPauseTime > coolDownPeriod
       return userHasBalance && (isTimeElapsedSinceLastPausedGreaterThanCoolDown && isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod)
     }
     return userHasBalance
@@ -75,16 +75,16 @@ export default function Enable({tokenAddress, vaultAddress, openModal, strategy,
       )}
 
     {!isConnected &&
-        <ConnectKitButton.Custom>
-          {({show}) => {
-            return (
-              <button onClick={show}
-                      className={`w-full text-tPrimary ${accentPrimaryGradient} hover:bg-accentSecondary p-3 rounded-lg uppercase`}>
-                Connect Wallet
-              </button>
-            );
-          }}
-        </ConnectKitButton.Custom>
+      <ConnectKitButton.Custom>
+        {({show}) => {
+          return (
+            <button onClick={show}
+                    className={`w-full text-tPrimary ${accentPrimaryGradient} hover:bg-accentSecondary p-3 rounded-lg uppercase`}>
+              Connect Wallet
+            </button>
+          );
+        }}
+      </ConnectKitButton.Custom>
     }
   </div>
 }
