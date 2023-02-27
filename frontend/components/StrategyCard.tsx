@@ -8,6 +8,7 @@ import { APYsContext } from "../contexts/ApyContext";
 import { WithLoader } from "./WithLoader";
 import { BigNumber, ethers } from 'ethers';
 import NonSSRWrapper from './NonSSRWrapper';
+import {roundToNDecimals} from "../utils/formatters";
 
 export default function StrategyCard({
                                        strategy,
@@ -33,7 +34,12 @@ export default function StrategyCard({
     const balanceInUsd = ethers.utils.formatUnits(
       amount.mul((prices[strategy.coinGeckoId] * 10000).toFixed(0)).div(10000),
       strategy.decimals);
-    return (+balanceInUsd).toFixed(2);
+    return roundToNDecimals(+balanceInUsd, 2)
+  }
+  
+  const formatStakedAmountInToken = (amount: BigNumber) => {
+    const numberAmount = parseFloat(ethers.utils.formatUnits(amount, strategy.decimals))
+    return roundToNDecimals(numberAmount, 6)
   }
 
   const handleOpenModal = () => {
@@ -47,12 +53,12 @@ export default function StrategyCard({
         <div className={`flex`}>
           <div className="flex flex-col my-6 flex-grow">
             <p className="text-xs text-tSecondary">Staked</p>
-            <p
-              className={`text-2xl text-tPrimary`}>{status === 'ACTIVE' ? `$${getUserStakedInDollars(userStaked)}` : '-'}</p>
+            <p className={`text-2xl text-tPrimary`}>{status === 'ACTIVE' ? `$${getUserStakedInDollars(userStaked)}` : '-'}</p>
             <p className={`text-xs text-tSecondary`}>
-              {status === 'ACTIVE' ? `${parseFloat(ethers.utils.formatUnits(userStaked, strategy.decimals)).toFixed(4)} ${(strategy.tokenSymbol)}` : '-'}
+              {status === 'ACTIVE' ? `${formatStakedAmountInToken(userStaked)} ${(strategy.tokenSymbol)}` : '-'}
             </p>
           </div>
+          
           <div className="flex flex-col my-6">
             <p className="text-xs text-tSecondary">APY</p>
             {status === 'ACTIVE' ? (
@@ -64,15 +70,12 @@ export default function StrategyCard({
             )}
           </div>
         </div>
+        
         {status !== 'SOON' ? (
           <NonSSRWrapper>
             <Enable
-              vaultAddress={strategy.vaultAddress}
-              tokenAddress={strategy.tokenAddress}
               openModal={handleOpenModal}
               strategy={strategy}
-              paused={paused}
-              lastPaused={lastPaused}
             ></Enable>
           </NonSSRWrapper>
         ) : (
