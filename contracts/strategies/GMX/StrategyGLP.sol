@@ -27,6 +27,7 @@ contract StrategyGLP is Manager, GasFeeThrottler, Stoppable {
     address public vault;
 
     address public protocolStakingAddress;
+    address public devFeeAddress;
     uint256 STAKING_CONTRACT_FEE = 0;
     uint MAX_FEE;
     uint DEV_FEE;
@@ -60,6 +61,7 @@ contract StrategyGLP is Manager, GasFeeThrottler, Stoppable {
         DEV_FEE = 5 * 10 ** (ERC20(rewardToken).decimals() - 2);
         DIVISOR = 10 ** ERC20(rewardToken).decimals();
         MAX_FEE = 5 * 10 ** (ERC20(rewardToken).decimals() - 1);
+        devFeeAddress = _msgSender();
     }
 
     function want() external view returns (address) {
@@ -115,7 +117,7 @@ contract StrategyGLP is Manager, GasFeeThrottler, Stoppable {
     function chargeFees() internal {
         uint256 devFeeAmount = IERC20(rewardToken).balanceOf(address(this)) * DEV_FEE / DIVISOR;
         uint256 protocolTokenFeeAmount = IERC20(rewardToken).balanceOf(address(this)) * STAKING_CONTRACT_FEE / DIVISOR;
-        IERC20(rewardToken).safeTransfer(owner(), devFeeAmount);
+        IERC20(rewardToken).safeTransfer(devFeeAddress, devFeeAmount);
 
         if (protocolTokenFeeAmount > 0) {
             IERC20(rewardToken).safeTransfer(protocolStakingAddress, protocolTokenFeeAmount);
@@ -179,6 +181,10 @@ contract StrategyGLP is Manager, GasFeeThrottler, Stoppable {
 
     function setStakingAddress(address _protocolStakingAddress) external onlyOwner {
         protocolStakingAddress = _protocolStakingAddress;
+    }
+
+    function setDevFeeAddress(address _devFeeAddress) external onlyOwner {
+        devFeeAddress = _devFeeAddress;
     }
 
     function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {

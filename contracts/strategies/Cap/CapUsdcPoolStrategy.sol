@@ -22,6 +22,7 @@ contract CapUsdcPoolStrategy is Manager, PausableTimed, GasFeeThrottler, Stoppab
     address public vault;
     address public rewards;
     address public stakingAddress;
+    address public devFeeAddress;
 
     uint256 DIVISOR;
     uint256 CAP_MULTIPLIER = 10 ** 12;
@@ -54,6 +55,7 @@ contract CapUsdcPoolStrategy is Manager, PausableTimed, GasFeeThrottler, Stoppab
         DEV_FEE = 5 * 10 ** (ERC20(token).decimals() - 2);
         MAX_FEE = 5 * 10 ** (ERC20(token).decimals() - 1);
         DIVISOR = 10 ** ERC20(token).decimals();
+        devFeeAddress = _msgSender();
     }
 
 
@@ -125,7 +127,7 @@ contract CapUsdcPoolStrategy is Manager, PausableTimed, GasFeeThrottler, Stoppab
     function chargeFees() internal {
         uint256 devFeeAmount = IERC20(token).balanceOf(address(this)) * DEV_FEE / DIVISOR;
         uint256 stakingFeeAmount = IERC20(token).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
-        IERC20(token).safeTransfer(owner(), devFeeAmount);
+        IERC20(token).safeTransfer(devFeeAddress, devFeeAmount);
 
         if (stakingFeeAmount > 0) {
             IERC20(token).safeTransfer(stakingAddress, stakingFeeAmount);
@@ -180,6 +182,10 @@ contract CapUsdcPoolStrategy is Manager, PausableTimed, GasFeeThrottler, Stoppab
 
     function setStakingAddress(address _stakingAddress) external onlyOwner {
         stakingAddress = _stakingAddress;
+    }
+
+    function setDevFeeAddress(address _devFeeAddress) external onlyOwner {
+        devFeeAddress = _devFeeAddress;
     }
 
     function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {

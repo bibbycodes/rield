@@ -26,6 +26,7 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
     uint256 public lastDepositTime;
 
     address public stakingAddress;
+    address public devFeeAddress;
     uint256 STAKING_FEE = 0;
     uint DEV_FEE = 5 * 10 ** 16;
     uint DIVISOR = 10 ** 18;
@@ -43,6 +44,7 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
         chef = _chef;
         rewardStorage = IGMXRouter(chef).feeGmxTracker();
         balanceTracker = IGMXRouter(chef).stakedGmxTracker();
+        devFeeAddress = _msgSender();
     }
 
     function want() external view returns (address) {
@@ -107,7 +109,7 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
     function chargeFees() internal {
         uint256 devFeeAmount = IERC20(native).balanceOf(address(this)) * DEV_FEE / DIVISOR;
         uint256 stakingFeeAmount = IERC20(native).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
-        IERC20(native).safeTransfer(owner(), devFeeAmount);
+        IERC20(native).safeTransfer(devFeeAddress, devFeeAmount);
 
         if (stakingFeeAmount > 0) {
             IERC20(native).safeTransfer(stakingAddress, stakingFeeAmount);
@@ -180,6 +182,10 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
 
     function setStakingAddress(address _stakingAddress) external onlyOwner {
         stakingAddress = _stakingAddress;
+    }
+
+    function setDevFeeAddress(address _devFeeAddress) external onlyOwner {
+        devFeeAddress = _devFeeAddress;
     }
 
     function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {

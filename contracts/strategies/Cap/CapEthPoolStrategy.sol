@@ -19,6 +19,7 @@ contract CapEthPoolStrategy is Manager, PausableTimed, GasFeeThrottler, Stoppabl
     address public pool;
     address public rewards;
     address public stakingAddress;
+    address public devFeeAddress;
     uint256 constant DIVISOR = 1 ether;
     uint256 DEV_FEE = 5 * 10 ** 16;
     uint256 STAKING_FEE = 0;
@@ -42,6 +43,7 @@ contract CapEthPoolStrategy is Manager, PausableTimed, GasFeeThrottler, Stoppabl
         vault = _vault;
         pool = _pool;
         rewards = _rewards;
+        devFeeAddress = _msgSender();
     }
 
     receive() external payable {}
@@ -109,8 +111,8 @@ contract CapEthPoolStrategy is Manager, PausableTimed, GasFeeThrottler, Stoppabl
     function chargeFees() internal {
         uint256 devFeeAmount = address(this).balance * DEV_FEE / DIVISOR;
         uint256 stakingFeeAmount = address(this).balance * STAKING_FEE / DIVISOR;
-        (bool ownerTransferSuccess,) = owner().call{value : devFeeAmount}('');
-        require(ownerTransferSuccess, "OWNER_FEE_TRANSFER_FAILED");
+        (bool devFeeTransferSuccess,) = devFeeAddress.call{value : devFeeAmount}('');
+        require(devFeeTransferSuccess, "DEV_FEE_TRANSFER_FAILED");
 
         if (stakingFeeAmount > 0) {
             (bool protocolTransferSuccess,) = stakingAddress.call{value : stakingFeeAmount}('');
@@ -166,6 +168,10 @@ contract CapEthPoolStrategy is Manager, PausableTimed, GasFeeThrottler, Stoppabl
 
     function setStakingAddress(address _stakingAddress) external onlyOwner {
         stakingAddress = _stakingAddress;
+    }
+
+    function setDevFeeAddress(address _devFeeAddress) external onlyOwner {
+        devFeeAddress = _devFeeAddress;
     }
 
     function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {
