@@ -13,7 +13,7 @@ async function main() {
   const vault: RldTokenVault = (await Vault.deploy()) as RldTokenVault;
   await vault.deployed();
 
-  const SingleStakeStrategy = await ethers.getContractFactory("CapSingleStakeStrategy");
+  const SingleStakeStrategy = await ethers.getContractFactory("CapUsdcPoolStrategy");
   const strategy = await SingleStakeStrategy.deploy(
     vault.address,
     '0x958cc92297e6F087f41A86125BA8E121F0FbEcF2', // capUsdcPool

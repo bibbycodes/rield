@@ -17,7 +17,7 @@ export interface VaultData {
   vaultWantBalance: BigNumber
   paused: boolean
   lastHarvest: BigNumber
-  lastDepositTime: BigNumber
+  lastPoolDepositTime: BigNumber
   lastPauseTime: BigNumber
 }
 
@@ -32,7 +32,7 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
     abi: RldVault.abi,
     address: strategy.vaultAddress,
   }
-  
+
   const strategyContract = {
     abi: genericStrategy.abi,
     address: strategy.strategyAddress,
@@ -70,20 +70,20 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
     ...vault,
     functionName: 'balance',
   }
-  
+
   const paused = {
     ...strategyContract,
     functionName: 'paused',
   }
-  
+
   const lastHarvest = {
     ...strategyContract,
     functionName: 'lastHarvest',
   }
 
-  const lastDepositTime = {
+  const lastPoolDepositTime = {
     ...strategyContract,
-    functionName: 'lastDepositTime',
+    functionName: 'lastPoolDepositTime',
   }
 
   const lastPauseTime = {
@@ -98,7 +98,7 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
     vaultWantBalance,
     paused,
     lastHarvest,
-    lastDepositTime,
+    lastPoolDepositTime,
     lastPauseTime
   ]
 }
@@ -129,22 +129,22 @@ export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Add
     ...vault,
     functionName: 'balance',
   }
-  
+
   const paused = {
     ...strategyContract,
     functionName: 'paused',
   }
-  
+
   const lastHarvest = {
     ...strategyContract,
     functionName: 'lastHarvest',
   }
-  
-  const lastDepositTime = {
+
+  const lastPoolDepositTime = {
     ...strategyContract,
-    functionName: 'lastDepositTime',
+    functionName: 'lastPoolDepositTime',
   }
-  
+
   const lastPauseTime = {
     ...strategyContract,
     functionName: 'lastPauseTime',
@@ -156,7 +156,7 @@ export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Add
     vaultWantBalance,
     paused,
     lastHarvest,
-    lastDepositTime,
+    lastPoolDepositTime,
     lastPauseTime
   ]
 }
