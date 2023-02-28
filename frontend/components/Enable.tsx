@@ -25,7 +25,7 @@ export default function Enable({
   const vaultData = vaultsData[vaultAddress]
   const {approve} = useApproveToken(tokenAddress, vaultAddress, address, strategy, refetchForStrategy);
   const isApproved = vaultsData[vaultAddress]?.allowance?.gt(0)
-  const lastPoolDepositTime = vaultData?.lastPoolDepositTime?.toNumber() * 1000
+  const lastPoolDepositTime = vaultData?.lastPoolDepositTime?.toNumber() ? vaultData.lastPoolDepositTime.toNumber() * 1000 : 0
   const {isConnected} = useAccount()
   const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
   const accentPrimaryGradient = 'bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient'

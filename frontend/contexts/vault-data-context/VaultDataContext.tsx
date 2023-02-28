@@ -51,7 +51,7 @@ const VaultDataContextProvider = ({children}: {
     } else {
       ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastPoolDepositTime, lastPauseTime] = data as BigNumber[])
     }
-    
+
     setVaultsData({
       ...vaultsData,
       [strategy.vaultAddress]: {
