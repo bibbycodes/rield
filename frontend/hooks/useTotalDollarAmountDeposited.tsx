@@ -22,7 +22,7 @@ export const useTotalDollarAmountDeposited = () => {
 
   async function getTotalStakedInDollars() {
     return availableStrategies
-      .filter(strategy => strategy.isActive)
+      .filter(strategy => strategy.status === 'ACTIVE')
       .reduce((acc: any, strategy: any, index: number) => {
         if (vaultsData[strategy.vaultAddress] && Object.keys(prices).length && userAddress) {
           const {
