@@ -1,16 +1,16 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import fs from "fs";
-import { BeefyETHVault } from '../../typechain-types';
+import { RldEthVault } from "../../typechain-types";
 
 async function main() {
   const [deployer]: SignerWithAddress[] =
     await ethers.getSigners();
-  const Vault = await ethers.getContractFactory("BeefyETHVault");
-  const vault: BeefyETHVault = (await Vault.deploy()) as BeefyETHVault;
+  const Vault = await ethers.getContractFactory("RldEthVault");
+  const vault: RldEthVault = (await Vault.deploy()) as RldEthVault;
   await vault.deployed();
 
-  const SingleStakeStrategy = await ethers.getContractFactory("CapSingleStakeStrategyETH");
+  const SingleStakeStrategy = await ethers.getContractFactory("CapEthPoolStrategy");
   const strategy = await SingleStakeStrategy.deploy(
     vault.address,
     '0xE0cCd451BB57851c1B2172c07d8b4A7c6952a54e', // capETHPool

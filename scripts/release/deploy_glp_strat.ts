@@ -22,7 +22,7 @@ async function main() {
   );
   await strategy.deployed();
 
-  await vault.initialize(strategy.address, "GLP_AUTO_C", "GLP_AUTO_C")
+  await vault.initialize(strategy.address, "RLD_GMX_GLP", "RLD_GMX_GLP")
 
   console.log("Vault Deployed to:", vault.address);
   console.log("Strategy Deployed to:", strategy.address);
