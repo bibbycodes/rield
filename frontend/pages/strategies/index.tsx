@@ -7,11 +7,13 @@ import {Toast} from "../../components/Toast";
 import {AccountBalance, WalletOutlined} from '@mui/icons-material';
 import {useGetTVL} from "../../hooks/useGetTVL";
 import {ToolBarDataItem} from "../../components/ToolBarDataItem";
+import {useAccount} from "wagmi";
 
 export default function Compound() {
   const [isStrategyDetailsModalOpen, setIsStrategyDetailsModalOpen] = useState<boolean>(false);
   const {totalDollarAmountDeposited} = useTotalDollarAmountDeposited()
   const {tvl, isLoading: tvlLoading} = useGetTVL()
+  const {isConnected} = useAccount()
 
   return <>
     <Toast/>
@@ -22,12 +24,12 @@ export default function Compound() {
         label={"Balance"}
         isLoading={totalDollarAmountDeposited == null}
       />
-      <ToolBarDataItem
+      {isConnected && <ToolBarDataItem
         MuiIcon={AccountBalance}
         value={tvl.toFixed(2)}
         label={"TVL"}
         isLoading={tvlLoading}
-      />
+      />}
     </div>
     <div className="flex justify-center">
       <div className={`grid md:grid-cols-2 grid-cols-1 gap-4 [&>*]:shadow-xl max-w-6xl w-full`}>
