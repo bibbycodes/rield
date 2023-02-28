@@ -44,14 +44,14 @@ const VaultDataContextProvider = ({children}: {
     const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy, userAddress) : getMultiCallDataForErc20Vault(strategy, userAddress)
     const data = await multicall({contracts: multiCallData})
-    let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPauseTime
+    let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastPoolDepositTime, lastPauseTime
 
     if (isEthVault) {
-      ([vaultBalance, vaultPricePerFullShare, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPauseTime] = data as BigNumber[])
+      ([vaultBalance, vaultPricePerFullShare, vaultWantBalance, paused, lastHarvest, lastPoolDepositTime, lastPauseTime] = data as BigNumber[])
     } else {
-      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastDepositTime, lastPauseTime] = data as BigNumber[])
+      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastPoolDepositTime, lastPauseTime] = data as BigNumber[])
     }
-    
+
     setVaultsData({
       ...vaultsData,
       [strategy.vaultAddress]: {
@@ -63,7 +63,7 @@ const VaultDataContextProvider = ({children}: {
         tokenBalance,
         paused,
         lastHarvest,
-        lastDepositTime,
+        lastPoolDepositTime,
         lastPauseTime
       }
     })
@@ -98,7 +98,7 @@ const VaultDataContextProvider = ({children}: {
               vaultWantBalance: strategyData[4],
               paused: strategyData[5],
               lastHarvest: strategyData[6],
-              lastDepositTime: strategyData[7],
+              lastPoolDepositTime: strategyData[7],
               lastPauseTime: strategyData[8]
             }
           }
@@ -115,7 +115,7 @@ const VaultDataContextProvider = ({children}: {
               vaultWantBalance: strategyData[2],
               paused: strategyData[3],
               lastHarvest: strategyData[4],
-              lastDepositTime: strategyData[5],
+              lastPoolDepositTime: strategyData[5],
               lastPauseTime: strategyData[6],
             }
           }
