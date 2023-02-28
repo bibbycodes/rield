@@ -25,8 +25,7 @@ export default function Enable({
   const vaultData = vaultsData[vaultAddress]
   const {approve} = useApproveToken(tokenAddress, vaultAddress, address, strategy, refetchForStrategy);
   const isApproved = vaultsData[vaultAddress]?.allowance?.gt(0)
-  const lastDepositTime = vaultData?.lastPoolDepositTime?.toNumber() * 1000 ?? 0
-  const lastPauseTime = vaultData?.lastPauseTime?.toNumber() * 1000 ?? 0
+  const lastPoolDepositTime = vaultData?.lastPoolDepositTime?.toNumber() * 1000
   const {isConnected} = useAccount()
   const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
   const accentPrimaryGradient = 'bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient'
@@ -40,9 +39,8 @@ export default function Enable({
   const isWithdrawEnabled = () => {
     const userHasBalance = userStaked?.gte(0)
     if (strategy.hasWithdrawalSchedule) {
-      const isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod = Date.now() - lastDepositTime > coolDownPeriod
-      const isTimeElapsedSinceLastPausedGreaterThanCoolDown = Date.now() - lastPauseTime > coolDownPeriod
-      return userHasBalance && (isTimeElapsedSinceLastPausedGreaterThanCoolDown && isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod)
+      const isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod = Date.now() - lastPoolDepositTime > coolDownPeriod
+      return userHasBalance && isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod
     }
     return userHasBalance
   }
