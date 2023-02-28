@@ -93,7 +93,7 @@ export const availableStrategies: Strategy[] = [
     tokenLogoUrl: "/gmx-logo.svg",
     description: "GMX Token is a governance token for the GMD protocol. It is used to vote on protocol changes and to earn rewards from the GMD protocol.",
     protocolUrl: "https://gmx.io/#/",
-    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=${gmx.tokenAddress}`,
+    tokenUrl: `https://app.gmx.io/#/buy_gmx`,
     decimals: 18,
     status: 'ACTIVE',
     abi: abi,

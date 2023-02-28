@@ -125,7 +125,7 @@ export default function Home() {
               </a>
             </div>
             <div className="max-w-[12rem]">
-              <a target="_blank" rel="noopener noreferrer" href={'https://discord.gg/mbbFQ5wc'}>
+              <a target="_blank" rel="noopener noreferrer" href={'https://discord.gg/uMuzHWVPzR'}>
                 <img alt={"Token Logo"} className={`h-full w-full`} src={'/discord-logo.png'}/>
               </a>
             </div>
