@@ -3,14 +3,14 @@ import hre from "hardhat";
 async function main() {
 
   await hre.run("verify:verify", {
-    address: '0xa3680fE3BDD26DE08D101dc58eCa6d63A2d1Aa0c',
+    address: '0xE6a4d3724a0C3FC03879c75282a717765bA65dC1',
     constructorArguments: []
   });
 
   await hre.run("verify:verify", {
-    address: '0x23DdD269c5c95989cA6ce688574F9b7E018989fF',
+    address: '0x64eC93A337395832233dD28E7c4dD13331eA1Bac',
     constructorArguments: [
-      '0xa3680fE3BDD26DE08D101dc58eCa6d63A2d1Aa0c',
+      '0xE6a4d3724a0C3FC03879c75282a717765bA65dC1',
       '0x958cc92297e6F087f41A86125BA8E121F0FbEcF2',
       '0x10f2f3B550d98b6E51461a83AD3FE27123391029',
       '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
