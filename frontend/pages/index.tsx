@@ -120,7 +120,7 @@ export default function Home() {
             [&>*]:h-full [&>*]:w-full">
             <div className="hidden md:visible flex-grow"></div>
             <div className="max-w-[12rem]">
-              <a target="_blank" rel="noopener noreferrer" href={'https://t.me/+ubUR0yfc_HRjZTg0'}>
+              <a target="_blank" rel="noopener noreferrer" href={'https://t.me/rldfinance'}>
                 <img alt={"Token Logo"} className={`h-full w-full`} src={'/telegram-logo.png'}/>
               </a>
             </div>
