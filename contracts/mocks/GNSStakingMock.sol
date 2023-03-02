@@ -13,6 +13,7 @@ contract GNSStakingMock is IGNSStakingProxy {
     address immutable gns;
     address immutable rewardToken;
     mapping(address => uint256) public gnsBalances;
+
     event Harvest(address indexed user, uint256 amount);
     event Staked(address indexed user, uint256 amount);
     event UnStaked(address indexed user, uint256 amount);
@@ -36,7 +37,7 @@ contract GNSStakingMock is IGNSStakingProxy {
     function harvest() external {
         uint256 amount = gnsBalances[msg.sender];
         uint256 extraAmount = amount / 10;
-        gnsBalances[msg.sender] += extraAmount;
+        ERC20(rewardToken).transfer(msg.sender, extraAmount);
         emit Harvest(msg.sender, extraAmount);
     }
 

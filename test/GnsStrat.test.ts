@@ -27,15 +27,15 @@ describe("GNS", () => {
     const gnsToken: TokenMock = (await Token.deploy("GNS", "GNS", 18)) as TokenMock;
     await gnsToken.deployed();
 
-    const ethToken = await Token.deploy("DAI", "DAI", 18);
-    await ethToken.deployed();
+    const daiToken = await Token.deploy("DAI", "DAI", 18);
+    await daiToken.deployed();
 
     const UniSwapMock = await ethers.getContractFactory("UniswapV3RouterMock");
     const uniSwapMock: UniswapV3RouterMock = (await UniSwapMock.deploy()) as UniswapV3RouterMock;
     await uniSwapMock.deployed();
 
     const GNSStakingMock = await ethers.getContractFactory("GNSStakingMock");
-    const gnsRouterMock: GNSStakingMock = (await GNSStakingMock.deploy(gnsToken.address, ethToken.address)) as GNSStakingMock;
+    const gnsRouterMock: GNSStakingMock = (await GNSStakingMock.deploy(gnsToken.address, daiToken.address)) as GNSStakingMock;
     await gnsRouterMock.deployed();
 
     const Vault = await ethers.getContractFactory("RldTokenVault");
@@ -51,7 +51,7 @@ describe("GNS", () => {
     const Strategy = await ethers.getContractFactory("StrategyGNS");
     const strategy = await Strategy.deploy(
       gnsRouterMock.address,
-      [ethToken.address, gnsToken.address],
+      [daiToken.address, gnsToken.address],
       [3000],
       commonAddresses
     ) as StrategyGNS;
@@ -59,8 +59,8 @@ describe("GNS", () => {
 
     await vault.initialize(strategy.address, "gns_AUTO_C", "gns_AUTO_C")
 
-    await ethToken.mintFor(gnsRouterMock.address, ONE_THOUSAND_ETH);
-    await ethToken.mintFor(uniSwapMock.address, ONE_THOUSAND_ETH);
+    await daiToken.mintFor(gnsRouterMock.address, ONE_THOUSAND_ETH);
+    await daiToken.mintFor(uniSwapMock.address, ONE_THOUSAND_ETH);
     await gnsToken.mintFor(alice.address, ONE_THOUSAND_ETH);
     await gnsToken.mintFor(bob.address, ONE_THOUSAND_ETH);
     await gnsToken.mintFor(uniSwapMock.address, ONE_THOUSAND_ETH);
@@ -73,7 +73,7 @@ describe("GNS", () => {
       deployer,
       alice,
       bob,
-      ethToken,
+      daiToken,
       gns: gnsToken,
       uniswap: uniSwapMock
     };
@@ -145,7 +145,7 @@ describe("GNS", () => {
 
   describe("Harvest", () => {
     it("Compounds, claims and restakes, owner takes 5% of pf, rest goes back into strategy", async () => {
-      const {alice, vault, strategy, gns, gnsRouter, ethToken, deployer} = await loadFixture(setupFixture);
+      const {alice, vault, strategy, gns, gnsRouter, daiToken, deployer} = await loadFixture(setupFixture);
       await gns.connect(alice).approve(vault.address, TEN_ETHER);
       await vault.connect(alice).deposit(ONE_ETHER);
       expect(await vault.totalSupply()).to.equal(ONE_ETHER);
@@ -153,23 +153,20 @@ describe("GNS", () => {
       expect(await gns.balanceOf(alice.address)).to.equal(parseEther("999"));
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
 
-      const claimAmount = ONE_ETHER.div(10);
-      const compoundAmount = ONE_ETHER.sub(parseEther("0.05"));
+      const harvestAmount = ONE_ETHER.div(10);
+      const ownerCut = harvestAmount.div(20); //5% of harvest
       const txReceipt = await strategy.harvest();
 
-      expect(await ethToken.balanceOf(deployer.address)).to.equal(parseEther("0.05"));
-      expect(await gnsRouter.gnsBalances(strategy.address)).to.equal(
-        ONE_ETHER.add(claimAmount).add(compoundAmount))
-
-      await expect(txReceipt).to.emit(gnsRouter, "Compound")
-      await expect(txReceipt).to.emit(gnsRouter, "Staked")
-      await expect(txReceipt).to.emit(gnsRouter, "Claimed")
+      expect(await daiToken.balanceOf(deployer.address)).to.equal(ownerCut);
+      expect(await gnsRouter.gnsBalances(strategy.address)).to.equal(ONE_ETHER.add(harvestAmount.sub(ownerCut)));
+      await expect(txReceipt).to.emit(strategy, "StratHarvest")
+      await expect(txReceipt).to.emit(gnsRouter, "Harvest")
     })
   })
 
   describe("Withdraw", () => {
     it("Harvests, Returns tokens to depositor with additional harvest", async () => {
-      const {alice, vault, strategy, gns, gnsRouter, ethToken, deployer} = await loadFixture(setupFixture);
+      const {alice, vault, strategy, gns, gnsRouter, daiToken, deployer} = await loadFixture(setupFixture);
       expect(await vault.totalSupply()).to.equal(0);
       await gns.connect(alice).approve(vault.address, TEN_ETHER);
       await vault.connect(alice)
@@ -180,22 +177,20 @@ describe("GNS", () => {
       expect(await gns.balanceOf(alice.address)).to.equal(parseEther("999"));
       expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETHER);
 
-      await strategy.harvest();
+      const txReceipt = await strategy.harvest();
 
       const aliceShares = await vault.balanceOf(alice.address);
       await vault.connect(alice).withdraw(aliceShares);
-
-      const compoundAmount = parseEther("0.1");
-      const claimAmount = parseEther("1");
-      const claimAmountUserPart = claimAmount.sub(parseEther("0.05"));
-      const ownerFee = claimAmount.sub(parseEther("0.95"));
-
-      const expectedAlicegns = ONE_THOUSAND_ETH.add(claimAmountUserPart).add(compoundAmount);
+      
+      const harvestAmount = ONE_ETHER.div(10);
+      const ownerCut = harvestAmount.div(20); //5% of harvest
+      const claimAmountUserPart = harvestAmount.sub(ownerCut);
+      const expectedAliceGns = ONE_THOUSAND_ETH.add(claimAmountUserPart)
 
       expect(await vault.totalSupply()).to.equal(0);
       expect(await vault.balanceOf(alice.address)).to.equal(0);
-      expect(await gns.balanceOf(alice.address)).to.equal(expectedAlicegns);
-      expect(await ethToken.balanceOf(deployer.address)).to.equal(ownerFee);
+      expect(await gns.balanceOf(alice.address)).to.equal(expectedAliceGns);
+      expect(await daiToken.balanceOf(deployer.address)).to.equal(ownerCut);
     })
   })
 });
