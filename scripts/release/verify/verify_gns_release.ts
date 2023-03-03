@@ -2,7 +2,7 @@ import hre, { ethers } from "hardhat";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
-  const vaultAddress = '0xb3a2AFa70483b72bE8CfEE0413C70f6c3A0186E5'
+  const vaultAddress = '0x0DD4dD3Ee508CB70C3518951050E4C8620a63620'
 
   await hre.run("verify:verify", {
     address: vaultAddress,
@@ -21,11 +21,11 @@ async function main() {
   }
 
   await hre.run("verify:verify", {
-    address: '0xA67102F5324a1FD95a2c2be550E33693019ac4D3',
+    address: '0x8136A7bACDDcfff060Aea622B6542d9d7BB08440',
     constructorArguments: [
       gnsStakingProxy,
       [daiToken, gnsToken],
-      [3000],
+      [10000],
       commonAddresses
     ]
   });

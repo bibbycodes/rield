@@ -25,7 +25,7 @@ async function main() {
   const strategy = await Strategy.deploy(
     gnsStakingProxy,
     [daiToken, gnsToken],
-    [3000],
+    [10000],
     commonAddresses
   );
   await strategy.deployed();
