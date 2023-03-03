@@ -24,7 +24,7 @@ export const useGetTVL = () => {
             decimals
           }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
           const price = prices[coinGeckoId]
-          const vaultTvl = parseFloat(vaultWantBalance.toString()) / (10 ** decimals)
+          const vaultTvl = parseFloat(vaultWantBalance?.toString()) / (10 ** decimals)
           const vaultTvlInDollars = vaultTvl * price
           return acc + vaultTvlInDollars
         }, 0 as number)
@@ -46,6 +46,7 @@ export const useGetTVL = () => {
           }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
           const price = prices[coinGeckoId]
           const vaultTvl = parseFloat(vaultWantBalance.toString()) / (10 ** decimals)
+          console.log({vaultTvl, price, vaultAddress})
           acc[vaultAddress] = vaultTvl * price
           return acc
         }, tvlMap)

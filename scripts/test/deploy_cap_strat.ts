@@ -56,7 +56,7 @@ async function main() {
     "./resources/deploy_cap-output.json",
     JSON.stringify({
       vaultAddress: vault.address,
-      ethToken: ethToken.address,
+      daiToken: ethToken.address,
       capPoolMock: capPoolMock.address,
       capRewardsMock: capPoolMock.address,
       deployerAddress: deployer.address,

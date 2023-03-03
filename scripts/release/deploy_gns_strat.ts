@@ -10,12 +10,6 @@ async function main() {
   const vault = await Vault.deploy();
   await vault.deployed();
 
-  //   Constructor
-  //   address _chef,
-  //   address[] memory _rewardToWantRoute, // [DAI, GNS]
-  //   uint24[] memory _rewardToWantFees,
-  //   CommonAddresses memory _commonAddresses
-
   const gnsStakingProxy = '0x6B8D3C08072a020aC065c467ce922e3A36D3F9d6'
   const daiToken = '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1'
   const gnsToken = '0x18c11fd286c5ec11c3b683caa813b77f5163a122'

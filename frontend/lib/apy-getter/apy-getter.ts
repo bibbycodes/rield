@@ -3,9 +3,11 @@ import * as capWethPool from "../../resources/vault-details/deploy_cap_eth-outpu
 import * as capUsdcPool from "../../resources/vault-details/deploy_cap_usdc-output.json";
 import * as gmx from "../../resources/vault-details/deploy_gmx-output.json";
 import * as glp from "../../resources/vault-details/deploy_glp-output.json";
-import {getCapAPY} from "../apy-getter-functions/cap";
+import * as gns from "../../resources/vault-details/deploy_gns-output.json";
+import {getCapApr} from "../apy-getter-functions/cap";
 import {getGmxGlpApr} from "../apy-getter-functions/gmx";
 import {Prices} from "../../contexts/TokenPricesContext";
+import {getGainsApr} from "../apy-getter-functions/gains";
 
 export class ApyGetter {
   constructor(private provider: any, private prices: Prices) {
@@ -15,13 +17,15 @@ export class ApyGetter {
   async getApy(strategyAddress: Address) {
     switch (strategyAddress) {
       case capUsdcPool.strategyAddress:
-        return getCapAPY('usdc', this.provider)
+        return getCapApr('usdc', this.provider)
       case capWethPool.strategyAddress:
-        return getCapAPY('weth', this.provider)
+        return getCapApr('weth', this.provider)
       case gmx.strategyAddress:
         return getGmxGlpApr(this.provider, 'GMX', this.prices['ethereum'])
-      case glp.strategyAddress:
+      case glp.strategyAddress: 
         return getGmxGlpApr(this.provider, 'GLP', this.prices['ethereum'])
+      case gns.strategyAddress:
+        return getGainsApr()
       default:
         return 0
     }
@@ -33,6 +37,7 @@ export class ApyGetter {
       [capUsdcPool.strategyAddress]: await this.getApy(capUsdcPool.strategyAddress as Address),
       [gmx.strategyAddress]: await this.getApy(gmx.strategyAddress as Address),
       [glp.strategyAddress]: await this.getApy(glp.strategyAddress as Address),
+      [gns.strategyAddress]: await this.getApy(gns.strategyAddress as Address),
     }
   }
 }

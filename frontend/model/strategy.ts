@@ -2,6 +2,7 @@ import * as capEth from "../resources/vault-details/deploy_cap_eth-output.json";
 import * as capUSDC from "../resources/vault-details/deploy_cap_usdc-output.json";
 import * as gmx from "../resources/vault-details/deploy_gmx-output.json";
 import * as glp from "../resources/vault-details/deploy_glp-output.json";
+import * as gns from "../resources/vault-details/deploy_gns-output.json";
 import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
@@ -124,27 +125,27 @@ export const availableStrategies: Strategy[] = [
     coolDownPeriod: 0,
   },
 
-  // {
-  //   id: 0,
-  //   name: "GNS",
-  //   protocol: "Gains Network",
-  //   tokenSymbol: "GNS",
-  //   tokenAddress: randomAddress() as Address,
-  //   vaultAddress: randomAddress() as Address,
-  //   strategyAddress: randomAddress() as Address,
-  //   protocolLogoUrl: "/gns-logo.png",
-  //   tokenLogoUrl: "/gns-logo.png",
-  //   description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
-  //   protocolUrl: "https://gains.trade/",
-  //   tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=gns`,
-  //   decimals: 18,
-  //   status: 'SOON',
-  //   abi: abi,
-  //   coinGeckoId: "gns",
-  //   type: "Auto Compound",
-  //   performanceFee: 5,
-  //   coolDownPeriod: 0
-  // },
+  {
+    id: 0,
+    name: "GNS",
+    protocol: "Gains Network",
+    tokenSymbol: "GNS",
+    tokenAddress: gns.tokenAddress as Address,
+    vaultAddress: gns.vaultAddress as Address,
+    strategyAddress: gns.strategyAddress as Address,
+    protocolLogoUrl: "/gns-logo.png",
+    tokenLogoUrl: "/gns-logo.png",
+    description: "Gains network is a decentralized perpetual platform built on arbitrum.",
+    protocolUrl: "https://gains.trade/",
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=gns`,
+    decimals: 18,
+    status: 'ACTIVE',
+    abi: abi,
+    coinGeckoId: "gains-network",
+    type: "Auto Compound",
+    performanceFee: 5,
+    coolDownPeriod: 0
+  },
   // {
   //   id: 0,
   //   name: "GNS Dai",

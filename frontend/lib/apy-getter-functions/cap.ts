@@ -120,7 +120,7 @@ export function formatToDisplay(amount: number, maxPrecision?: number, fixPrecis
   }
 }
 
-export async function getCapAPY(token: capTokens, provider: any): Promise<number> {
+export async function getCapApr(token: capTokens, provider: any): Promise<number> {
   let {cumulativeFees, cumulativePnl} = await fetchCapPoolStats(chainData.currencies[token]);
   [cumulativeFees, cumulativePnl] = [capFormatUnits(cumulativeFees), capFormatUnits(cumulativePnl)];
   const poolInception = chainData.poolInception[token];
