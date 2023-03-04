@@ -137,7 +137,7 @@ export const availableStrategies: Strategy[] = [
     tokenLogoUrl: "/gns-logo.png",
     description: "Gains network is a decentralized perpetual platform built on arbitrum.",
     protocolUrl: "https://gains.trade/",
-    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=gns`,
+    tokenUrl: `https://traderjoexyz.com/arbitrum/trade?inputCurrency=ETH&outputCurrency=0x18c11fd286c5ec11c3b683caa813b77f5163a122`,
     decimals: 18,
     status: 'ACTIVE',
     abi: abi,
