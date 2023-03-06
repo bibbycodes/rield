@@ -25,7 +25,7 @@ export class ApyGetter {
       case gmx.strategyAddress:
         return getGmxGlpApr(this.provider, 'GMX', this.prices['ethereum'])
       case bfr.strategyAddress:
-        return getBfrBlpApr(this.provider, 'BFR', this.prices['usd-coin'])
+        return getBfrBlpApr(this.provider, 'BFR', this.prices['ibuffer-token'])
       case glp.strategyAddress:
         return getGmxGlpApr(this.provider, 'GLP', this.prices['ethereum'])
       case gns.strategyAddress:

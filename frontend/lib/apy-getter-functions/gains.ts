@@ -15,11 +15,6 @@ export const getGainsApr = async () => {
       "accept": "*/*",
       "accept-language": "en-GB,en;q=0.9",
       "if-none-match": "W/\"c1-UmlYmAkh5x8jccAwvP/bhoYIs/k\"",
-      "sec-fetch-dest": "empty",
-      "sec-fetch-mode": "cors",
-      "sec-fetch-site": "cross-site",
-      "sec-gpc": "1",
-      "Referer": "https://gainsnetwork.io/",
       "Referrer-Policy": "strict-origin-when-cross-origin"
     }
   })
