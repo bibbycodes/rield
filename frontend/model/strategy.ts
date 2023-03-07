@@ -3,6 +3,7 @@ import * as capUSDC from "../resources/vault-details/deploy_cap_usdc-output.json
 import * as gmx from "../resources/vault-details/deploy_gmx-output.json";
 import * as glp from "../resources/vault-details/deploy_glp-output.json";
 import * as gns from "../resources/vault-details/deploy_gns-output.json";
+import * as bfr from "../resources/vault-details/deploy_bfr-output.json";
 import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
@@ -167,26 +168,27 @@ export const availableStrategies: Strategy[] = [
   //   type: "Auto Compound",
   //   performanceFee: 5
   // },
-  // {
-  //   id: 0,
-  //   name: "BFR",
-  //   protocol: "Buffer Finance",
-  //   tokenSymbol: "BFR",
-  //   tokenAddress: randomAddress() as Address,
-  //   vaultAddress: randomAddress() as Address,
-  //   strategyAddress: randomAddress() as Address,
-  //   protocolLogoUrl: "/bfr-logo.png",
-  //   tokenLogoUrl: "/bfr-logo.png",
-  //   description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
-  //   protocolUrl: "https://app.buffer.finance/ARBITRUM/earn",
-  //   apy: 13,
-  //   tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=gns`,
-  //   decimals: 18,
-  //   isActive: false,
-  //   abi: abi,
-  //   coinGeckoId: "bfr",
-  //   type: "Auto Compound",
-  //   performanceFee: 5
-  // },
+  {
+    id: 5,
+    name: "BFR",
+    protocol: "Buffer Finance",
+    tokenSymbol: "BFR",
+    tokenAddress: bfr.tokenAddress as Address,
+    vaultAddress: bfr.vaultAddress as Address,
+    strategyAddress: bfr.strategyAddress as Address,
+    protocolLogoUrl: "/bfr-logo.png",
+    tokenLogoUrl: "/bfr-logo.png",
+    description: "Buffer",
+    protocolUrl: "https://app.buffer.finance/ARBITRUM/earn",
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=gns`,
+    decimals: 18,
+    status: 'ACTIVE',
+    coolDownPeriod: 0,
+    hasWithdrawalSchedule: false,
+    abi: abi,
+    coinGeckoId: "ibuffer-token",
+    type: "Auto Compound",
+    performanceFee: 5
+  },
 ]
 

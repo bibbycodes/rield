@@ -21,7 +21,20 @@ export default function Layout({children}: PropsWithChildren) {
         <link rel="icon" href="/favicon.ico"/>
       </Head>
 
-      <div className={`text-white w-full ${navGradient} ${navHeight} absolute`}></div>
+      <div className={`text-white w-full ${navGradient} ${navHeight} absolute`}>
+        <div className={`w-[45vw] ${navHeight} absolute top left-0 z-1`} style={{
+          'background':
+            'radial-gradient(circle at left 20% bottom 0%, #049be0, transparent 50%)',
+          opacity: 0.2
+        }}/>
+
+        <div className={`w-[120vw] ${navHeight} absolute top right-0 z-1`} style={{
+          'background':
+            'radial-gradient(circle at right 0% bottom 100%, #8e0be8, transparent 50%)',
+          opacity: 0.5
+        }}/>
+
+      </div>
       <main className="relative z-10">
         <nav className="text-white w-full py-0">
           <div className="flex flex-row w-full">

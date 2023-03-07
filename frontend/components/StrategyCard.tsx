@@ -36,7 +36,7 @@ export default function StrategyCard({
       strategy.decimals);
     return roundToNDecimals(+balanceInUsd, 2)
   }
-  
+
   const formatStakedAmountInToken = (amount: BigNumber) => {
     const numberAmount = parseFloat(ethers.utils.formatUnits(amount, strategy.decimals))
     return roundToNDecimals(numberAmount, 6)
@@ -47,7 +47,7 @@ export default function StrategyCard({
   }
 
   return (
-    <div className={`${primaryToSecondary} rounded-lg p-2`}>
+    <div className={`${primaryToSecondary} rounded-2xl p-2`}>
       <div className="p-4">
         <StrategyLogos strategy={strategy}></StrategyLogos>
         <div className={`flex`}>
@@ -58,7 +58,7 @@ export default function StrategyCard({
               {status === 'ACTIVE' ? `${formatStakedAmountInToken(userStaked)} ${(strategy.tokenSymbol)}` : '-'}
             </p>
           </div>
-          
+
           <div className="flex flex-col my-6">
             <p className="text-xs text-tSecondary">APY</p>
             {status === 'ACTIVE' ? (
@@ -70,7 +70,7 @@ export default function StrategyCard({
             )}
           </div>
         </div>
-        
+
         {status !== 'SOON' ? (
           <NonSSRWrapper>
             <Enable
