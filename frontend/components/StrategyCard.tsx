@@ -9,6 +9,8 @@ import { WithLoader } from "./WithLoader";
 import { BigNumber, ethers } from 'ethers';
 import NonSSRWrapper from './NonSSRWrapper';
 import {roundToNDecimals} from "../utils/formatters";
+import * as capEth from "../resources/vault-details/deploy_cap_eth-output.json";
+import * as capUSDC from "../resources/vault-details/deploy_cap_usdc-output.json";
 
 export default function StrategyCard({
                                        strategy,
@@ -19,9 +21,6 @@ export default function StrategyCard({
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys[strategy.strategyAddress]
   const {status} = strategy
-  const paused = true
-  const lastPaused = Date.now()
-  const canWithdraw = lastPaused - strategy.coolDownPeriod > 0
   const primaryToSecondary = 'bg-gradient-to-r from-backgroundSecondaryGradient to-backgroundSecondary'
 
   // TODO: Move this to a useGetUserStaked
@@ -40,6 +39,13 @@ export default function StrategyCard({
   const formatStakedAmountInToken = (amount: BigNumber) => {
     const numberAmount = parseFloat(ethers.utils.formatUnits(amount, strategy.decimals))
     return roundToNDecimals(numberAmount, 6)
+  }
+  
+  const getApy = (apy: number) => {
+    if ([capEth.strategyAddress, capUSDC.strategyAddress].includes(strategy.strategyAddress)) {
+      return `~${apy}`
+    }
+    return apy
   }
 
   const handleOpenModal = () => {
@@ -63,7 +69,7 @@ export default function StrategyCard({
             <p className="text-xs text-tSecondary">APY</p>
             {status === 'ACTIVE' ? (
               <WithLoader className={`min-w-[5rem]`} type={`text`} isLoading={isLoading}>
-                <p className={`text-2xl text-tPrimary`}>{apy}%</p>
+                <p className={`text-2xl text-tPrimary`}>{getApy(apy)}%</p>
               </WithLoader>
             ) : (
               <p className={`text-2xl text-tPrimary`}>-</p>
