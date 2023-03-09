@@ -180,7 +180,7 @@ export const availableStrategies: Strategy[] = [
     tokenLogoUrl: "/bfr-logo.png",
     description: "Buffer",
     protocolUrl: "https://app.buffer.finance/ARBITRUM/earn",
-    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=gns`,
+    tokenUrl: `https://app.uniswap.org/#/tokens/arbitrum/0x1a5b0aaf478bf1fda7b934c76e7692d722982a6d`,
     decimals: 18,
     status: 'ACTIVE',
     coolDownPeriod: 0,
