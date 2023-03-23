@@ -10,6 +10,7 @@ import "../../interfaces/gmx/IGMXStrategy.sol";
 import "../Common/StratFeeManager.sol";
 import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/common/IUniswapRouterV3.sol";
+import "hardhat/console.sol";
 
 contract StrategyGMX is StrategyManager, GasFeeThrottler {
     using SafeERC20 for IERC20;
@@ -95,6 +96,7 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
         // Claim and re-stake esGMX and multiplier points
         IGMXTracker(rewardStorage).claim(address(this));
         uint256 nativeBal = IERC20(native).balanceOf(address(this));
+        console.log(nativeBal, "GMX nativeBal");
         if (nativeBal > 0) {
             chargeFees();
             swapRewards();
@@ -109,6 +111,7 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
     function chargeFees() internal {
         uint256 devFeeAmount = IERC20(native).balanceOf(address(this)) * DEV_FEE / DIVISOR;
         uint256 stakingFeeAmount = IERC20(native).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
+        console.log(devFeeAmount, "GMX dev fee");
         IERC20(native).safeTransfer(devFeeAddress, devFeeAmount);
 
         if (stakingFeeAmount > 0) {
