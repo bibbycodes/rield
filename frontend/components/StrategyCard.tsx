@@ -11,6 +11,7 @@ import NonSSRWrapper from './NonSSRWrapper';
 import {roundToNDecimals} from "../utils/formatters";
 import * as capEth from "../resources/vault-details/deploy_cap_eth-output.json";
 import * as capUSDC from "../resources/vault-details/deploy_cap_usdc-output.json";
+import {cardGradient} from "../pages";
 
 export default function StrategyCard({
                                        strategy,
@@ -21,7 +22,6 @@ export default function StrategyCard({
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys[strategy.strategyAddress]
   const {status} = strategy
-  const primaryToSecondary = 'bg-gradient-to-r from-backgroundSecondaryGradient to-backgroundSecondary'
 
   // TODO: Move this to a useGetUserStaked
   const getUserStakedInDollars = (amount: BigNumber) => {
@@ -53,7 +53,7 @@ export default function StrategyCard({
   }
 
   return (
-    <div className={`${primaryToSecondary} rounded-2xl p-2`}>
+    <div className={`${cardGradient} border-[#181E2F] border-solid border-2 rounded-2xl p-2`}>
       <div className="p-4">
         <StrategyLogos strategy={strategy}></StrategyLogos>
         <div className={`flex`}>

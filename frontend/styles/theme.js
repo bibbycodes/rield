@@ -12,7 +12,7 @@ const theme = {
   tPrimary: '#FFFFFF',
   tSecondary: '#9597A0',
   backgroundSecondary: '#262640',
-  backgroundPrimary: '#1b1b26',
+  backgroundPrimary: '#0E121D',
   backgroundPrimaryGradient: '#262640',
   backgroundSecondaryGradient: '#262645',
   accentPrimary: '#4d6dd2',
