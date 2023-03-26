@@ -28,7 +28,10 @@ export default function Enable({
   const lastPoolDepositTime = vaultData?.lastPoolDepositTime?.toNumber() ? vaultData.lastPoolDepositTime.toNumber() * 1000 : 0
   const {isConnected} = useAccount()
   const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
-  const accentPrimaryGradient = 'bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient'
+  const purpleColor = `bg-gradient-to-b from-[#6F47EF] to-[#6F47DA]`
+  const hoverColor = `[#8225ED]`
+  const hoverBorderColor = `hover:border-[#7E1FE7]`
+  // const accentPrimaryGradient = 'bg-gradient-to-b from-[#7E1FE7] to-[#5C2DC5]'
 
   const handleClick = (action: TransactionAction) => {
     setAction(action)
@@ -37,7 +40,7 @@ export default function Enable({
   }
 
   const isWithdrawEnabled = () => {
-    const userHasBalance = userStaked?.gte(0)
+    const userHasBalance = userStaked?.gt(0)
     if (strategy.hasWithdrawalSchedule) {
       const isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod = Date.now() - lastPoolDepositTime > coolDownPeriod
       return userHasBalance && isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod
@@ -50,12 +53,12 @@ export default function Enable({
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => handleClick("deposit")}
-          className={`text-tPrimary ${accentPrimaryGradient} hover:bg-accentSecondary p-3 rounded-lg uppercase disabled:text-tSecondary disabled:border-tSecondary`}
+          className={`text-tPrimary ${purpleColor} hover:bg-${hoverColor} p-3 rounded-lg uppercase disabled:text-tSecondary disabled:border-tSecondary`}
         >Deposit
         </button>
         <button
           disabled={!isWithdrawEnabled()}
-          className={`disabled:text-tSecondary disabled:border-tSecondary p-3 rounded-lg border-2 text-accentPrimary border-accentPrimary hover:text-accentSecondary hover:border-accentSecondary uppercase`}
+          className={`disabled:text-tSecondary disabled:border-tSecondary p-3 rounded-lg border-2 text-white border-[#6F47EF] hover:border-${hoverColor} hover:text-${hoverColor} uppercase`}
           onClick={() => handleClick('withdraw')}
         >Withdraw
         </button>
@@ -65,7 +68,7 @@ export default function Enable({
     {isConnected
       && showApprove && (
         <button
-          className={`w-full text-tPrimary ${accentPrimaryGradient} hover:bg-accentSecondary p-3 rounded-lg uppercase`}
+          className={`w-full text-tPrimary ${purpleColor} hover:bg-${hoverColor} p-3 rounded-lg uppercase`}
           onClick={() => approve()}
         >Approve</button>
       )}
@@ -75,7 +78,7 @@ export default function Enable({
         {({show}) => {
           return (
             <button onClick={show}
-                    className={`w-full text-tPrimary ${accentPrimaryGradient} hover:bg-accentSecondary p-3 rounded-lg uppercase`}>
+                    className={`w-full text-tPrimary ${purpleColor} bg-[4FD9B3] hover:bg-${hoverColor} p-3 rounded-lg uppercase`}>
               Connect Wallet
             </button>
           );

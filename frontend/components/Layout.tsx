@@ -12,7 +12,8 @@ export default function Layout({children}: PropsWithChildren) {
   const isLandingPage = router.pathname === '/'
   const navHeight = isLandingPage ? 'h-16' : 'h-64'
   const outerDivStyle = isLandingPage ? 'bg-backgroundPrimary' : `pt-2 pb-10 px-3 sm:px-10`
-  const navGradient = "bg-gradient-to-br from-navGray to-navGrayGradient"
+  // const navGradient = "bg-gradient-to-r from-[#0E1420] to-[#1A1C48]"
+  const navGradient = "bg-gradient-to-r from-[#3F37AA] to-[#8F18F7]"
   return (
     <>
       <Head>
@@ -22,39 +23,33 @@ export default function Layout({children}: PropsWithChildren) {
       </Head>
 
       <div className={`text-white w-full ${navGradient} ${navHeight} absolute`}>
-        <div className={`w-[45vw] ${navHeight} absolute top left-0 z-1`} style={{
-          'background':
-            'radial-gradient(circle at left 20% bottom 0%, #049be0, transparent 50%)',
-          opacity: 0.2
-        }}/>
+        <div className={`w-[45vw] ${navHeight} absolute top left-0 z-1`}/>
 
-        <div className={`w-[120vw] ${navHeight} absolute top right-0 z-1`} style={{
-          'background':
-            'radial-gradient(circle at right 0% bottom 100%, #8e0be8, transparent 50%)',
-          opacity: 0.5
-        }}/>
+        <div className={`w-[120vw] ${navHeight} ${navGradient} absolute top right-0 z-1`}/>
 
       </div>
       <main className="relative z-10">
-        <nav className="text-white w-full py-0">
+        {!isLandingPage && (<nav className="text-white w-full py-0">
           <div className="flex flex-row w-full">
             <ul className={`flex items-center px-3 sm:px-10 w-full`}>
               <div>
                 <Link href='/'>
                   <div className={`flex items-center mr-16 w-full`}>
-                    <Image height={70} width={80} src="/rld-logo-2.png" alt="RLD Logo"
+                    <Image height={70} width={80} src="/logo-new.svg" alt="RLD Logo"
                            className="w-14 mr-1 mr-0 ml-0 rounded-lg p-2 sm:pl-0 font-bold"></Image>
-                    <p className={`ml-0 text-3xl logo`}>RLD</p>
+                    <p className={`ml-0 text-3xl logo text-white`}>RLD</p>
                   </div>
                 </Link>
               </div>
               <div className={`flex flex-row justify-center items-center ml-auto`}>
-                <div className="px-5 hidden md:block"><Link target="_blank" rel="noopener noreferrer" href='https://rld-1.gitbook.io/rld/'>Docs</Link></div>
+                <div className="px-5 hidden md:block"><Link target="_blank" rel="noopener noreferrer"
+                                                            href='https://rld-1.gitbook.io/rld/'>Docs</Link></div>
                 <div className="px-5 hidden md:block"><Link href='/strategies'>Strategies</Link></div>
                 <div className="ml-auto">
                   {!isLandingPage ? (<NonSSRWrapper>
                     <ConnectKitButton.Custom>
                       {({isConnected, show, truncatedAddress, ensName}) => {
+                        console.log(truncatedAddress)
                         return (
                           <button className={`bg-backgroundPrimary rounded-lg p-3 text-sm hover:bg-accentPrimary`}
                                   onClick={show}>
@@ -65,7 +60,7 @@ export default function Layout({children}: PropsWithChildren) {
                     </ConnectKitButton.Custom>
                   </NonSSRWrapper>) : (
                     <Link href='/strategies'>
-                      <button className={`bg-accentPrimary rounded-lg p-2 text-md hover:bg-accentPrimary`}>
+                      <button className={`bg-backgroundPrimary rounded-lg p-2 text-md hover:bg-accentPrimary`}>
                         Enter App
                       </button>
                     </Link>
@@ -75,7 +70,7 @@ export default function Layout({children}: PropsWithChildren) {
               </div>
             </ul>
           </div>
-        </nav>
+        </nav>)}
 
         <div className={outerDivStyle}>
           <main>{children}</main>

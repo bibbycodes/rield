@@ -121,17 +121,19 @@ export function formatToDisplay(amount: number, maxPrecision?: number, fixPrecis
 }
 
 export async function getCapApr(token: capTokens, provider: any): Promise<number> {
-  let {cumulativeFees, cumulativePnl} = await fetchCapPoolStats(chainData.currencies[token]);
-  [cumulativeFees, cumulativePnl] = [capFormatUnits(cumulativeFees), capFormatUnits(cumulativePnl)];
-  const poolInception = chainData.poolInception[token];
-  const currency = chainData.currencies[token] as Address;
-  const poolShare = await getPoolShare(currency, provider);
-  const timeSinceInception = Date.now() - poolInception;
-  const timeInAYear = 365 * 24 * 3600 * 1000;
-  const timeScaler = timeInAYear / timeSinceInception;
-  const tvl = await getPoolTVL(token, provider);
-  let apy = timeScaler * 100 * (cumulativeFees * poolShare / 100 - 1 * cumulativePnl) / tvl;
-  return formatToDisplay(apy)
+  // let {cumulativeFees, cumulativePnl} = await fetchCapPoolStats(chainData.currencies[token]);
+  // [cumulativeFees, cumulativePnl] = [capFormatUnits(cumulativeFees), capFormatUnits(cumulativePnl)];
+  // const poolInception = chainData.poolInception[token];
+  // const currency = chainData.currencies[token] as Address;
+  // const poolShare = await getPoolShare(currency, provider);
+  // const timeSinceInception = Date.now() - poolInception;
+  // const timeInAYear = 365 * 24 * 3600 * 1000;
+  // const timeScaler = timeInAYear / timeSinceInception;
+  // const tvl = await getPoolTVL(token, provider);
+  // let apy = timeScaler * 100 * (cumulativeFees * poolShare / 100 - 1 * cumulativePnl) / tvl;
+  // return formatToDisplay(apy)
+  // TODO Monitor situation while cap has hardcoded their values
+  return 20;
 }
 
 export const getRouterContract = (provider: any): ethers.Contract => {

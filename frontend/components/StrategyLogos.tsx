@@ -3,7 +3,7 @@ import Image from "next/image"
 
 export const StrategyLogos = ({strategy}: { strategy: Strategy }) => {
   const {tokenLogoUrl, tokenSymbol} = strategy
-  const backgroundPrimaryDarker = 'bg-gradient-to-r from-backgroundPrimaryGradient to-backgroundPrimary'
+  const backgroundPrimaryDarker = 'bg-gradient-to-r from-backgroundPrimary to-[#10141F]'
   return (
     <div className={`flex`}>
       <div className={`flex flex-grow flex-row items-center`}>
