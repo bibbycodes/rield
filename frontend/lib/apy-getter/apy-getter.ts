@@ -5,11 +5,13 @@ import * as gmx from "../../resources/vault-details/deploy_gmx-output.json";
 import * as glp from "../../resources/vault-details/deploy_glp-output.json";
 import * as gns from "../../resources/vault-details/deploy_gns-output.json";
 import * as bfr from "../../resources/vault-details/deploy_bfr-output.json";
+import * as hopUsdc from "../../resources/vault-details/deploy_hop_usdc-output.json";
 import {getCapApr} from "../apy-getter-functions/cap";
 import {getGmxGlpApr} from "../apy-getter-functions/gmx";
 import {Prices} from "../../contexts/TokenPricesContext";
 import {getGainsApr} from "../apy-getter-functions/gains";
 import { getBfrBlpApr } from '../apy-getter-functions/bfr';
+import { getHopApr } from '../apy-getter-functions/hop';
 
 export class ApyGetter {
   constructor(private provider: any, private prices: Prices) {
@@ -30,6 +32,8 @@ export class ApyGetter {
         return getGmxGlpApr(this.provider, 'GLP', this.prices['ethereum'])
       case gns.strategyAddress:
         return getGainsApr()
+      case hopUsdc.strategyAddress:
+        return getHopApr('USDC')
       default:
         return 0
     }
@@ -43,6 +47,7 @@ export class ApyGetter {
       [glp.strategyAddress]: await this.getApy(glp.strategyAddress as Address),
       [gns.strategyAddress]: await this.getApy(gns.strategyAddress as Address),
       [bfr.strategyAddress]: await this.getApy(bfr.strategyAddress as Address),
+      [hopUsdc.strategyAddress]: await this.getApy(hopUsdc.strategyAddress as Address),
     }
   }
 }

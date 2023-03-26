@@ -1,11 +1,11 @@
-import {useAccount} from "wagmi";
-import {BigNumber} from "ethers";
-import {useContext, useEffect, useState} from "react";
-import {availableStrategies} from "../model/strategy";
-import {TokenPricesContext} from "../contexts/TokenPricesContext";
-import {formatDollarAmount} from "../utils/formatters";
-import {formatUnits} from "ethers/lib/utils";
-import {VaultDataContext} from "../contexts/vault-data-context/VaultDataContext";
+import { useAccount } from "wagmi";
+import { BigNumber } from "ethers";
+import { useContext, useEffect, useState } from "react";
+import { availableStrategies, Strategy } from "../model/strategy";
+import { TokenPricesContext } from "../contexts/TokenPricesContext";
+import { formatDollarAmount } from "../utils/formatters";
+import { formatUnits } from "ethers/lib/utils";
+import { VaultDataContext } from "../contexts/vault-data-context/VaultDataContext";
 
 export const useTotalDollarAmountDeposited = () => {
   const [totalDollarAmountDeposited, setTotalDollarAmountDeposited] = useState<string | null>(null);
@@ -15,8 +15,16 @@ export const useTotalDollarAmountDeposited = () => {
   const pricesStringified = JSON.stringify(prices)
   const vaultsDataStringified = JSON.stringify(vaultsData)
 
-  const calculateUserStakedInDollars = (balance: BigNumber, price: number, pricePerShare: BigNumber, decimals: number) => {
-    const userStaked = formatUnits(balance.mul(pricePerShare).div(BigNumber.from(10).pow(decimals)), decimals)
+  const calculateUserStakedInDollars = (balance: BigNumber,
+                                        price: number,
+                                        pricePerShare: BigNumber,
+                                        decimals: number,
+                                        strategy: Strategy,
+                                        additionalData: any) => {
+    let userStaked = formatUnits(balance.mul(pricePerShare).div(BigNumber.from(10).pow(decimals)), decimals)
+    if (strategy.name === 'HOP' && additionalData) {
+      userStaked = formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6);
+    }
     return parseFloat(userStaked) * price
   }
 
@@ -34,7 +42,12 @@ export const useTotalDollarAmountDeposited = () => {
           }
           const decimals = availableStrategies[index].decimals
           const price = prices[availableStrategies[index].coinGeckoId]
-          const dollarAmount = calculateUserStakedInDollars(balance, price, pricePerShare, decimals)
+          const dollarAmount = calculateUserStakedInDollars(balance,
+            price,
+            pricePerShare,
+            decimals,
+            strategy,
+            vaultsData[strategy.vaultAddress].additionalData)
           return acc + dollarAmount
         }
         return acc

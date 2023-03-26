@@ -26,7 +26,6 @@ abstract contract UniSwapRoutes is Ownable {
         }
     }
 
-    // todo: remove token allowance?
     function registerRoute(address[] memory route, uint24[] memory fee) public onlyOwner {
         bytes memory path = UniswapV3Utils.routeToPath(route, fee);
         routesByToken[route[0]] = Route(route, fee, path);

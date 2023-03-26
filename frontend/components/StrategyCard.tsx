@@ -40,7 +40,7 @@ export default function StrategyCard({
     const numberAmount = parseFloat(ethers.utils.formatUnits(amount, strategy.decimals))
     return roundToNDecimals(numberAmount, 6)
   }
-  
+
   const getApy = (apy: number) => {
     if ([capEth.strategyAddress, capUSDC.strategyAddress].includes(strategy.strategyAddress)) {
       return `~${apy}`

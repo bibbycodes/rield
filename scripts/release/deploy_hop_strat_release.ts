@@ -10,7 +10,7 @@ async function main() {
   console.log("Deploying contracts with the account:", deployer.address);
   //
   const Vault = await ethers.getContractFactory("RldLpTokenVault");
-  const vault: RldLpTokenVault = (await Vault.deploy()) as RldLpTokenVault;
+  const vault: RldLpTokenVault = (await Vault.deploy("RLD_HOP_USDC", "RLD_HOP_USDC")) as RldLpTokenVault;
   await vault.deployed();
 
   const hopPool = '0xb0CabFE930642AD3E7DECdc741884d8C3F7EbC70'
@@ -32,7 +32,7 @@ async function main() {
   );
 
   await strategy.deployed();
-  await vault.initialize(strategy.address, "RLD_HOP_USDC", "RLD_HOP_USDC")
+  await vault.initStrategy(strategy.address)
 
   console.log("Vault address:", vault.address);
   console.log("Strategy address:", strategy.address);

@@ -14,7 +14,7 @@ export const StrategyLogos = ({strategy}: { strategy: Strategy }) => {
       </div>
       <div>
         <a
-          className={`inline-flex flex-row rounded-lg ${backgroundPrimaryDarker} p-2 border-solid border-backgroundPrimary border-2 hover:border-accentSecondary`}
+          className={`inline-flex flex-row rounded-lg ${backgroundPrimaryDarker} p-2 border-solid border-backgroundPrimary border-2 hover:border-accentSecondary items-center`}
           href={strategy.protocolUrl}>
           <Image alt={'Protocol Logo'} width={25} height={25} src={strategy.protocolLogoUrl} className="font-thin	mr-3"/>
           <p className={`text-sm text-tPrimary slim-text`}>{strategy.protocol}</p>

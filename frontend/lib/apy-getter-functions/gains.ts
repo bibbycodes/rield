@@ -18,5 +18,5 @@ export const getGainsApr = async () => {
       "Referrer-Policy": "strict-origin-when-cross-origin"
     }
   })
-  return res.data.sssApr
+  return res.data.sssBaseApr
 }

@@ -23,4 +23,10 @@ interface IHopTokenTracker {
     function getTokenIndex(address token) external view returns (uint8);
 
     function swap(uint8 tokenIndexFrom, uint8 tokenIndexTo, uint256 dx, uint256 minDy, uint256 deadline) external;
+
+    function calculateRemoveLiquidity(address account, uint256 amount) external view returns (uint256[] memory);
+
+    function calculateSwap(uint8 tokenIndexFrom, uint8 tokenIndexTo, uint256 dx) external view returns (uint256);
+
+    function calculateTokenAmount(address account, uint256[] memory amounts, bool deposit) external view returns (uint256);
 }

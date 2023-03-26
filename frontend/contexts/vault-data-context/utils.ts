@@ -1,11 +1,14 @@
-import {Strategy} from "../../model/strategy";
-import {Address} from "wagmi";
+import { Strategy } from "../../model/strategy";
+import { Address } from "wagmi";
 import * as RldVault from "../../resources/abis/RldTokenVault.json";
-import {ADDRESS_ZERO} from "../../lib/apy-getter-functions/cap";
+import { ADDRESS_ZERO } from "../../lib/apy-getter-functions/cap";
 import * as RldEthVault from "../../resources/abis/BeefyETHVault.json";
 import * as genericStrategy from "../../resources/abis/CapSingleStakeStrategy.json";
 import * as erc20 from "../../resources/abis/erc20.json";
-import {BigNumber} from "ethers";
+import * as hopUsdc from "../../resources/vault-details/deploy_hop_usdc-output.json";
+import { BigNumber } from "ethers";
+import { extractHopAdditionalData, getHopVaultContextData } from './hop-vault-context';
+import { StructuredMulticallResult } from './multicall-structured-result';
 
 const erc20Abi = Array.from(erc20)
 
@@ -19,6 +22,7 @@ export interface VaultData {
   lastHarvest: BigNumber
   lastPoolDepositTime: BigNumber
   lastPauseTime: BigNumber
+  additionalData?: any
 }
 
 export type MultiCallInput = {
@@ -90,6 +94,9 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
     ...strategyContract,
     functionName: 'lastPauseTime',
   }
+
+
+  const additionalCalls = getStrategySpecificCalls(strategy)
   return [
     vaultBalance,
     vaultPricePerFullShare,
@@ -99,7 +106,8 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
     paused,
     lastHarvest,
     lastPoolDepositTime,
-    lastPauseTime
+    lastPauseTime,
+    ...additionalCalls
   ]
 }
 
@@ -189,5 +197,23 @@ export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Addre
     ethVaultCallData: ethVaultCallData.reduce((acc, strategy) => {
       return [...acc, ...strategy.calls]
     }, [] as any),
+  }
+}
+
+export const getStrategySpecificCalls = (strategy: Strategy) => {
+  switch (strategy.strategyAddress) {
+    case hopUsdc.strategyAddress:
+      return getHopVaultContextData(hopUsdc, strategy);
+    default:
+      return []
+  }
+}
+
+export const extractStrategySpecificData = (strategy: Strategy, data: StructuredMulticallResult) => {
+  switch (strategy.strategyAddress) {
+    case hopUsdc.strategyAddress:
+      return {...extractHopAdditionalData(hopUsdc, data)};
+    default:
+      return null
   }
 }

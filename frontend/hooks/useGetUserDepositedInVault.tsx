@@ -30,8 +30,13 @@ export const useGetUserDepositedInVault = (strategy: Strategy) => {
     const {
       vaultBalance,
       vaultPricePerFullShare,
+      additionalData
     } = vaultsData[strategy.vaultAddress]
-    setUserStaked(calculateUserStaked(vaultBalance as BigNumber, vaultPricePerFullShare as BigNumber))
+    let userStaked = calculateUserStaked(vaultBalance as BigNumber, vaultPricePerFullShare as BigNumber);
+    if (strategy.name === 'HOP' && additionalData) {
+      userStaked = additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12))
+    }
+    setUserStaked(userStaked)
   }, [vaultsData[strategy.vaultAddress]])
 
   return {

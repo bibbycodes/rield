@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./ITokenStrategy.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 interface ILpTokenStrategy is ITokenStrategy  {
-    function inputToken() external view returns (IERC20Upgradeable);
+    function inputToken() external view returns (IERC20);
 }
 

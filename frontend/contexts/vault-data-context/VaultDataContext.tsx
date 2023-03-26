@@ -2,15 +2,15 @@ import { createContext, useEffect, useState } from "react";
 import { Address, useAccount } from "wagmi";
 import { availableStrategies, Strategy } from '../../model/strategy'
 import { ADDRESS_ZERO } from "../../lib/apy-getter-functions/cap";
-import { multicall } from "@wagmi/core";
 import {
+  extractStrategySpecificData,
   getMultiCallDataForErc20Vault,
   getMultiCallDataForEthVault,
   getVaultMultiCallData,
   MultiCallInput,
   VaultData
 } from "./utils";
-import { BigNumber } from 'ethers';
+import { structuredMulticall } from './multicall-structured-result';
 
 export interface VaultContextData {
   vaultsData: { [vaultAddress: Address]: Strategy & VaultData }
@@ -43,29 +43,24 @@ const VaultDataContextProvider = ({children}: {
   const refetchForStrategy = async (strategy: Strategy, userAddress: Address) => {
     const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy, userAddress) : getMultiCallDataForErc20Vault(strategy, userAddress)
-    const data = await multicall({contracts: multiCallData})
-    let vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastPoolDepositTime, lastPauseTime
+    const data = await structuredMulticall({contracts: multiCallData})
 
-    if (isEthVault) {
-      ([vaultBalance, vaultPricePerFullShare, vaultWantBalance, paused, lastHarvest, lastPoolDepositTime, lastPauseTime] = data as BigNumber[])
-    } else {
-      ([vaultBalance, vaultPricePerFullShare, allowance, tokenBalance, vaultWantBalance, paused, lastHarvest, lastPoolDepositTime, lastPauseTime] = data as BigNumber[])
-    }
-
+    const vaultDataForStrategy = {
+      ...strategy,
+      vaultBalance: data[strategy.vaultAddress]['balanceOf'],
+      vaultPricePerFullShare: data[strategy.vaultAddress]['getPricePerFullShare'],
+      allowance: data[strategy.tokenAddress]['allowance'],
+      tokenBalance: data[strategy.tokenAddress]['balanceOf'],
+      vaultWantBalance: data[strategy.vaultAddress]['balance'],
+      paused: data[strategy.strategyAddress]['paused'],
+      lastHarvest: data[strategy.strategyAddress]['lastHarvest'],
+      lastPoolDepositTime: data[strategy.strategyAddress]['lastPoolDepositTime'],
+      lastPauseTime: data[strategy.strategyAddress]['lastPauseTime'],
+      additionalData: extractStrategySpecificData(strategy, data)
+    };
     setVaultsData({
       ...vaultsData,
-      [strategy.vaultAddress]: {
-        ...strategy,
-        vaultPricePerFullShare,
-        vaultBalance,
-        vaultWantBalance,
-        allowance,
-        tokenBalance,
-        paused,
-        lastHarvest,
-        lastPoolDepositTime,
-        lastPauseTime
-      }
+      [strategy.vaultAddress]: vaultDataForStrategy
     })
   }
 
@@ -76,47 +71,43 @@ const VaultDataContextProvider = ({children}: {
         erc20VaultCallData,
         ethVaultCallData
       } = getVaultMultiCallData(availableStrategies, address)
-      const erc20DVaultDataCalls = multicall({
-        contracts: erc20VaultCallData
-      })
+      const erc20DVaultDataCalls = structuredMulticall({contracts: erc20VaultCallData})
 
-      const ethVaultDataCalls = multicall({
-        contracts: ethVaultCallData
-      })
+      const ethVaultDataCalls = structuredMulticall({contracts: ethVaultCallData})
 
       Promise.all([erc20DVaultDataCalls, ethVaultDataCalls]).then(data => {
-        const erc20VaultData = erc20Vaults.reduce((acc, strategy, index) => {
-          const strategyData = data[0].slice(index * 9, index * 9 + 9)
+        const erc20VaultData = erc20Vaults.reduce((acc, strategy) => {
           return {
             ...acc,
             [strategy.vaultAddress]: {
               ...strategy,
-              vaultBalance: strategyData[0],
-              vaultPricePerFullShare: strategyData[1],
-              allowance: strategyData[2],
-              tokenBalance: strategyData[3],
-              vaultWantBalance: strategyData[4],
-              paused: strategyData[5],
-              lastHarvest: strategyData[6],
-              lastPoolDepositTime: strategyData[7],
-              lastPauseTime: strategyData[8]
+              vaultBalance: data[0][strategy.vaultAddress]['balanceOf'],
+              vaultPricePerFullShare: data[0][strategy.vaultAddress]['getPricePerFullShare'],
+              allowance: data[0][strategy.tokenAddress]['allowance'],
+              tokenBalance: data[0][strategy.tokenAddress]['balanceOf'],
+              vaultWantBalance: data[0][strategy.vaultAddress]['balance'],
+              paused: data[0][strategy.strategyAddress]['paused'],
+              lastHarvest: data[0][strategy.strategyAddress]['lastHarvest'],
+              lastPoolDepositTime: data[0][strategy.strategyAddress]['lastPoolDepositTime'],
+              lastPauseTime: data[0][strategy.strategyAddress]['lastPauseTime'],
+              additionalData: extractStrategySpecificData(strategy, data[0])
             }
           }
         }, {} as any)
 
-        const ethVaultData = ethVaults.reduce((acc, strategy, index) => {
-          const strategyData = data[1].slice(index * 7, index * 7 + 7)
+        const ethVaultData = ethVaults.reduce((acc, strategy) => {
           return {
             ...acc,
             [strategy.vaultAddress]: {
               ...strategy,
-              vaultBalance: strategyData[0],
-              vaultPricePerFullShare: strategyData[1],
-              vaultWantBalance: strategyData[2],
-              paused: strategyData[3],
-              lastHarvest: strategyData[4],
-              lastPoolDepositTime: strategyData[5],
-              lastPauseTime: strategyData[6],
+              vaultBalance: data[1][strategy.vaultAddress]['balanceOf'],
+              vaultPricePerFullShare: data[1][strategy.vaultAddress]['getPricePerFullShare'],
+              vaultWantBalance: data[1][strategy.vaultAddress]['balance'],
+              paused: data[1][strategy.strategyAddress]['paused'],
+              lastHarvest: data[1][strategy.strategyAddress]['lastHarvest'],
+              lastPoolDepositTime: data[1][strategy.strategyAddress]['lastPoolDepositTime'],
+              lastPauseTime: data[1][strategy.strategyAddress]['lastPauseTime'],
+              additionalData: extractStrategySpecificData(strategy, data[1])
             }
           }
         }, {} as any)

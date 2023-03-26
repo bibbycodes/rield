@@ -4,6 +4,7 @@ import * as gmx from "../resources/vault-details/deploy_gmx-output.json";
 import * as glp from "../resources/vault-details/deploy_glp-output.json";
 import * as gns from "../resources/vault-details/deploy_gns-output.json";
 import * as bfr from "../resources/vault-details/deploy_bfr-output.json";
+import * as hop from "../resources/vault-details/deploy_hop_usdc-output.json";
 import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
@@ -147,27 +148,6 @@ export const availableStrategies: Strategy[] = [
     performanceFee: 5,
     coolDownPeriod: 0
   },
-  // {
-  //   id: 0,
-  //   name: "GNS Dai",
-  //   protocol: "Gains Network",
-  //   tokenSymbol: "DAI",
-  //   tokenAddress: randomAddress() as Address,
-  //   vaultAddress: randomAddress() as Address,
-  //   strategyAddress: randomAddress() as Address,
-  //   protocolLogoUrl: "/gns-logo.png",
-  //   tokenLogoUrl: "/dai-logo.png",
-  //   description: "Cap is a decentralized protocol that allows users to earn interest on their crypto assets. The protocol is designed to be as simple as possible, while still providing the best possible interest rates.",
-  //   protocolUrl: "https://gains.trade/",
-  //   apy: 13,
-  //   tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=gns`,
-  //   decimals: 18,
-  //   isActive: false,
-  //   abi: abi,
-  //   coinGeckoId: "gns",
-  //   type: "Auto Compound",
-  //   performanceFee: 5
-  // },
   {
     id: 5,
     name: "BFR",
@@ -190,5 +170,28 @@ export const availableStrategies: Strategy[] = [
     type: "Auto Compound",
     performanceFee: 5
   },
+  {
+    id: 6,
+    name: "HOP",
+    protocol: "HOP",
+    tokenSymbol: "USDC",
+    tokenAddress: hop.tokenAddress as Address,
+    vaultAddress: hop.vaultAddress as Address,
+    strategyAddress: hop.strategyAddress as Address,
+    protocolLogoUrl: "/hop-logo.svg",
+    tokenLogoUrl: "/usdc-logo.svg",
+    description: "Buffer",
+    protocolUrl: "https://app.hop.exchange/#/pools?token=ETH",
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${capUSDC.tokenAddress}`,
+    decimals: 6,
+    status: 'ACTIVE',
+    coolDownPeriod: 0,
+    hasWithdrawalSchedule: false,
+    abi: abi,
+    coinGeckoId: "usd-coin",
+    type: "Auto Compound",
+    performanceFee: 5
+  },
 ]
+availableStrategies.reverse()
 

@@ -1,9 +1,11 @@
-import {useContext, useEffect, useState} from "react";
-import {VaultDataContext} from "../contexts/vault-data-context/VaultDataContext";
-import {TokenPricesContext} from "../contexts/TokenPricesContext";
-import {Strategy} from "../model/strategy";
-import {VaultData} from "../contexts/vault-data-context/utils";
-import {Address} from "wagmi";
+import { useContext, useEffect, useState } from "react";
+import { VaultDataContext } from "../contexts/vault-data-context/VaultDataContext";
+import { TokenPricesContext } from "../contexts/TokenPricesContext";
+import { Strategy } from "../model/strategy";
+import { VaultData } from "../contexts/vault-data-context/utils";
+import { Address } from "wagmi";
+import { BigNumber } from 'ethers';
+import { formatUnits } from 'ethers/lib/utils';
 
 export const useGetTVL = () => {
   const {vaultsData} = useContext(VaultDataContext)
@@ -21,10 +23,15 @@ export const useGetTVL = () => {
           const {
             vaultWantBalance,
             coinGeckoId,
-            decimals
+            decimals,
+            additionalData,
+            name
           }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
           const price = prices[coinGeckoId]
-          const vaultTvl = parseFloat(vaultWantBalance?.toString()) / (10 ** decimals)
+          let vaultTvl = parseFloat(vaultWantBalance?.toString()) / (10 ** decimals)
+          if (name === 'HOP' && additionalData) {
+            vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6));
+          }
           const vaultTvlInDollars = vaultTvl * price
           return acc + vaultTvlInDollars
         }, 0 as number)
@@ -42,10 +49,15 @@ export const useGetTVL = () => {
             vaultWantBalance,
             coinGeckoId,
             vaultAddress,
-            decimals
+            decimals,
+            additionalData,
+            name
           }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
           const price = prices[coinGeckoId]
-          const vaultTvl = parseFloat(vaultWantBalance.toString()) / (10 ** decimals)
+          let vaultTvl = parseFloat(vaultWantBalance.toString()) / (10 ** decimals)
+          if (name === 'HOP' && additionalData) {
+            vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6));
+          }
           acc[vaultAddress] = vaultTvl * price
           return acc
         }, tvlMap)

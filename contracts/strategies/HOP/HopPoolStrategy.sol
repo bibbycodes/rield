@@ -34,6 +34,9 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
     uint256 public DEV_FEE;
     uint256 STAKING_FEE = 0;
     uint MAX_FEE;
+    uint24 public maxDepositSlippage = 5;
+    uint24 public maxWithdrawSlippage = 5;
+    uint24 public maxSwapSlippage = 5;
 
     uint256 public lastPoolDepositTime;
     bool public harvestOnDeposit;
@@ -63,12 +66,12 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
         lpToken = IHopTokenTracker(tracker).swapStorage().lpToken;
         hopTokenIdx = IHopTokenTracker(tracker).getTokenIndex(hopToken);
         inputTokenIdx = IHopTokenTracker(tracker).getTokenIndex(inputToken);
+        DEV_FEE = 5 * 10 ** (ERC20(inputToken).decimals() - 2);
+        MAX_FEE = 5 * 10 ** (ERC20(inputToken).decimals() - 1);
+        DIVISOR = 10 ** ERC20(inputToken).decimals();
+        devFeeAddress = _msgSender();
         _giveAllowances();
         setRewardRouteParams(unirouter);
-        DEV_FEE = 5 * 10 ** (ERC20(lpToken).decimals() - 2);
-        MAX_FEE = 5 * 10 ** (ERC20(lpToken).decimals() - 1);
-        DIVISOR = 10 ** ERC20(lpToken).decimals();
-        devFeeAddress = _msgSender();
     }
 
     function setRewardRouteParams(address unirouter) internal {
@@ -89,19 +92,32 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
         return lpToken;
     }
 
-    // puts the funds to work
     function deposit() public whenNotStopped {
         uint256 tokenBalance = IERC20(inputToken).balanceOf(address(this));
         if (tokenBalance > 0) {
             uint256[] memory amounts = new uint256[](2);
             amounts[0] = tokenBalance;
             amounts[1] = 0;
-            IHopTokenTracker(tracker).addLiquidity(amounts, 0, block.timestamp + (86400));
+            uint256 minAmount = _calculateMinAmount(tokenBalance);
+            IHopTokenTracker(tracker).addLiquidity(amounts, minAmount, block.timestamp + (86400));
             uint256 lpTokenBal = IERC20(lpToken).balanceOf(address(this));
             IHopRewardPool(pool).stake(lpTokenBal);
             lastPoolDepositTime = block.timestamp;
             emit Deposit(balanceOf());
         }
+    }
+
+    /**
+     * @dev Calculates the minimum amount of LP tokens to be received for a given amount of input tokens.
+     * This is used to mitigate front-running attacks on the addLiquidity function.
+     * @param amount The amount of input tokens to be converted to LP tokens.
+     */
+    function _calculateMinAmount(uint256 amount) internal view returns (uint256) {
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = amount;
+        amounts[1] = 0;
+        uint256 lpAmountForTokens = IHopTokenTracker(tracker).calculateTokenAmount(address(this), amounts, true);
+        return lpAmountForTokens * (100 - maxDepositSlippage) / 100;
     }
 
     function _withdraw(uint256 _amount) internal {
@@ -111,12 +127,11 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
         if (wantTokenBal < _amount) {
             uint256 amountToWithdraw = (_amount - wantTokenBal);
             IHopRewardPool(pool).withdraw(amountToWithdraw);
-            uint256[] memory minAmounts = new uint256[](2);
-            minAmounts[0] = 0;
-            minAmounts[1] = 0;
+            uint256[] memory minAmounts = _calculateMinWithdrawAmounts(amountToWithdraw);
             IHopTokenTracker(tracker).removeLiquidity(amountToWithdraw, minAmounts, block.timestamp + (86400));
             uint256 hopTokenBal = IERC20(hopToken).balanceOf(address(this));
-            IHopTokenTracker(tracker).swap(hopTokenIdx, inputTokenIdx, hopTokenBal, 0, block.timestamp + (86400));
+            uint256 minSwapAmount = _calculateMinSwapAmount(hopTokenBal);
+            IHopTokenTracker(tracker).swap(hopTokenIdx, inputTokenIdx, hopTokenBal, minSwapAmount, block.timestamp + (86400));
             wantTokenBal = IERC20(inputToken).balanceOf(address(this));
         }
 
@@ -126,6 +141,20 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
 
         IERC20(inputToken).safeTransfer(vault, wantTokenBal);
         emit Withdraw(balanceOf());
+    }
+
+    function _calculateMinWithdrawAmounts(uint256 amount) internal view returns (uint256[] memory) {
+        uint256[] memory minAmounts = new uint256[](2);
+        uint256[] memory tokenAmounts = IHopTokenTracker(tracker).calculateRemoveLiquidity(address(this), amount);
+        tokenAmounts[0] = tokenAmounts[0] * (100 - maxWithdrawSlippage) / 100;
+        tokenAmounts[1] = tokenAmounts[1] * (100 - maxWithdrawSlippage) / 100;
+        return minAmounts;
+    }
+
+    function _calculateMinSwapAmount(uint256 amount) internal view returns (uint256) {
+        uint256 minSwapAmount = IHopTokenTracker(tracker).calculateSwap(hopTokenIdx, inputTokenIdx, amount);
+        minSwapAmount = minSwapAmount * (100 - maxSwapSlippage) / 100;
+        return minSwapAmount;
     }
 
     function withdraw(uint256 _amount) external {
@@ -161,10 +190,10 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
     function chargeFees() internal {
         uint256 devFeeAmount = IERC20(inputToken).balanceOf(address(this)) * DEV_FEE / DIVISOR;
         uint256 stakingFeeAmount = IERC20(inputToken).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
-        IERC20(lpToken).safeTransfer(devFeeAddress, devFeeAmount);
+        IERC20(inputToken).safeTransfer(devFeeAddress, devFeeAmount);
 
         if (stakingFeeAmount > 0) {
-            IERC20(lpToken).safeTransfer(stakingAddress, stakingFeeAmount);
+            IERC20(inputToken).safeTransfer(stakingAddress, stakingFeeAmount);
         }
 
         emit ChargedFees(DEV_FEE, devFeeAmount + stakingFeeAmount);
@@ -223,6 +252,18 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
 
     function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {
         shouldGasThrottle = _shouldGasThrottle;
+    }
+
+    function setMaxDepositSlippage(uint24 _maxDepositSlippage) external onlyOwner {
+        maxDepositSlippage = _maxDepositSlippage;
+    }
+
+    function setMaxWithdrawSlippage(uint24 _maxWithdrawSlippage) external onlyOwner {
+        maxWithdrawSlippage = _maxWithdrawSlippage;
+    }
+
+    function setMaxSwapSlippage(uint24 _maxSwapSlippage) external onlyOwner {
+        maxSwapSlippage = _maxSwapSlippage;
     }
 
     function panic() public onlyOwner {

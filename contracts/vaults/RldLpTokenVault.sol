@@ -2,11 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../interfaces/strategy/ILpTokenStrategy.sol";
 
 /**
@@ -14,48 +13,27 @@ import "../interfaces/strategy/ILpTokenStrategy.sol";
  * This is the contract that receives funds and that users interface with.
  * The yield optimizing strategy itself is implemented in a separate 'Strategy.sol' contract.
  */
-contract RldLpTokenVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
-
-    struct StratCandidate {
-        address implementation;
-        uint proposedTime;
-    }
-
-    // The last proposed strategy to switch to.
-    StratCandidate public stratCandidate;
-    // The strategy currently in use by the vault.
+contract RldLpTokenVault is ERC20, Ownable, ReentrancyGuard {
+    using SafeERC20 for IERC20;
     ILpTokenStrategy public strategy;
 
-    event NewStratCandidate(address implementation);
-    event UpgradeStrat(address implementation);
-
-    /**
-     * @dev Sets the value of {token} to the token that the vault will
-     * hold as underlying value. It initializes the vault's own 'moo' token.
-     * This token is minted when someone does a deposit. It is burned in order
-     * to withdraw the corresponding portion of the underlying assets.
-     * @param _strategy the address of the strategy.
-     * @param _name the name of the vault token.
-     * @param _symbol the symbol of the vault token.
-     */
-     function initialize(
-        ILpTokenStrategy _strategy,
+    constructor(
         string memory _name,
         string memory _symbol
-    ) public initializer {
-        __ERC20_init(_name, _symbol);
-        __Ownable_init();
-        __ReentrancyGuard_init();
-        strategy = _strategy;
+    ) ERC20(_name, _symbol) {
     }
 
-    function want() public view returns (IERC20Upgradeable) {
-        return IERC20Upgradeable(strategy.want());
+    function initStrategy(address _strategy) external onlyOwner {
+        require(address(strategy) == address(0), "Strategy already set");
+        strategy = ILpTokenStrategy(_strategy);
     }
 
-    function inputToken() public view returns (IERC20Upgradeable) {
-        return IERC20Upgradeable(strategy.inputToken());
+    function want() public view returns (IERC20) {
+        return IERC20(strategy.want());
+    }
+
+    function inputToken() public view returns (IERC20) {
+        return IERC20(strategy.inputToken());
     }
 
     function decimals() public view virtual override returns (uint8) {
@@ -73,11 +51,8 @@ contract RldLpTokenVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuar
     }
 
     /**
-     * @dev Custom logic in here for how much the vault allows to be borrowed.
-     * We return 100% of tokens for now. Under certain conditions we might
-     * want to keep some of the system funds at hand in the vault, instead
-     * of putting them to work.
-     */
+    * @dev It returns the total amount of {inputToken} held by the vault.
+    */
     function available() public view returns (uint256) {
         return inputToken().balanceOf(address(this));
     }
@@ -178,7 +153,7 @@ contract RldLpTokenVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuar
     function inCaseTokensGetStuck(address _token) external onlyOwner {
         require(_token != address(inputToken()), "!token");
 
-        uint256 amount = IERC20Upgradeable(_token).balanceOf(address(this));
-        IERC20Upgradeable(_token).safeTransfer(msg.sender, amount);
+        uint256 amount = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).safeTransfer(msg.sender, amount);
     }
 }
