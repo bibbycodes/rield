@@ -7,6 +7,8 @@ import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../utils/UniswapV3Utils.sol";
 
 abstract contract UniSwapRoutes is Ownable {
+    using SafeERC20 for IERC20;
+
     struct Route {
         address[] aToBRoute;
         uint24[] aToBFees;
@@ -24,9 +26,11 @@ abstract contract UniSwapRoutes is Ownable {
         }
     }
 
+    // todo: remove token allowance?
     function registerRoute(address[] memory route, uint24[] memory fee) public onlyOwner {
         bytes memory path = UniswapV3Utils.routeToPath(route, fee);
         routesByToken[route[0]] = Route(route, fee, path);
+        IERC20(route[0]).safeApprove(unirouter, type(uint).max);
     }
 
     function setUniRouter(address _unirouter) public onlyOwner {
