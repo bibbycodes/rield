@@ -17,6 +17,9 @@ import Image from 'next/image'
 
 export const bgGradient = `bg-gradient-to-b from-[#3F37AA] to-[#8F18F7]`
 export const cardGradient = 'bg-gradient-to-b from-[#191F30] to-[#101625]'
+export const buttonColor = `bg-gradient-to-b from-[#6F47EF] to-[#6F47DA]`
+export const buttonHoverColor = `[#8225ED]`
+export const bgColor = `bg-[#0E121D]`
 export default function Home() {
   return (
     <>
