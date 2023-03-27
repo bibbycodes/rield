@@ -14,6 +14,7 @@ const erc20Abi = Array.from(erc20)
 
 export interface VaultData {
   vaultBalance: BigNumber
+  totalSupply: BigNumber
   vaultPricePerFullShare: BigNumber
   allowance?: BigNumber
   tokenBalance?: BigNumber
@@ -51,6 +52,11 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
     ...vault,
     functionName: 'balanceOf',
     args: [userAddress]
+  }
+
+  const vaultTotalSupply = {
+    ...vault,
+    functionName: 'totalSupply'
   }
 
   const vaultPricePerFullShare = {
@@ -99,6 +105,7 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
   const additionalCalls = getStrategySpecificCalls(strategy)
   return [
     vaultBalance,
+    vaultTotalSupply,
     vaultPricePerFullShare,
     allowance,
     tokenBalance,

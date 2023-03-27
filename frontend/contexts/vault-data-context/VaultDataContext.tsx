@@ -48,6 +48,7 @@ const VaultDataContextProvider = ({children}: {
     const vaultDataForStrategy = {
       ...strategy,
       vaultBalance: data[strategy.vaultAddress]['balanceOf'],
+      totalSupply: data[strategy.vaultAddress]['totalSupply'],
       vaultPricePerFullShare: data[strategy.vaultAddress]['getPricePerFullShare'],
       allowance: data[strategy.tokenAddress]['allowance'],
       tokenBalance: data[strategy.tokenAddress]['balanceOf'],
@@ -82,6 +83,7 @@ const VaultDataContextProvider = ({children}: {
             [strategy.vaultAddress]: {
               ...strategy,
               vaultBalance: data[0][strategy.vaultAddress]['balanceOf'],
+              totalSupply: data[0][strategy.vaultAddress]['totalSupply'],
               vaultPricePerFullShare: data[0][strategy.vaultAddress]['getPricePerFullShare'],
               allowance: data[0][strategy.tokenAddress]['allowance'],
               tokenBalance: data[0][strategy.tokenAddress]['balanceOf'],
@@ -101,6 +103,7 @@ const VaultDataContextProvider = ({children}: {
             [strategy.vaultAddress]: {
               ...strategy,
               vaultBalance: data[1][strategy.vaultAddress]['balanceOf'],
+              totalSupply: data[1][strategy.vaultAddress]['totalSupply'],
               vaultPricePerFullShare: data[1][strategy.vaultAddress]['getPricePerFullShare'],
               vaultWantBalance: data[1][strategy.vaultAddress]['balance'],
               paused: data[1][strategy.strategyAddress]['paused'],
