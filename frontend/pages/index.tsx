@@ -36,20 +36,20 @@ export default function Home() {
             <div className="order-5 sm:order-3">
               <Link href='/strategies'>
                 <button
-                  className={`slim-text p-3 px-10 text-white mt-10 rounded-3xl text-l sm:text-xl shadow-2xl bg-gray-900 hover:bg-backgroundPrimaryGradient`}>
+                  className={`slim-text p-3 px-10 text-white mt-5 sm:mt-10 rounded-3xl text-l sm:text-xl shadow-2xl bg-gray-900 hover:bg-backgroundPrimaryGradient`}>
                   Get Started
                 </button>
               </Link>
             </div>
 
-            <div className="order-2">
-              <p className={`slim-text text-white text-center mt-10 text-xl sm:text-2xl sm:text-3xl leading-snug`}>
+            <div className="order-2 hidden sm:flex">
+              <p className={`slim-text text-white text-center mt-5 sm:mt-10 text-xl sm:text-2xl sm:text-3xl leading-snug`}>
                 Grow Your Crypto Investments Like a Pro, <br/> Hassle-Free.
               </p>
             </div>
             
-            <div className={`p-2 order-4 sm:mt-10`}>
-              <p className={`slim-text text-[#E9CAFF] text-center max-w-2xl hidden sm:flex`}>
+            <div className={`p-2 order-4 p-10 sm:p-0 sm:mt-10`}>
+              <p className={`slim-text text-[#E9CAFF] text-center max-w-2xl`}>
                 RLD (💯,💰) is your ultimate partner for boosting yields on Arbitrum. <br/>
                 Our platform helps you grow your bags with top Real Yield tokens, fantastic vaults, <br/>
                 and popular assets like $ETH, $USDC, $BFR, $GMX, and $GLP.
@@ -58,14 +58,14 @@ export default function Home() {
           </div>
         </div>
 
-        <div className={`bg-[#232736] w-full flex items-center justify-center p-8 h-[70vw] max-h-[70rem] sm:h-[60vw] sm:max-h-[50rem] flex-col relative`}>
+        <div className={`bg-[#232736] w-full flex items-center justify-center p-8 h-[85vw] max-h-[90rem] sm:h-[60vw] sm:max-h-[70rem] flex-col relative`}>
           <Image 
             quality={100} 
             src={'/interface.jpeg'} 
             height={1000} 
             width={1000} 
             alt={'Interface preview'} 
-            className={'border border-solid border-4 w-[70vw] max-w-[60rem] shadow-lg rounded-3xl border-backgroundPrimary absolute top-[-7em]'}>
+            className={'border border-solid border-4 w-[95vw] sm:w-[80vw] sm:max-w-[80rem] shadow-lg rounded-3xl border-backgroundPrimary absolute top-[-7em]'}>
           </Image>
         </div>
 
