@@ -1,23 +1,24 @@
 import * as React from 'react';
-import { useContext, useState } from 'react';
+import {useContext, useState} from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import { TextField } from '@mui/material';
-import { useAccount, useBalance } from 'wagmi';
-import { useContractActions } from '../hooks/useContractActions';
-import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
-import { SelectedStrategyContext, TransactionAction } from "../contexts/SelectedStrategyContext";
+import {TextField} from '@mui/material';
+import {useAccount, useBalance} from 'wagmi';
+import {useContractActions} from '../hooks/useContractActions';
+import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
+import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
-import { APYsContext } from "../contexts/ApyContext";
-import { ethers } from "ethers";
-import { ToastContext, ToastSeverity } from "../contexts/ToastContext";
+import {APYsContext} from "../contexts/ApyContext";
+import {ethers} from "ethers";
+import {ToastContext, ToastSeverity} from "../contexts/ToastContext";
 import Image from 'next/image'
-import { useCalculateSendAmount } from '../hooks/useCalculateSendAmount';
-import { WithLoader } from './WithLoader';
+import {useCalculateSendAmount} from '../hooks/useCalculateSendAmount';
+import {WithLoader} from './WithLoader';
 import IconButton from '@mui/material/IconButton';
 import WarningIcon from '@mui/icons-material/Warning';
-import { ADDRESS_ZERO } from '../lib/apy-getter-functions/cap';
+import {ADDRESS_ZERO} from '../lib/apy-getter-functions/cap';
+import {bgColor, buttonColor} from "../pages";
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -160,9 +161,9 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
         <Box
           sx={style}
           id={"input-container"}
-          className={`bg-backgroundPrimary border-none text-tPrimary flex p-4 flex-col rounded-lg`}
+            className={`${bgColor} border-none text-tPrimary flex p-5 flex-col rounded-2xl`}
         >
-          <div className={"flex pb-2"}>
+          <div className={`flex pb-2`}>
             <Typography id="modal-modal-title" variant="h6" component="h2" className="capitalize">
               {action}
             </Typography>
@@ -228,7 +229,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
           <Box className={`flex flex-row justify-between`}>
             <button
-              className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
+              className={`${buttonColor} rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
               onClick={() => performAction(action)}>{action}
             </button>
           </Box>
