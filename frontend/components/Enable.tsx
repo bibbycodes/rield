@@ -1,5 +1,4 @@
 import {useContext} from 'react';
-import {useApproveToken} from '../hooks/useApproveToken';
 import {useAccount} from 'wagmi';
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import {Strategy} from "../model/strategy";
@@ -17,18 +16,13 @@ export default function Enable({
                                  openModal,
                                  strategy,
                                }: StrategyDetailsModalProps) {
-  const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-  const {tokenAddress, vaultAddress, coolDownPeriod} = strategy
-  const {address} = useAccount();
+  const {vaultAddress, coolDownPeriod} = strategy
   const {userStaked} = useGetUserDepositedInVault(strategy)
   const {setAction, setSelectedStrategy} = useContext(SelectedStrategyContext)
-  const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
+  const {vaultsData} = useContext(VaultDataContext)
   const vaultData = vaultsData[vaultAddress]
-  const {approve} = useApproveToken(tokenAddress, vaultAddress, address, strategy, refetchForStrategy);
-  const isApproved = vaultsData[vaultAddress]?.allowance?.gt(0)
   const lastPoolDepositTime = vaultData?.lastPoolDepositTime?.toNumber() ? vaultData.lastPoolDepositTime.toNumber() * 1000 : 0
   const {isConnected} = useAccount()
-  const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
   // const hoverBorderColor = `hover:border-[#7E1FE7]`
   // const accentPrimaryGradient = 'bg-gradient-to-b from-[#7E1FE7] to-[#5C2DC5]'
 
@@ -48,7 +42,7 @@ export default function Enable({
   }
 
   return <div>
-    {(isConnected && !showApprove) && (
+    {(isConnected) && (
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => handleClick("deposit")}
@@ -63,14 +57,6 @@ export default function Enable({
         </button>
       </div>
     )}
-
-    {isConnected
-      && showApprove && (
-        <button
-          className={`w-full text-tPrimary ${buttonColor} hover:bg-${buttonHoverColor} p-3 rounded-lg uppercase`}
-          onClick={() => approve()}
-        >Approve</button>
-      )}
 
     {!isConnected &&
       <ConnectKitButton.Custom>

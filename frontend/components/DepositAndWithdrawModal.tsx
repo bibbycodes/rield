@@ -1,24 +1,26 @@
 import * as React from 'react';
-import {useContext, useState} from 'react';
+import { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import {TextField} from '@mui/material';
-import {useAccount, useBalance} from 'wagmi';
-import {useContractActions} from '../hooks/useContractActions';
-import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
-import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
+import { TextField } from '@mui/material';
+import { useAccount, useBalance } from 'wagmi';
+import { useContractActions } from '../hooks/useContractActions';
+import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
+import { SelectedStrategyContext, TransactionAction } from "../contexts/SelectedStrategyContext";
 import CloseIcon from '@mui/icons-material/Close';
-import {APYsContext} from "../contexts/ApyContext";
-import {ethers} from "ethers";
-import {ToastContext, ToastSeverity} from "../contexts/ToastContext";
+import { APYsContext } from "../contexts/ApyContext";
+import { ethers } from "ethers";
+import { ToastContext, ToastSeverity } from "../contexts/ToastContext";
 import Image from 'next/image'
-import {useCalculateSendAmount} from '../hooks/useCalculateSendAmount';
-import {WithLoader} from './WithLoader';
+import { useCalculateSendAmount } from '../hooks/useCalculateSendAmount';
+import { WithLoader } from './WithLoader';
 import IconButton from '@mui/material/IconButton';
 import WarningIcon from '@mui/icons-material/Warning';
-import {ADDRESS_ZERO} from '../lib/apy-getter-functions/cap';
-import {bgColor, buttonColor} from "../pages";
+import { ADDRESS_ZERO } from '../lib/apy-getter-functions/cap';
+import { VaultDataContext } from '../contexts/vault-data-context/VaultDataContext';
+import { useApproveToken } from '../hooks/useApproveToken';
+import { bgColor, buttonColor } from "../pages";
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -37,6 +39,7 @@ export interface StrategyDetailsModalProps {
 }
 
 export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDetailsModalProps) {
+  const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
   const {action, selectedStrategy} = useContext(SelectedStrategyContext)
   const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress, decimals} = selectedStrategy;
   const {address: userAddress} = useAccount();
@@ -50,9 +53,13 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const tokenBalanceBN = tokenBalanceData?.value
   const vaultTokenBalanceBn = vaultTokenBalanceData?.value
   const [visibleAmount, setVisibleAmount] = useState<string>('0')
+  const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
+  const {approve} = useApproveToken(tokenAddress, vaultAddress, userAddress, selectedStrategy, refetchForStrategy);
   const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys?.[strategyAddress]
+  const isApproved = visibleAmount < '0' || vaultsData[vaultAddress]?.allowance?.gt(ethers.utils.parseUnits(visibleAmount, decimals))
+  const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
   const amount = useCalculateSendAmount(visibleAmount, action, decimals, userStaked, vaultTokenBalanceBn)
   const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals, tokenAddress})
@@ -161,7 +168,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
         <Box
           sx={style}
           id={"input-container"}
-            className={`${bgColor} border-none text-tPrimary flex p-5 flex-col rounded-2xl`}
+          className={`${bgColor} border-none text-tPrimary flex p-5 flex-col rounded-2xl`}
         >
           <div className={`flex pb-2`}>
             <Typography id="modal-modal-title" variant="h6" component="h2" className="capitalize">
@@ -228,10 +235,16 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           )}
 
           <Box className={`flex flex-row justify-between`}>
-            <button
-              className={`${buttonColor} rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
-              onClick={() => performAction(action)}>{action}
-            </button>
+            {showApprove &&
+                <button
+                    className={`${buttonColor} rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
+                    onClick={() => approve()}
+                >Approve</button>}
+            {!showApprove &&
+                <button
+                    className={`${buttonColor} rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
+                    onClick={() => performAction(action)}>{action}
+                </button>}
           </Box>
 
           <WithLoader isLoading={isLoading} className={`mt-4`} height={`1.5rem`} width={`6rem`} type={'rectangular'}>
