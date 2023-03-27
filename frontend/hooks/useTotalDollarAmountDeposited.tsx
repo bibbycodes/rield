@@ -20,10 +20,18 @@ export const useTotalDollarAmountDeposited = () => {
                                         pricePerShare: BigNumber,
                                         decimals: number,
                                         strategy: Strategy,
+                                        totalSupply: BigNumber,
                                         additionalData: any) => {
     let userStaked = formatUnits(balance.mul(pricePerShare).div(BigNumber.from(10).pow(decimals)), decimals)
     if (strategy.name === 'HOP' && additionalData) {
-      userStaked = formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6);
+      const vaultPortion = balance.mul(BigNumber.from(10).pow(18)).div(totalSupply);
+      userStaked = formatUnits(
+        additionalData.hopPoolBalance
+          .mul(additionalData.hopVirtualPrice)
+          .mul(vaultPortion)
+          .div(BigNumber.from(10).pow(18))
+          .div(BigNumber.from(10).pow(18))
+          .div(BigNumber.from(10).pow(12)), 6);
     }
     return parseFloat(userStaked) * price
   }
@@ -36,6 +44,7 @@ export const useTotalDollarAmountDeposited = () => {
           const {
             vaultBalance: balance,
             vaultPricePerFullShare: pricePerShare,
+            totalSupply
           } = vaultsData[strategy.vaultAddress]
           if (balance == null || pricePerShare == null) {
             return acc;
@@ -47,6 +56,7 @@ export const useTotalDollarAmountDeposited = () => {
             pricePerShare,
             decimals,
             strategy,
+            totalSupply,
             vaultsData[strategy.vaultAddress].additionalData)
           return acc + dollarAmount
         }

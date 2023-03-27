@@ -2,11 +2,14 @@ import hre, { ethers } from "hardhat";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
-  const vaultAddress = '0x03E82e9d1F3ca8C41Fa235eE763b055d5f2F83B7'
+  const vaultAddress = '0xf0921c01A7b0C87161395ecb62b19a737e753BbC'
 
   await hre.run("verify:verify", {
     address: vaultAddress,
-    constructorArguments: []
+    constructorArguments: [
+     "RLD_HOP_USDC",
+     "RLD_HOP_USDC"
+    ]
   });
 
   const hopPool = '0xb0CabFE930642AD3E7DECdc741884d8C3F7EbC70'
@@ -17,7 +20,7 @@ async function main() {
   const unirouter = '0xE592427A0AEce92De3Edee1F18E0157C05861564'
 
   await hre.run("verify:verify", {
-    address: '0x77aa8b4fcc2cfFbf2A63EeE83dE292DA9f4008AE',
+    address: '0x1eE1C75Ff7439A666C995278CAfE97D3b2CB3D1E',
     constructorArguments: [
       vaultAddress,
       hopPool,
