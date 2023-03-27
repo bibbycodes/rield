@@ -148,12 +148,12 @@ export default function Home() {
             </div>
             <div className="max-w-[12rem]">
               <a target="_blank" rel="noopener noreferrer" href={'https://discord.gg/uMuzHWVPzR'}>
-                <img alt={"Discord"} className={`h-40 w-42`} src={'/discord-logo.png'}/>
+                <img alt={"Discord"} className={`h-full w-full p-[5%]`} src={'/discord-logo.png'}/>
               </a>
             </div>            
             <div className="max-w-[12rem]">
               <a target="_blank" rel="noopener noreferrer" href={'https://twitter.com/RldFinance'}>
-                <img height={100} width={100} alt={"Twitter"} className={`h-32 w-32`} src={'/twitter-logo.png'}/>
+                <img alt={"Twitter"} className={`h-full w-full p-[5%]`} src={'/twitter-logo.png'}/>
               </a>
             </div>
           </div>
