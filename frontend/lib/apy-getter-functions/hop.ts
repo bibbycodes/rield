@@ -12,12 +12,24 @@ export interface HopPoolStats {
         apr: number
       }
     }
+  },
+  stakingRewards: {
+    [token: string]: {
+      [chain: string]: {
+        apr: number
+      }
+    }
   }
 }
 
 export const getHopApr = async (token: string) => {
   const poolStats = await getHopPoolStats()
   const chain = 'arbitrum'
+  // HOP this HOP protocol is returning different APRs for the optimalYield and pools field depending
+  // on if the stakingRewards field is present or not
+  if (!poolStats?.stakingRewards?.[token]) {
+    return poolStats?.pools?.[token]?.[chain]?.apr * 100;
+  }
   return poolStats?.optimalYield?.[token]?.[chain]?.apr * 100 + poolStats?.pools?.[token]?.[chain]?.apr * 100
 }
 
