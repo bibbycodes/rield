@@ -2,7 +2,7 @@ import hre, { ethers } from "hardhat";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
-  const vaultAddress = '0xf0921c01A7b0C87161395ecb62b19a737e753BbC'
+  const vaultAddress = '0xFc8872D97dc976f590ae24957794dF933424F398'
 
   await hre.run("verify:verify", {
     address: vaultAddress,
@@ -20,7 +20,7 @@ async function main() {
   const unirouter = '0xE592427A0AEce92De3Edee1F18E0157C05861564'
 
   await hre.run("verify:verify", {
-    address: '0x1eE1C75Ff7439A666C995278CAfE97D3b2CB3D1E',
+    address: '0x884b56c8529F4EDBB1b3c806a4975de9c70Bb618',
     constructorArguments: [
       vaultAddress,
       hopPool,

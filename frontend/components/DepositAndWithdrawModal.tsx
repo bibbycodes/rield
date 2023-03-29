@@ -60,12 +60,6 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys?.[strategyAddress]
   const isApproved = visibleAmount < '0' || vaultsData[vaultAddress]?.allowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals))
-  console.log({
-    vaultsData: vaultsData[vaultAddress],
-    allowance: vaultsData[vaultAddress]?.allowance?.toString(),
-    visibleAmount,
-    isApproved
-  })
   const showApprove = action === 'deposit' && tokenAddress !== ZERO_ADDRESS && !isApproved
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
   const amount = useCalculateSendAmount(visibleAmount, action, decimals, userStaked, vaultTokenBalanceBn)
