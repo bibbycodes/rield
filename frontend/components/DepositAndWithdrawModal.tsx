@@ -55,7 +55,10 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const vaultTokenBalanceBn = vaultTokenBalanceData?.value
   const [visibleAmount, setVisibleAmount] = useState<string>('0')
   const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
-  const {approve, isLoading: approveLoading} = useApproveToken(tokenAddress, vaultAddress, userAddress, selectedStrategy, refetchForStrategy);
+  const {
+    approve,
+    isLoading: approveLoading
+  } = useApproveToken(tokenAddress, vaultAddress, userAddress, selectedStrategy, refetchForStrategy);
   const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys?.[strategyAddress]
@@ -63,7 +66,14 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const showApprove = action === 'deposit' && tokenAddress !== ZERO_ADDRESS && !isApproved
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
   const amount = useCalculateSendAmount(visibleAmount, action, decimals, userStaked, vaultTokenBalanceBn)
-  const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals, tokenAddress})
+  const actions = useContractActions({
+    vaultAddress,
+    amount,
+    abi,
+    decimals: selectedStrategy.decimals,
+    tokenAddress,
+    isApproved: !showApprove
+  })
 
   const handleClose = () => {
     setVisibleAmount('0')

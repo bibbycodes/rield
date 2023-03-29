@@ -8,16 +8,17 @@ export interface useContractActionsProps {
   amount: BigNumber,
   abi: AbiItem[],
   decimals: number,
-  tokenAddress: Address
+  tokenAddress: Address,
+  isApproved: boolean
 }
 
-export function useContractActions({vaultAddress, amount, abi, tokenAddress}: useContractActionsProps) {
+export function useContractActions({vaultAddress, amount, abi, tokenAddress, isApproved}: useContractActionsProps) {
 
   const {config: depositConfig} = usePrepareContractWrite({
     address: vaultAddress,
     functionName: "deposit",
     abi,
-    enabled: amount.gt(0),
+    enabled: isApproved && amount.gt(0),
     args: tokenAddress === ADDRESS_ZERO ? [] : [amount],
     overrides: tokenAddress === ADDRESS_ZERO ? {value: amount} : undefined
   })
