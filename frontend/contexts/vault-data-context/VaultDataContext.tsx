@@ -10,7 +10,7 @@ import {
   MultiCallInput,
   VaultData
 } from "./utils";
-import { structuredMulticall } from './multicall-structured-result';
+import { structuredMulticall, structuredMulticallFromCallInfo } from './multicall-structured-result';
 
 export interface VaultContextData {
   vaultsData: { [vaultAddress: Address]: Strategy & VaultData }
@@ -43,20 +43,20 @@ const VaultDataContextProvider = ({children}: {
   const refetchForStrategy = async (strategy: Strategy, userAddress: Address) => {
     const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy, userAddress) : getMultiCallDataForErc20Vault(strategy, userAddress)
-    const data = await structuredMulticall({contracts: multiCallData})
+    const data = await structuredMulticall(strategy.strategyAddress, multiCallData)
 
     const vaultDataForStrategy = {
       ...strategy,
-      vaultBalance: data[strategy.vaultAddress]['balanceOf'],
-      totalSupply: data[strategy.vaultAddress]['totalSupply'],
-      vaultPricePerFullShare: data[strategy.vaultAddress]['getPricePerFullShare'],
-      allowance: data[strategy.tokenAddress]['allowance'],
-      tokenBalance: data[strategy.tokenAddress]['balanceOf'],
-      vaultWantBalance: data[strategy.vaultAddress]['balance'],
-      paused: data[strategy.strategyAddress]['paused'],
-      lastHarvest: data[strategy.strategyAddress]['lastHarvest'],
-      lastPoolDepositTime: data[strategy.strategyAddress]['lastPoolDepositTime'],
-      lastPauseTime: data[strategy.strategyAddress]['lastPauseTime'],
+      vaultBalance: data[strategy.strategyAddress][strategy.vaultAddress]['balanceOf'],
+      totalSupply: data[strategy.strategyAddress][strategy.vaultAddress]['totalSupply'],
+      vaultPricePerFullShare: data[strategy.strategyAddress][strategy.vaultAddress]['getPricePerFullShare'],
+      allowance: data[strategy.strategyAddress][strategy.tokenAddress]['allowance'],
+      tokenBalance: data[strategy.strategyAddress][strategy.tokenAddress]['balanceOf'],
+      vaultWantBalance: data[strategy.strategyAddress][strategy.vaultAddress]['balance'],
+      paused: data[strategy.strategyAddress][strategy.strategyAddress]['paused'],
+      lastHarvest: data[strategy.strategyAddress][strategy.strategyAddress]['lastHarvest'],
+      lastPoolDepositTime: data[strategy.strategyAddress][strategy.strategyAddress]['lastDepositTime'],
+      lastPauseTime: data[strategy.strategyAddress][strategy.strategyAddress]['lastPauseTime'],
       additionalData: extractStrategySpecificData(strategy, data)
     };
     setVaultsData({
@@ -72,9 +72,9 @@ const VaultDataContextProvider = ({children}: {
         erc20VaultCallData,
         ethVaultCallData
       } = getVaultMultiCallData(availableStrategies, address)
-      const erc20DVaultDataCalls = structuredMulticall({contracts: erc20VaultCallData})
+      const erc20DVaultDataCalls = structuredMulticallFromCallInfo(erc20VaultCallData)
 
-      const ethVaultDataCalls = structuredMulticall({contracts: ethVaultCallData})
+      const ethVaultDataCalls = structuredMulticallFromCallInfo(ethVaultCallData)
 
       Promise.all([erc20DVaultDataCalls, ethVaultDataCalls]).then(data => {
         const erc20VaultData = erc20Vaults.reduce((acc, strategy) => {
@@ -82,16 +82,16 @@ const VaultDataContextProvider = ({children}: {
             ...acc,
             [strategy.vaultAddress]: {
               ...strategy,
-              vaultBalance: data[0][strategy.vaultAddress]['balanceOf'],
-              totalSupply: data[0][strategy.vaultAddress]['totalSupply'],
-              vaultPricePerFullShare: data[0][strategy.vaultAddress]['getPricePerFullShare'],
-              allowance: data[0][strategy.tokenAddress]['allowance'],
-              tokenBalance: data[0][strategy.tokenAddress]['balanceOf'],
-              vaultWantBalance: data[0][strategy.vaultAddress]['balance'],
-              paused: data[0][strategy.strategyAddress]['paused'],
-              lastHarvest: data[0][strategy.strategyAddress]['lastHarvest'],
-              lastPoolDepositTime: data[0][strategy.strategyAddress]['lastPoolDepositTime'],
-              lastPauseTime: data[0][strategy.strategyAddress]['lastPauseTime'],
+              vaultBalance: data[0][strategy.strategyAddress][strategy.vaultAddress]['balanceOf'],
+              totalSupply: data[0][strategy.strategyAddress][strategy.vaultAddress]['totalSupply'],
+              vaultPricePerFullShare: data[0][strategy.strategyAddress][strategy.vaultAddress]['getPricePerFullShare'],
+              allowance: data[0][strategy.strategyAddress][strategy.tokenAddress]['allowance'],
+              tokenBalance: data[0][strategy.strategyAddress][strategy.tokenAddress]['balanceOf'],
+              vaultWantBalance: data[0][strategy.strategyAddress][strategy.vaultAddress]['balance'],
+              paused: data[0][strategy.strategyAddress][strategy.strategyAddress]['paused'],
+              lastHarvest: data[0][strategy.strategyAddress][strategy.strategyAddress]['lastHarvest'],
+              lastPoolDepositTime: data[0][strategy.strategyAddress][strategy.strategyAddress]['lastDepositTime'],
+              lastPauseTime: data[0][strategy.strategyAddress][strategy.strategyAddress]['lastPauseTime'],
               additionalData: extractStrategySpecificData(strategy, data[0])
             }
           }
@@ -102,14 +102,14 @@ const VaultDataContextProvider = ({children}: {
             ...acc,
             [strategy.vaultAddress]: {
               ...strategy,
-              vaultBalance: data[1][strategy.vaultAddress]['balanceOf'],
-              totalSupply: data[1][strategy.vaultAddress]['totalSupply'],
-              vaultPricePerFullShare: data[1][strategy.vaultAddress]['getPricePerFullShare'],
-              vaultWantBalance: data[1][strategy.vaultAddress]['balance'],
-              paused: data[1][strategy.strategyAddress]['paused'],
-              lastHarvest: data[1][strategy.strategyAddress]['lastHarvest'],
-              lastPoolDepositTime: data[1][strategy.strategyAddress]['lastPoolDepositTime'],
-              lastPauseTime: data[1][strategy.strategyAddress]['lastPauseTime'],
+              vaultBalance: data[1][strategy.strategyAddress][strategy.vaultAddress]['balanceOf'],
+              totalSupply: data[1][strategy.strategyAddress][strategy.vaultAddress]['totalSupply'],
+              vaultPricePerFullShare: data[1][strategy.strategyAddress][strategy.vaultAddress]['getPricePerFullShare'],
+              vaultWantBalance: data[1][strategy.strategyAddress][strategy.vaultAddress]['balance'],
+              paused: data[1][strategy.strategyAddress][strategy.strategyAddress]['paused'],
+              lastHarvest: data[1][strategy.strategyAddress][strategy.strategyAddress]['lastHarvest'],
+              lastPoolDepositTime: data[1][strategy.strategyAddress][strategy.strategyAddress]['lastDepositTime'],
+              lastPauseTime: data[1][strategy.strategyAddress][strategy.strategyAddress]['lastPauseTime'],
               additionalData: extractStrategySpecificData(strategy, data[1])
             }
           }

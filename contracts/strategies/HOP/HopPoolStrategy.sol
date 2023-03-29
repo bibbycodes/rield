@@ -123,23 +123,24 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
     function _withdraw(uint256 _amount) internal {
         require(msg.sender == vault, "!vault");
         uint256 wantTokenBal = IERC20(lpToken).balanceOf(address(this));
+        uint256 beforeInputTokenBal = IERC20(inputToken).balanceOf(address(this));
 
         if (wantTokenBal < _amount) {
             uint256 amountToWithdraw = (_amount - wantTokenBal);
             IHopRewardPool(pool).withdraw(amountToWithdraw);
-            uint256[] memory minAmounts = _calculateMinWithdrawAmounts(amountToWithdraw);
-            IHopTokenTracker(tracker).removeLiquidity(amountToWithdraw, minAmounts, block.timestamp + (86400));
-            uint256 hopTokenBal = IERC20(hopToken).balanceOf(address(this));
-            uint256 minSwapAmount = _calculateMinSwapAmount(hopTokenBal);
-            IHopTokenTracker(tracker).swap(hopTokenIdx, inputTokenIdx, hopTokenBal, minSwapAmount, block.timestamp + (86400));
-            wantTokenBal = IERC20(inputToken).balanceOf(address(this));
         }
 
-        if (wantTokenBal > _amount) {
-            wantTokenBal = _amount;
-        }
+        uint256[] memory minAmounts = _calculateMinWithdrawAmounts(_amount);
+        IHopTokenTracker(tracker).removeLiquidity(_amount, minAmounts, block.timestamp + (86400));
+        uint256 hopTokenBal = IERC20(hopToken).balanceOf(address(this));
+        uint256 minSwapAmount = _calculateMinSwapAmount(hopTokenBal);
+        IHopTokenTracker(tracker).swap(hopTokenIdx, inputTokenIdx, hopTokenBal, minSwapAmount, block.timestamp + (86400));
 
-        IERC20(inputToken).safeTransfer(vault, wantTokenBal);
+        uint256 amountToSend = IERC20(inputToken).balanceOf(address(this));
+        if (beforeInputTokenBal > 0) {
+            amountToSend = amountToSend - beforeInputTokenBal;
+        }
+        IERC20(inputToken).safeTransfer(vault, amountToSend);
         emit Withdraw(balanceOf());
     }
 
@@ -179,10 +180,10 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
         uint256 tokenBal = IERC20(inputToken).balanceOf(address(this));
         if (tokenBal > 0) {
             chargeFees();
-            uint256 wantTokenHarvested = balanceOfWant();
+            uint256 inputTokenHarvested = IERC20(inputToken).balanceOf(address(this));
             deposit();
             lastHarvest = block.timestamp;
-            emit StratHarvest(msg.sender, wantTokenHarvested, balanceOf());
+            emit StratHarvest(msg.sender, inputTokenHarvested, balanceOf());
         }
     }
 

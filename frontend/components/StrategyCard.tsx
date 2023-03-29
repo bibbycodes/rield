@@ -3,7 +3,7 @@ import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault"
 import Enable from './Enable';
 import { StrategyLogos } from "./StrategyLogos";
 import { TokenPricesContext } from "../contexts/TokenPricesContext";
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { APYsContext } from "../contexts/ApyContext";
 import { WithLoader } from "./WithLoader";
 import { BigNumber, ethers } from 'ethers';
@@ -12,6 +12,7 @@ import {roundToNDecimals} from "../utils/formatters";
 import * as capEth from "../resources/vault-details/deploy_cap_eth-output.json";
 import * as capUSDC from "../resources/vault-details/deploy_cap_usdc-output.json";
 import {cardGradient} from "../pages";
+import LoadingButton from './LoadingButton';
 
 export default function StrategyCard({
                                        strategy,

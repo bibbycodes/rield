@@ -1,18 +1,19 @@
 import Link from "next/link";
-import React, {ReactElement} from "react";
-import {availableStrategies} from "../model/strategy";
+import React, { ReactElement } from "react";
+import { availableStrategies } from "../model/strategy";
 import ApyCard from "../components/ApyCard";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AssuredWorkloadOutlinedIcon from '@mui/icons-material/AssuredWorkloadOutlined';
 import VerifiedIcon from '@mui/icons-material/VerifiedOutlined';
 import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
-import {KeyFeatureCard} from "../components/KeyFeatureCard";
+import { KeyFeatureCard } from "../components/KeyFeatureCard";
 import Layout from '../components/Layout';
-import {WagmiConfig} from 'wagmi';
-import {APYsContextProvider} from '../contexts/ApyContext';
-import {client} from '../lib/Providers';
-import {TokenPricesContextProvider} from '../contexts/TokenPricesContext';
-import Image from 'next/image'
+import { WagmiConfig } from 'wagmi';
+import { APYsContextProvider } from '../contexts/ApyContext';
+import { client } from '../lib/Providers';
+import { TokenPricesContextProvider } from '../contexts/TokenPricesContext';
+import FadeInImage from '../components/FadeInImage';
+import FadeInOnScroll from '../components/FadeInOnScroll';
 
 
 export const bgGradient = `bg-gradient-to-b from-[#3F37AA] to-[#8F18F7]`
@@ -27,7 +28,7 @@ export default function Home() {
         <div className={`${bgGradient}`}>
           <div
             className={`w-full min-h-full flex flex-col min-h-[50vh] items-center z-10 relative pb-40`}>
-            <div className ={'mt-[7vh] order-1'}>
+            <div className={'mt-[7vh] order-1'}>
               <p className={`text-center text-white text-4xl sm:text-5xl leading-snug p-2`}>
                 Real Yield <span className={`text-[#E9CAFF]`}>Optimized</span>
               </p>
@@ -43,11 +44,12 @@ export default function Home() {
             </div>
 
             <div className="order-2 hidden sm:flex">
-              <p className={`slim-text text-white text-center mt-5 sm:mt-10 text-xl sm:text-2xl sm:text-3xl leading-snug`}>
+              <p
+                className={`slim-text text-white text-center mt-5 sm:mt-10 text-xl sm:text-2xl sm:text-3xl leading-snug`}>
                 Grow Your Crypto Investments Like a Pro, <br/> Hassle-Free.
               </p>
             </div>
-            
+
             <div className={`p-2 order-4 p-10 sm:p-0 sm:mt-10`}>
               <p className={`slim-text text-[#E9CAFF] text-center max-w-2xl`}>
                 RLD (💯,💰) is your ultimate partner for boosting yields on Arbitrum. <br/>
@@ -58,15 +60,12 @@ export default function Home() {
           </div>
         </div>
 
-        <div className={`bg-[#232736] w-full flex items-center justify-center p-8 h-[85vw] max-h-[90rem] sm:h-[60vw] sm:max-h-[70rem] flex-col relative`}>
-          <Image 
-            quality={100} 
-            src={'/interface.jpeg'} 
-            height={1000} 
-            width={1000} 
-            alt={'Interface preview'} 
-            className={'border border-solid border-4 w-[95vw] sm:w-[80vw] sm:max-w-[80rem] shadow-lg rounded-3xl border-backgroundPrimary absolute top-[-7em]'}>
-          </Image>
+        <div
+          className={`bg-[#232736] w-full flex items-center justify-center p-8 h-[85vw] max-h-[65vw] sm:h-[60vw] sm:max-h-[55rem] flex-col relative`}>
+          <FadeInImage src={'/interface.jpeg'}
+                       className="border border-solid border-4 w-[95vw]
+                       sm:w-[80vw] sm:max-w-[70rem] shadow-lg rounded-3xl
+                       border-backgroundPrimary absolute top-[-7em]"/>
         </div>
 
         <div className={`bg-white w-full flex items-center justify-center p-8 min-h-screen flex-col md:flex-row gap-4`}>
@@ -81,19 +80,21 @@ export default function Home() {
             </p>
           </div>
           <div className={`max-w-[400px] w-[90vw]`}>
-            <div className={`w-full shadow-2xl rounded-2xl mb-8`}>
-              <ApyCard
-                key={availableStrategies[3].vaultAddress}
-                strategy={availableStrategies[3]}
-              />
-            </div>
+            <FadeInOnScroll>
+              <div className={`w-full shadow-2xl rounded-2xl mb-8`}>
+                <ApyCard
+                  key={availableStrategies[3].vaultAddress}
+                  strategy={availableStrategies[3]}
+                />
+              </div>
 
-            <div className={`w-full shadow-2xl md:block mt-8`}>
-              <ApyCard
-                key={availableStrategies[5].vaultAddress}
-                strategy={availableStrategies[5]}
-              />
-            </div>
+              <div className={`w-full shadow-2xl md:block mt-8`}>
+                <ApyCard
+                  key={availableStrategies[5].vaultAddress}
+                  strategy={availableStrategies[5]}
+                />
+              </div>
+            </FadeInOnScroll>
           </div>
         </div>
 
@@ -103,31 +104,33 @@ export default function Home() {
               Key Features
             </p>
           </div>
-          <div className={`grid mt-11 grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10`}>
-            <KeyFeatureCard
-              title={'Real Yield'}
-              description={'Rely on RLD\'s expert team to handpick the best Real Yield tokens for your investments, offering you the most promising DeFi opportunities.'}
-              IconComponent={AttachMoneyIcon}
-            />
+          <FadeInOnScroll>
+            <div className={`grid mt-11 grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10`}>
+              <KeyFeatureCard
+                title={'Real Yield'}
+                description={'Rely on RLD\'s expert team to handpick the best Real Yield tokens for your investments, offering you the most promising DeFi opportunities.'}
+                IconComponent={AttachMoneyIcon}
+              />
 
-            <KeyFeatureCard
-              title={'Auto-compounding'}
-              description={'Harness compound interest, our smart contracts reinvest your earnings and maximize returns without any extra effort.'}
-              IconComponent={TrendingUpOutlinedIcon}
-            />
+              <KeyFeatureCard
+                title={'Auto-compounding'}
+                description={'Harness compound interest, our smart contracts reinvest your earnings and maximize returns without any extra effort.'}
+                IconComponent={TrendingUpOutlinedIcon}
+              />
 
-            <KeyFeatureCard
-              title={'Single Stake'}
-              description={'Deposit one asset, and we\'ll handle the rest, ensuring top-notch returns without juggling multiple tokens.'}
-              IconComponent={AssuredWorkloadOutlinedIcon}
-            />
+              <KeyFeatureCard
+                title={'Single Stake'}
+                description={'Deposit one asset, and we\'ll handle the rest, ensuring top-notch returns without juggling multiple tokens.'}
+                IconComponent={AssuredWorkloadOutlinedIcon}
+              />
 
-            <KeyFeatureCard
-              title={'Trustless'}
-              description={'Our permissionless, trustless approach safeguards your assets using cutting-edge technology and protocols.'}
-              IconComponent={VerifiedIcon}
-            ></KeyFeatureCard>
-          </div>
+              <KeyFeatureCard
+                title={'Trustless'}
+                description={'Our permissionless, trustless approach safeguards your assets using cutting-edge technology and protocols.'}
+                IconComponent={VerifiedIcon}
+              />
+            </div>
+          </FadeInOnScroll>
         </div>
 
         <div className={`bg-white w-full flex  flex-col items-center justify-center p-8 min-h-screen`}>
@@ -137,27 +140,29 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="flex h-full max-h-[12rem] items-center
+          <FadeInOnScroll>
+            <div className="flex h-full max-h-[12rem] items-center
             justify-center flex-row my-2 gap-10
             [&>*]:h-full [&>*]:w-full">
+              <div className="hidden md:visible flex-grow"></div>
+              <div className="max-w-[12rem]">
+                <a target="_blank" rel="noopener noreferrer" href={'https://t.me/rldfinance'}>
+                  <img alt={"Telegram"} className={`h-full w-full`} src={'/telegram-logo.png'}/>
+                </a>
+              </div>
+              <div className="max-w-[12rem]">
+                <a target="_blank" rel="noopener noreferrer" href={'https://discord.gg/uMuzHWVPzR'}>
+                  <img alt={"Discord"} className={`h-full w-full p-[5%]`} src={'/discord-logo.png'}/>
+                </a>
+              </div>
+              <div className="max-w-[12rem]">
+                <a target="_blank" rel="noopener noreferrer" href={'https://twitter.com/RldFinance'}>
+                  <img alt={"Twitter"} className={`h-full w-full p-[5%]`} src={'/twitter-logo.png'}/>
+                </a>
+              </div>
+            </div>
             <div className="hidden md:visible flex-grow"></div>
-            <div className="max-w-[12rem]">
-              <a target="_blank" rel="noopener noreferrer" href={'https://t.me/rldfinance'}>
-                <img alt={"Telegram"} className={`h-full w-full`} src={'/telegram-logo.png'}/>
-              </a>
-            </div>
-            <div className="max-w-[12rem]">
-              <a target="_blank" rel="noopener noreferrer" href={'https://discord.gg/uMuzHWVPzR'}>
-                <img alt={"Discord"} className={`h-full w-full p-[5%]`} src={'/discord-logo.png'}/>
-              </a>
-            </div>            
-            <div className="max-w-[12rem]">
-              <a target="_blank" rel="noopener noreferrer" href={'https://twitter.com/RldFinance'}>
-                <img alt={"Twitter"} className={`h-full w-full p-[5%]`} src={'/twitter-logo.png'}/>
-              </a>
-            </div>
-          </div>
-          <div className="hidden md:visible flex-grow"></div>
+          </FadeInOnScroll>
         </div>
       </main>
     </>

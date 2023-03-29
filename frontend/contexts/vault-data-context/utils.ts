@@ -182,6 +182,7 @@ export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Addre
     .map((strategy: Strategy) => {
       const calls = getMultiCallDataForErc20Vault(strategy, userAddress)
       return {
+        strategyAddress: strategy.strategyAddress,
         calls,
         tokenAddress: strategy.tokenAddress,
       }
@@ -192,6 +193,7 @@ export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Addre
     .map((strategy) => {
       const calls = getMultiCallDataForEthVault(strategy, userAddress)
       return {
+        strategyAddress: strategy.strategyAddress,
         calls,
         tokenAddress: strategy.tokenAddress,
       }
@@ -199,11 +201,19 @@ export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Addre
 
   return {
     erc20VaultCallData: erc20VaultCallData.reduce((acc, strategy) => {
-      return [...acc, ...strategy.calls]
-    }, [] as any),
+      if (!acc.has(strategy.strategyAddress)) {
+        acc.set(strategy.strategyAddress, []);
+      }
+      acc.set(strategy.strategyAddress, [...acc.get(strategy.strategyAddress)!, ...strategy.calls]);
+      return acc;
+    }, new Map<Address, any[]>()),
     ethVaultCallData: ethVaultCallData.reduce((acc, strategy) => {
-      return [...acc, ...strategy.calls]
-    }, [] as any),
+      if (!acc.has(strategy.strategyAddress)) {
+        acc.set(strategy.strategyAddress, []);
+      }
+      acc.set(strategy.strategyAddress, [...acc.get(strategy.strategyAddress)!, ...strategy.calls]);
+      return acc;
+    }, new Map<Address, any[]>()),
   }
 }
 
@@ -219,7 +229,7 @@ export const getStrategySpecificCalls = (strategy: Strategy) => {
 export const extractStrategySpecificData = (strategy: Strategy, data: StructuredMulticallResult) => {
   switch (strategy.strategyAddress) {
     case hopUsdc.strategyAddress:
-      return {...extractHopAdditionalData(hopUsdc, data)};
+      return {...extractHopAdditionalData(hopUsdc, strategy, data)};
     default:
       return null
   }

@@ -34,9 +34,10 @@ export const getHopVaultContextData = (hopOutput: { hopPool: string, hopTracker:
 }
 
 export const extractHopAdditionalData = (hopOutput: { hopPool: string, hopTracker: string },
+                                         strategy: Strategy,
                                          data: StructuredMulticallResult) => {
   return {
-    hopPoolBalance: data[hopOutput.hopPool as Address]['balanceOf'],
-    hopVirtualPrice: data[hopOutput.hopTracker as Address]['getVirtualPrice'],
+    hopPoolBalance: data[strategy.strategyAddress][hopOutput.hopPool as Address]['balanceOf'],
+    hopVirtualPrice: data[strategy.strategyAddress][hopOutput.hopTracker as Address]['getVirtualPrice'],
   }
 }

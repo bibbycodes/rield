@@ -1,8 +1,8 @@
-import {BigNumber} from "ethers";
-import {useContext, useEffect, useState} from "react";
-import {Strategy} from "../model/strategy";
-import {useAccount} from "wagmi";
-import {VaultDataContext} from "../contexts/vault-data-context/VaultDataContext";
+import { BigNumber } from "ethers";
+import { useContext, useEffect, useState } from "react";
+import { Strategy } from "../model/strategy";
+import { useAccount } from "wagmi";
+import { VaultDataContext } from "../contexts/vault-data-context/VaultDataContext";
 
 export const useGetUserDepositedInVault = (strategy: Strategy) => {
   const [userStaked, setUserStaked] = useState<BigNumber>(BigNumber.from(0));
@@ -23,7 +23,7 @@ export const useGetUserDepositedInVault = (strategy: Strategy) => {
   }
 
   useEffect(() => {
-    if (!(userAddress && vaultsData[strategy.vaultAddress] )) {
+    if (!(userAddress && vaultsData[strategy.vaultAddress])) {
       return;
     }
 
@@ -35,7 +35,7 @@ export const useGetUserDepositedInVault = (strategy: Strategy) => {
     } = vaultsData[strategy.vaultAddress]
     let userStaked = calculateUserStaked(vaultBalance as BigNumber, vaultPricePerFullShare as BigNumber);
     if (strategy.name === 'HOP' && additionalData) {
-      const vaultPortion = vaultBalance.mul(BigNumber.from(10).pow(18)).div(totalSupply);
+      const vaultPortion = totalSupply.gt(0) ? vaultBalance.mul(BigNumber.from(10).pow(18)).div(totalSupply) : 0;
       userStaked = additionalData.hopPoolBalance.mul(
         additionalData.hopVirtualPrice)
         .mul(vaultPortion)

@@ -2,6 +2,7 @@ import { Address, useContractWrite, usePrepareContractWrite, useWaitForTransacti
 import { BigNumber } from "ethers";
 import ERC20Abi from '../resources/abis/erc20.json';
 import { Strategy } from '../model/strategy';
+import { useState } from 'react';
 
 export function useApproveToken(tokenAddress: string,
                                 contractAddress: string,
@@ -16,21 +17,30 @@ export function useApproveToken(tokenAddress: string,
     functionName: "approve",
     abi
   })
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const {data: approveRes, writeAsync} = useContractWrite(config)
   const {isSuccess} = useWaitForTransaction({
     hash: approveRes?.hash,
   })
 
   async function handleApprove() {
-    const tx = await writeAsync?.()
-    await tx?.wait()
-    if (userAddress) {
-      await refetchForStrategy(strategy, userAddress)
+    setIsLoading(true)
+    try {
+      const tx = await writeAsync?.()
+      await tx?.wait()
+      if (userAddress) {
+        await refetchForStrategy(strategy, userAddress)
+
+      }
+    } catch (e) {
+      console.error(e)
     }
+    setIsLoading(false)
   }
 
   return {
     approve: handleApprove,
     isSuccess,
+    isLoading
   }
 }

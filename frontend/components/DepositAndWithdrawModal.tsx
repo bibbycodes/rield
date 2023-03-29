@@ -21,6 +21,7 @@ import { ADDRESS_ZERO } from '../lib/apy-getter-functions/cap';
 import { VaultDataContext } from '../contexts/vault-data-context/VaultDataContext';
 import { useApproveToken } from '../hooks/useApproveToken';
 import { bgColor, buttonColor } from "../pages";
+import LoadingButton from './LoadingButton';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -54,12 +55,18 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const vaultTokenBalanceBn = vaultTokenBalanceData?.value
   const [visibleAmount, setVisibleAmount] = useState<string>('0')
   const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
-  const {approve} = useApproveToken(tokenAddress, vaultAddress, userAddress, selectedStrategy, refetchForStrategy);
+  const {approve, isLoading: approveLoading} = useApproveToken(tokenAddress, vaultAddress, userAddress, selectedStrategy, refetchForStrategy);
   const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys?.[strategyAddress]
-  const isApproved = visibleAmount < '0' || vaultsData[vaultAddress]?.allowance?.gt(ethers.utils.parseUnits(visibleAmount, decimals))
-  const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
+  const isApproved = visibleAmount < '0' || vaultsData[vaultAddress]?.allowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals))
+  console.log({
+    vaultsData: vaultsData[vaultAddress],
+    allowance: vaultsData[vaultAddress]?.allowance?.toString(),
+    visibleAmount,
+    isApproved
+  })
+  const showApprove = action === 'deposit' && tokenAddress !== ZERO_ADDRESS && !isApproved
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
   const amount = useCalculateSendAmount(visibleAmount, action, decimals, userStaked, vaultTokenBalanceBn)
   const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals, tokenAddress})
@@ -236,10 +243,16 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
 
           <Box className={`flex flex-row justify-between`}>
             {showApprove &&
-                <button
-                    className={`${buttonColor} rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
-                    onClick={() => approve()}
-                >Approve</button>}
+                <LoadingButton loading={approveLoading}
+                               className={`w-full h-16 mt-6 uppercase rounded-lg text-tPrimary w-full`}
+                               onClick={() => approve()}>
+                    <button
+                        className={`${buttonColor} rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
+                        onClick={() => approve()}
+                    >Approve
+                    </button>
+                </LoadingButton>
+            }
             {!showApprove &&
                 <button
                     className={`${buttonColor} rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}

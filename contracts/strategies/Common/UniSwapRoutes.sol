@@ -40,7 +40,7 @@ abstract contract UniSwapRoutes is Ownable {
         tokens = _tokens;
     }
 
-    function swapRewards() public {
+    function swapRewards() internal {
         for (uint i = 0; i < tokens.length; i++) {
             swapReward(tokens[i]);
         }

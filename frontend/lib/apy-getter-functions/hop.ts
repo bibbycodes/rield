@@ -5,13 +5,20 @@ export interface HopPoolStats {
         apr: number
       }
     }
+  },
+  pools: {
+    [token: string]: {
+      [chain: string]: {
+        apr: number
+      }
+    }
   }
 }
 
 export const getHopApr = async (token: string) => {
   const poolStats = await getHopPoolStats()
   const chain = 'arbitrum'
-  return poolStats?.optimalYield?.[token]?.[chain]?.apr * 100
+  return poolStats?.optimalYield?.[token]?.[chain]?.apr * 100 + poolStats?.pools?.[token]?.[chain]?.apr * 100
 }
 
 async function getHopPoolStats() {
