@@ -1,4 +1,4 @@
-import { availableStrategies } from '../../model/strategy';
+import { strategies } from '../../model/strategy';
 import StrategyCard from '../../components/StrategyCard';
 import React, { useState } from 'react';
 import DepositAndWithdrawModal from '../../components/DepositAndWithdrawModal';
@@ -36,7 +36,7 @@ export default function Compound() {
     </div>
     <div className="flex justify-center">
       <div className={`grid md:grid-cols-2 grid-cols-1 gap-4 [&>*]:shadow-xl max-w-6xl w-full`}>
-        {availableStrategies
+        {strategies
           .map(strategy => <StrategyCard key={strategy.vaultAddress} strategy={strategy}
                                          openModal={setIsStrategyDetailsModalOpen}/>)}
       </div>

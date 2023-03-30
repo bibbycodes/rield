@@ -1,6 +1,8 @@
-import { multicall } from '@wagmi/core';
-import { Abi } from 'abitype';
-import { Address } from 'wagmi';
+import {multicall} from '@wagmi/core';
+import {Abi} from 'abitype';
+import {Address} from 'wagmi';
+import {Strategy} from "../../model/strategy";
+import {extractStrategySpecificData} from "./utils";
 
 export type StructuredMulticallResult = {
   [address: Address]: {
@@ -54,4 +56,26 @@ export async function structuredMulticallFromCallInfo<TAbi extends Abi | readonl
       });
       return acc;
     }, {} as StructuredMulticallResult)
+}
+
+export const transformMultiCallData = (data: any, strategies: Strategy[]) => {
+  return strategies.reduce((acc, strategy) => {
+    return {
+      ...acc,
+      [strategy.vaultAddress]: {
+        ...strategy,
+        vaultBalance: data[strategy.strategyAddress][strategy.vaultAddress]['balanceOf'],
+        totalSupply: data[strategy.strategyAddress][strategy.vaultAddress]['totalSupply'],
+        vaultPricePerFullShare: data[strategy.strategyAddress][strategy.vaultAddress]['getPricePerFullShare'],
+        allowance: data[strategy.strategyAddress][strategy.tokenAddress]['allowance'],
+        tokenBalance: data[strategy.strategyAddress][strategy.tokenAddress]['balanceOf'],
+        vaultWantBalance: data[strategy.strategyAddress][strategy.vaultAddress]['balance'],
+        paused: data[strategy.strategyAddress][strategy.strategyAddress]['paused'],
+        lastHarvest: data[strategy.strategyAddress][strategy.strategyAddress]['lastHarvest'],
+        lastPoolDepositTime: data[strategy.strategyAddress][strategy.strategyAddress]['lastDepositTime'],
+        lastPauseTime: data[strategy.strategyAddress][strategy.strategyAddress]['lastPauseTime'],
+        additionalData: extractStrategySpecificData(strategy, data)
+      }
+    }
+  }, {} as any)
 }
