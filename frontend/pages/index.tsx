@@ -1,6 +1,6 @@
 import Link from "next/link";
 import React, { ReactElement } from "react";
-import { availableStrategies } from "../model/strategy";
+import { strategies } from "../model/strategy";
 import ApyCard from "../components/ApyCard";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AssuredWorkloadOutlinedIcon from '@mui/icons-material/AssuredWorkloadOutlined';
@@ -83,15 +83,15 @@ export default function Home() {
             <FadeInOnScroll>
               <div className={`w-full shadow-2xl rounded-2xl mb-8`}>
                 <ApyCard
-                  key={availableStrategies[3].vaultAddress}
-                  strategy={availableStrategies[3]}
+                  key={strategies[3].vaultAddress}
+                  strategy={strategies[3]}
                 />
               </div>
 
               <div className={`w-full shadow-2xl md:block mt-8`}>
                 <ApyCard
-                  key={availableStrategies[5].vaultAddress}
-                  strategy={availableStrategies[5]}
+                  key={strategies[5].vaultAddress}
+                  strategy={strategies[5]}
                 />
               </div>
             </FadeInOnScroll>
