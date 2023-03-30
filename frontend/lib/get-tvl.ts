@@ -10,7 +10,7 @@ import * as RldVault from "../resources/abis/RldTokenVault.json";
 import * as RldEthVault from "../resources/abis/BeefyETHVault.json";
 import {
   structuredMulticallFromCallInfo,
-  transformMultiCallData
+  transformMultiCallDataForTvl
 } from "../contexts/vault-data-context/multicall-structured-result";
 
 
@@ -18,7 +18,7 @@ export const getTvl = () => {
 }
 
 
-export class tvlGetter {
+export class TvlGetter {
   constructor(private prices: Prices) {
   }
   getTvl = async (): Promise<number> => {
@@ -55,8 +55,8 @@ export class tvlGetter {
     const ethVaultDataCalls = structuredMulticallFromCallInfo(ethVaultCallData)
 
     return await Promise.all([erc20DVaultDataCalls, ethVaultDataCalls]).then(data => {
-      const erc20VaultData = transformMultiCallData(data[0], erc20Strategies)
-      const ethVaultData = transformMultiCallData(data[1], ethStrategies)
+      const erc20VaultData = transformMultiCallDataForTvl(data[0], erc20Strategies)
+      const ethVaultData = transformMultiCallDataForTvl(data[1], ethStrategies)
       return {
         ...ethVaultData,
         ...erc20VaultData

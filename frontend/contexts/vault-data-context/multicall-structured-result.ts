@@ -79,3 +79,16 @@ export const transformMultiCallData = (data: any, strategies: Strategy[]) => {
     }
   }, {} as any)
 }
+
+export const transformMultiCallDataForTvl = (data: any, strategies: Strategy[]) => {
+  return strategies.reduce((acc, strategy) => {
+    return {
+      ...acc,
+      [strategy.vaultAddress]: {
+        ...strategy,
+        vaultWantBalance: data[strategy.strategyAddress][strategy.vaultAddress]['balance'],
+        additionalData: extractStrategySpecificData(strategy, data)
+      }
+    }
+  }, {} as any)
+}

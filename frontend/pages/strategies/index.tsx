@@ -26,7 +26,7 @@ export default function Compound() {
         isLoading={totalDollarAmountDeposited == null}
       />
       <NonSSRWrapper>
-        {isConnected && <ToolBarDataItem
+        {<ToolBarDataItem
             MuiIcon={AccountBalance}
             value={tvl.toFixed(2)}
             label={"TVL"}
