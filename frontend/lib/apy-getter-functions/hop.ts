@@ -88,7 +88,7 @@ async function getPoolStatsFile(): Promise<HopPoolStats> {
   return json.data
 }
 
-async function getHOPMulticallData() {
+async function getHOPMulticallData(): Promise<{[key: string] :BigNumber}> {
   const pool = {
     abi: HopPoolAbi.abi,
     address: hopUsdc.hopPool as Address
@@ -130,7 +130,7 @@ async function getHOPMulticallData() {
   const {
     getVirtualPrice: virtualPrice,
   } = data[hopUsdc.hopPool as Address][hopUsdc.hopTracker as Address]
-  return {rewardRate, rewardPerToken, totalSupply, virtualPrice}
+  return {rewardRate, rewardPerToken, totalSupply, virtualPrice} as {[key: string] :BigNumber}
 }
 
 async function getHOPRewardsAprAndApy(
