@@ -12,8 +12,9 @@ import {
 } from "./utils";
 import { structuredMulticall, structuredMulticallFromCallInfo } from './multicall-structured-result';
 
+export interface VaultsData { [vaultAddress: Address]: Strategy & VaultData }
 export interface VaultContextData {
-  vaultsData: { [vaultAddress: Address]: Strategy & VaultData }
+  vaultsData: VaultsData
   isLoading: boolean
   refetchForStrategy: (strategy: Strategy, userAddress: Address) => Promise<void>
   refetchAll: () => Promise<void>

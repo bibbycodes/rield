@@ -33,7 +33,7 @@ export class ApyGetter {
       case gns.strategyAddress:
         return getGainsApr()
       case hopUsdc.strategyAddress:
-        return getHopApr('USDC')
+        return getHopApr('USDC', this.prices['hop-protocol'], this.prices['usd-coin'])
       default:
         return 0
     }

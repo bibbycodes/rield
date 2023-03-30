@@ -1,10 +1,10 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { Address, useNetwork } from "wagmi";
-import { calculateApyWithFee } from "../utils/calculator";
-import { ApyGetter } from "../lib/apy-getter/apy-getter";
-import { availableStrategies } from "../model/strategy";
-import { TokenPricesContext } from "./TokenPricesContext";
-import { staticArbProvider } from '../utils/static-provider';
+import {createContext, ReactNode, useContext, useEffect, useState} from "react";
+import {Address, useNetwork} from "wagmi";
+import {calculateApyWithFee} from "../utils/calculator";
+import {ApyGetter} from "../lib/apy-getter/apy-getter";
+import {availableStrategies} from "../model/strategy";
+import {TokenPricesContext} from "./TokenPricesContext";
+import {staticArbProvider} from '../utils/static-provider';
 
 const APYsContext = createContext<{ apys: { [strategy: Address]: number }, isLoading: boolean }>({
   apys: {},
@@ -19,8 +19,7 @@ const APYsContextProvider = ({children}: {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const {prices} = useContext(TokenPricesContext)
   const apyGetter = new ApyGetter(staticArbProvider, prices)
-
-
+  
   useEffect(() => {
     Object.keys(prices).length ?
       apyGetter.getApyForAllStrategies().then(
