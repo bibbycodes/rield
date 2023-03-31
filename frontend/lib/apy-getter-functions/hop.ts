@@ -5,7 +5,6 @@ import {VaultsData} from "../../contexts/vault-data-context/VaultDataContext";
 import {structuredMulticall} from "../../contexts/vault-data-context/multicall-structured-result";
 import * as HopPoolAbi from "../../resources/abis/HopPoolAbi.json";
 import * as HopTracker from "../../resources/abis/HopTrackerAbi.json";
-import * as hopUsdc from "../../resources/vault-details/deploy_hop_usdc-output.json";
 
 export interface HopPoolStats {
   optimalYield: {
@@ -31,24 +30,15 @@ export interface HopPoolStats {
   }
 }
 
-export const getHopApr = async (token: string, hopPrice: number, usdcPrice: number) => {
+export const getHopApr = async (token: string,
+                                hopPrice: number,
+                                usdcPrice: number,
+                                hopOutput: { hopPool: Address, hopTracker: Address }) => {
   const poolStats = await getHopPoolStats()
   const chain = 'arbitrum'
-  const {rewardRate, rewardPerToken, totalSupply, virtualPrice} = await getHOPMulticallData()
+  const {rewardRate, rewardPerToken, totalSupply, virtualPrice} = await getHOPMulticallData(hopOutput.hopPool, hopOutput.hopTracker)
   const {apr} = await getHOPRewardsAprAndApy(rewardRate, rewardPerToken, totalSupply, virtualPrice, hopPrice, usdcPrice)
   return apr + poolStats?.pools?.[token]?.[chain]?.apr * 100
-}
-
-export const extractPoolVaultsData = (vaultsData: VaultsData, vaultAddress: Address): {
-  rewardRate: BigNumber,
-  rewardPerToken: BigNumber,
-  totalSupply: BigNumber,
-  token: string
-} => {
-  const vaultData = vaultsData[vaultAddress]
-  const additionalData = vaultData?.additionalData
-  const {rewardRate, rewardPerToken, totalSupply} = additionalData
-  return {rewardRate, rewardPerToken, totalSupply, token: vaultData?.tokenSymbol}
 }
 
 async function getHopPoolStats() {
@@ -88,15 +78,15 @@ async function getPoolStatsFile(): Promise<HopPoolStats> {
   return json.data
 }
 
-async function getHOPMulticallData() {
+async function getHOPMulticallData(hopPoolAddress: Address, hopTrackerAddress: Address) {
   const pool = {
     abi: HopPoolAbi.abi,
-    address: hopUsdc.hopPool as Address
+    address: hopPoolAddress
   }
 
   const tracker = {
     abi: HopTracker.abi,
-    address: hopUsdc.hopTracker as Address
+    address: hopTrackerAddress
   }
 
   const rewardRateFn = {
@@ -120,32 +110,32 @@ async function getHOPMulticallData() {
     functionName: 'getVirtualPrice',
   }
 
-  const data = await structuredMulticall(hopUsdc.hopPool as Address, [rewardRateFn, rewardPerTokenFn, totalSupplyFn, virtualPriceFn])
+  const data = await structuredMulticall(hopPoolAddress as Address, [rewardRateFn, rewardPerTokenFn, totalSupplyFn, virtualPriceFn])
   const {
     rewardRate,
     rewardPerToken,
     totalSupply,
-  } = data[hopUsdc.hopPool as Address][hopUsdc.hopPool as Address] as { [key: string]: BigNumber }
-  
+  } = data[hopPoolAddress as Address][hopPoolAddress as Address] as { [key: string]: BigNumber }
+
   const {
-    getVirtualPrice: virtualPrice,
-  } = data[hopUsdc.hopPool as Address][hopUsdc.hopTracker as Address]
-  return {rewardRate, rewardPerToken, totalSupply, virtualPrice}
+    getVirtualPrice
+  } = data[hopPoolAddress as Address][hopTrackerAddress as Address]
+  return {rewardRate, rewardPerToken, totalSupply, virtualPrice: getVirtualPrice as BigNumber}
 }
 
 async function getHOPRewardsAprAndApy(
-  rewardRate: BigNumber, 
-  rewardPerToken: BigNumber, 
-  totalSupply: BigNumber, 
-  virtualPrice: BigNumber, 
-  hopPrice: number, 
+  rewardRate: BigNumber,
+  rewardPerToken: BigNumber,
+  totalSupply: BigNumber,
+  virtualPrice: BigNumber,
+  hopPrice: number,
   usdcPrice: number
 ): Promise<{apy: number, apr: number}> {
   const precision = BigNumber.from(10).pow(18)
   const totalRewardsPerDay = rewardRate.mul(86400) // multiply by 1 day
   const rewardTokenUsdPriceBn = ethers.utils.parseUnits(hopPrice.toString(), 18)
   const usdcPriceBn = ethers.utils.parseUnits(usdcPrice.toString(), 18)
-  
+
   const lpTokenPrice = usdcPriceBn.mul(virtualPrice).div(precision)
 
   const rateBn = totalRewardsPerDay

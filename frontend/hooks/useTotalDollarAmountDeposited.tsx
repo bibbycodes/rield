@@ -23,7 +23,7 @@ export const useTotalDollarAmountDeposited = () => {
                                         totalSupply: BigNumber,
                                         additionalData: any) => {
     let userStaked = formatUnits(balance.mul(pricePerShare).div(BigNumber.from(10).pow(decimals)), decimals)
-    if (strategy.name === 'HOP' && additionalData) {
+    if ((strategy.name === 'HOP-USDT' || strategy.name === 'HOP-USDC') && additionalData) {
       const vaultPortion = totalSupply.gt(0) ? balance.mul(BigNumber.from(10).pow(18)).div(totalSupply) : 0;
       userStaked = formatUnits(
         additionalData.hopPoolBalance

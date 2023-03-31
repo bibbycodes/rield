@@ -6,6 +6,7 @@ import * as RldEthVault from "../../resources/abis/BeefyETHVault.json";
 import * as genericStrategy from "../../resources/abis/CapSingleStakeStrategy.json";
 import * as erc20 from "../../resources/abis/erc20.json";
 import * as hopUsdc from "../../resources/vault-details/deploy_hop_usdc-output.json";
+import * as hopUsdt from "../../resources/vault-details/deploy_hop_usdt-output.json";
 import { BigNumber } from "ethers";
 import { extractHopAdditionalData, getHopVaultContextData } from './hop-vault-context';
 import { StructuredMulticallResult } from './multicall-structured-result';
@@ -221,6 +222,8 @@ export const getStrategySpecificCalls = (strategy: Strategy) => {
   switch (strategy.strategyAddress) {
     case hopUsdc.strategyAddress:
       return getHopVaultContextData(hopUsdc, strategy);
+    case hopUsdt.strategyAddress:
+      return getHopVaultContextData(hopUsdt, strategy);
     default:
       return []
   }
@@ -230,6 +233,8 @@ export const extractStrategySpecificData = (strategy: Strategy, data: Structured
   switch (strategy.strategyAddress) {
     case hopUsdc.strategyAddress:
       return {...extractHopAdditionalData(hopUsdc, strategy, data)};
+    case hopUsdt.strategyAddress:
+      return {...extractHopAdditionalData(hopUsdt, strategy, data)};
     default:
       return null
   }

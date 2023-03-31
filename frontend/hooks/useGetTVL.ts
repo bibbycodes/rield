@@ -29,7 +29,7 @@ export const useGetTVL = () => {
           }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
           const price = prices[coinGeckoId]
           let vaultTvl = parseFloat(vaultWantBalance?.toString()) / (10 ** decimals)
-          if (name === 'HOP' && additionalData) {
+          if ((name === 'HOP-USDC' || name === 'HOP-USDT') && additionalData) {
             vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6));
           }
           const vaultTvlInDollars = vaultTvl * price
@@ -55,7 +55,7 @@ export const useGetTVL = () => {
           }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
           const price = prices[coinGeckoId]
           let vaultTvl = parseFloat(vaultWantBalance.toString()) / (10 ** decimals)
-          if (name === 'HOP' && additionalData) {
+          if ((name === 'HOP-USDC' || name === 'HOP-USDT') && additionalData) {
             vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6));
           }
           acc[vaultAddress] = vaultTvl * price

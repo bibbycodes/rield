@@ -4,7 +4,8 @@ import * as gmx from "../resources/vault-details/deploy_gmx-output.json";
 import * as glp from "../resources/vault-details/deploy_glp-output.json";
 import * as gns from "../resources/vault-details/deploy_gns-output.json";
 import * as bfr from "../resources/vault-details/deploy_bfr-output.json";
-import * as hop from "../resources/vault-details/deploy_hop_usdc-output.json";
+import * as hopUsdc from "../resources/vault-details/deploy_hop_usdc-output.json";
+import * as hopUsdt from "../resources/vault-details/deploy_hop_usdt-output.json";
 import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
@@ -172,15 +173,15 @@ export const availableStrategies: Strategy[] = [
   },
   {
     id: 6,
-    name: "HOP",
+    name: "HOP-USDC",
     protocol: "HOP",
     tokenSymbol: "USDC",
-    tokenAddress: hop.tokenAddress as Address,
-    vaultAddress: hop.vaultAddress as Address,
-    strategyAddress: hop.strategyAddress as Address,
+    tokenAddress: hopUsdc.tokenAddress as Address,
+    vaultAddress: hopUsdc.vaultAddress as Address,
+    strategyAddress: hopUsdc.strategyAddress as Address,
     protocolLogoUrl: "/hop-logo.svg",
     tokenLogoUrl: "/usdc-logo.svg",
-    description: "Buffer",
+    description: "HOP",
     protocolUrl: "https://app.hop.exchange/#/pools?token=ETH",
     tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${capUSDC.tokenAddress}`,
     decimals: 6,
@@ -189,6 +190,28 @@ export const availableStrategies: Strategy[] = [
     hasWithdrawalSchedule: false,
     abi: abi,
     coinGeckoId: "usd-coin",
+    type: "Auto Compound",
+    performanceFee: 5
+  },
+  {
+    id: 7,
+    name: "HOP-USDT",
+    protocol: "HOP",
+    tokenSymbol: "USDT",
+    tokenAddress: hopUsdt.tokenAddress as Address,
+    vaultAddress: hopUsdt.vaultAddress as Address,
+    strategyAddress: hopUsdt.strategyAddress as Address,
+    protocolLogoUrl: "/hop-logo.svg",
+    tokenLogoUrl: "/usdt-logo.svg",
+    description: "HOP",
+    protocolUrl: "https://app.hop.exchange/#/pools?token=ETH",
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${hopUsdt.tokenAddress}`,
+    decimals: 6,
+    status: 'SOON',
+    coolDownPeriod: 0,
+    hasWithdrawalSchedule: false,
+    abi: abi,
+    coinGeckoId: "tether",
     type: "Auto Compound",
     performanceFee: 5
   },
