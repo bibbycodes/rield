@@ -1,7 +1,6 @@
 import {BigNumber, ethers} from "ethers";
 import {formatUnits} from "ethers/lib/utils";
 import {Address} from "wagmi";
-import {VaultsData} from "../../contexts/vault-data-context/VaultDataContext";
 import {structuredMulticall} from "../../contexts/vault-data-context/multicall-structured-result";
 import * as HopPoolAbi from "../../resources/abis/HopPoolAbi.json";
 import * as HopTracker from "../../resources/abis/HopTrackerAbi.json";
@@ -78,7 +77,7 @@ async function getPoolStatsFile(): Promise<HopPoolStats> {
   return json.data
 }
 
-async function getHOPMulticallData(hopPoolAddress: Address, hopTrackerAddress: Address) {
+async function getHOPMulticallData(hopPoolAddress: Address, hopTrackerAddress: Address): Promise<{[key: string] :BigNumber}> {
   const pool = {
     abi: HopPoolAbi.abi,
     address: hopPoolAddress
@@ -120,7 +119,7 @@ async function getHOPMulticallData(hopPoolAddress: Address, hopTrackerAddress: A
   const {
     getVirtualPrice
   } = data[hopPoolAddress as Address][hopTrackerAddress as Address]
-  return {rewardRate, rewardPerToken, totalSupply, virtualPrice: getVirtualPrice as BigNumber}
+  return {rewardRate, rewardPerToken, totalSupply, virtualPrice: getVirtualPrice as BigNumber} as {[key: string] :BigNumber}
 }
 
 async function getHOPRewardsAprAndApy(

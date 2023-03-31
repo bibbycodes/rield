@@ -10,6 +10,7 @@ import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
 import crypto from 'crypto'
+import {ADDRESS_ZERO} from "../lib/apy-getter-functions/cap";
 
 const randomAddress = () => {
   const randomBytes = crypto.randomBytes(20);
@@ -40,7 +41,7 @@ export interface Strategy {
   hasWithdrawalSchedule?: boolean;
 }
 
-export const availableStrategies: Strategy[] = [
+export const strategies: Strategy[] = [
   {
     id: 2,
     name: "RLD-CAP-USDC",
@@ -216,5 +217,12 @@ export const availableStrategies: Strategy[] = [
     performanceFee: 5
   },
 ]
-availableStrategies.reverse()
+export const erc20Strategies = strategies
+  .filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)
+  .filter(strategy => strategy.status !== 'DISABLED')
+export const ethStrategies = strategies
+  .filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
+  .filter(strategy => strategy.status !== 'DISABLED')
+
+strategies.reverse()
 
