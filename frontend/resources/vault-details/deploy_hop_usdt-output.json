@@ -1,0 +1,7 @@
+{
+  "vaultAddress": "0x5b33fec3fbbeD0B484FDd3A2B8A4147374a6F831",
+  "tokenAddress": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+  "strategyAddress": "0xCB8798E799BC5a0486Ce09a2DeB6c3cdC617b643",
+  "hopPool": "0x9Dd8685463285aD5a94D2c128bda3c5e8a6173c8",
+  "hopTracker": "0x18f7402B673Ba6Fb5EA4B95768aABb8aaD7ef18a"
+}

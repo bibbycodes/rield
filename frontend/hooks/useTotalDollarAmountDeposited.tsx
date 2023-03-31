@@ -1,7 +1,7 @@
 import { useAccount } from "wagmi";
 import { BigNumber } from "ethers";
 import { useContext, useEffect, useState } from "react";
-import { availableStrategies, Strategy } from "../model/strategy";
+import { strategies, Strategy } from "../model/strategy";
 import { TokenPricesContext } from "../contexts/TokenPricesContext";
 import { formatDollarAmount } from "../utils/formatters";
 import { formatUnits } from "ethers/lib/utils";
@@ -23,7 +23,7 @@ export const useTotalDollarAmountDeposited = () => {
                                         totalSupply: BigNumber,
                                         additionalData: any) => {
     let userStaked = formatUnits(balance.mul(pricePerShare).div(BigNumber.from(10).pow(decimals)), decimals)
-    if (strategy.name === 'HOP' && additionalData) {
+    if ((strategy.name === 'HOP-USDT' || strategy.name === 'HOP-USDC') && additionalData) {
       const vaultPortion = totalSupply.gt(0) ? balance.mul(BigNumber.from(10).pow(18)).div(totalSupply) : 0;
       userStaked = formatUnits(
         additionalData.hopPoolBalance
@@ -37,7 +37,7 @@ export const useTotalDollarAmountDeposited = () => {
   }
 
   async function getTotalStakedInDollars() {
-    return availableStrategies
+    return strategies
       .filter(strategy => strategy.status === 'ACTIVE')
       .reduce((acc: any, strategy: any, index: number) => {
         if (vaultsData[strategy.vaultAddress] && Object.keys(prices).length && userAddress) {
@@ -49,8 +49,8 @@ export const useTotalDollarAmountDeposited = () => {
           if (balance == null || pricePerShare == null) {
             return acc;
           }
-          const decimals = availableStrategies[index].decimals
-          const price = prices[availableStrategies[index].coinGeckoId]
+          const decimals = strategies[index].decimals
+          const price = prices[strategies[index].coinGeckoId]
           const dollarAmount = calculateUserStakedInDollars(balance,
             price,
             pricePerShare,

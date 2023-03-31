@@ -1,6 +1,6 @@
 import { Prices } from "../contexts/TokenPricesContext";
 import { useEffect, useState } from "react";
-import { availableStrategies } from "../model/strategy";
+import { strategies } from "../model/strategy";
 import axios from "axios";
 import { getGlpPrice } from '../lib/apy-getter-functions/gmx';
 import { staticArbProvider } from '../utils/static-provider';
@@ -14,10 +14,10 @@ export const useFetchPrices = () => {
     const priceData = readPricesFromLocalStorage();
     if (shouldUpdate(priceData)) {
       const glpPrice = await getGlpPrice(staticArbProvider)
-      const coinGeckoIds = availableStrategies
+      let coinGeckoIds = strategies
         .filter(strategy => strategy.status !== 'DISABLED')
         .map(strategy => strategy.coinGeckoId)
-      coinGeckoIds.push('ethereum')
+      coinGeckoIds = [...coinGeckoIds, 'ethereum', 'hop-protocol']
       const coinGeckoIdsString = coinGeckoIds.join(',')
       const {data} = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdsString}&vs_currencies=usd`)
       let transformedData = new Map(coinGeckoIds.map((id) => [id, data[id]?.usd]));

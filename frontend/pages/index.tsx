@@ -1,6 +1,6 @@
 import Link from "next/link";
 import React, { ReactElement } from "react";
-import { availableStrategies } from "../model/strategy";
+import { strategies } from "../model/strategy";
 import ApyCard from "../components/ApyCard";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AssuredWorkloadOutlinedIcon from '@mui/icons-material/AssuredWorkloadOutlined';
@@ -15,11 +15,9 @@ import { TokenPricesContextProvider } from '../contexts/TokenPricesContext';
 import FadeInImage from '../components/FadeInImage';
 import FadeInOnScroll from '../components/FadeInOnScroll';
 
-
+// todo: move these to tailwind theme:
 export const bgGradient = `bg-gradient-to-b from-[#3F37AA] to-[#8F18F7]`
 export const cardGradient = 'bg-gradient-to-b from-[#191F30] to-[#101625]'
-export const buttonColor = `bg-gradient-to-b from-[#6F47EF] to-[#6F47DA]`
-export const buttonHoverColor = `[#8225ED]`
 export const bgColor = `bg-[#0E121D]`
 export default function Home() {
   return (
@@ -83,15 +81,15 @@ export default function Home() {
             <FadeInOnScroll>
               <div className={`w-full shadow-2xl rounded-2xl mb-8`}>
                 <ApyCard
-                  key={availableStrategies[3].vaultAddress}
-                  strategy={availableStrategies[3]}
+                  key={strategies[3].vaultAddress}
+                  strategy={strategies[3]}
                 />
               </div>
 
               <div className={`w-full shadow-2xl md:block mt-8`}>
                 <ApyCard
-                  key={availableStrategies[5].vaultAddress}
-                  strategy={availableStrategies[5]}
+                  key={strategies[5].vaultAddress}
+                  strategy={strategies[5]}
                 />
               </div>
             </FadeInOnScroll>

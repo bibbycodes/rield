@@ -1,4 +1,4 @@
-import { availableStrategies } from '../../model/strategy';
+import { strategies } from '../../model/strategy';
 import StrategyCard from '../../components/StrategyCard';
 import React, { useState } from 'react';
 import DepositAndWithdrawModal from '../../components/DepositAndWithdrawModal';
@@ -7,14 +7,13 @@ import { Toast } from "../../components/Toast";
 import { AccountBalance, WalletOutlined } from '@mui/icons-material';
 import { useGetTVL } from "../../hooks/useGetTVL";
 import { ToolBarDataItem } from "../../components/ToolBarDataItem";
-import { useAccount } from "wagmi";
 import NonSSRWrapper from '../../components/NonSSRWrapper';
+import { formatDollarAmount } from '../../utils/formatters';
 
 export default function Compound() {
   const [isStrategyDetailsModalOpen, setIsStrategyDetailsModalOpen] = useState<boolean>(false);
   const {totalDollarAmountDeposited} = useTotalDollarAmountDeposited()
   const {tvl, isLoading: tvlLoading} = useGetTVL()
-  const {isConnected} = useAccount()
 
   return <>
     <Toast/>
@@ -26,9 +25,9 @@ export default function Compound() {
         isLoading={totalDollarAmountDeposited == null}
       />
       <NonSSRWrapper>
-        {isConnected && <ToolBarDataItem
+        {<ToolBarDataItem
             MuiIcon={AccountBalance}
-            value={tvl.toFixed(2)}
+            value={formatDollarAmount(tvl)}
             label={"TVL"}
             isLoading={tvlLoading}
         />}
@@ -36,7 +35,7 @@ export default function Compound() {
     </div>
     <div className="flex justify-center">
       <div className={`grid md:grid-cols-2 grid-cols-1 gap-4 [&>*]:shadow-xl max-w-6xl w-full`}>
-        {availableStrategies
+        {strategies
           .map(strategy => <StrategyCard key={strategy.vaultAddress} strategy={strategy}
                                          openModal={setIsStrategyDetailsModalOpen}/>)}
       </div>

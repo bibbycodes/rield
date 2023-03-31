@@ -20,7 +20,7 @@ import WarningIcon from '@mui/icons-material/Warning';
 import { ADDRESS_ZERO } from '../lib/apy-getter-functions/cap';
 import { VaultDataContext } from '../contexts/vault-data-context/VaultDataContext';
 import { useApproveToken } from '../hooks/useApproveToken';
-import { bgColor, buttonColor } from "../pages";
+import { bgColor } from "../pages";
 import LoadingButton from './LoadingButton';
 
 const style = {
@@ -251,7 +251,9 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
                                className={`w-full h-16 mt-6 uppercase rounded-lg text-tPrimary w-full`}
                                onClick={() => approve()}>
                     <button
-                        className={`${buttonColor} rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
+                        className={`bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient
+                        hover:from-accentSecondary hover:to-accentSecondaryGradient 
+                        rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
                         onClick={() => approve()}
                     >Approve
                     </button>
@@ -259,7 +261,9 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
             }
             {!showApprove &&
                 <button
-                    className={`${buttonColor} rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
+                    className={`bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient
+                        hover:from-accentSecondary hover:to-accentSecondaryGradient 
+                        rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
                     onClick={() => performAction(action)}>{action}
                 </button>}
           </Box>

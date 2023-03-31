@@ -1,3 +1,10 @@
+import {BigNumber, ethers} from "ethers";
+import {formatUnits} from "ethers/lib/utils";
+import {Address} from "wagmi";
+import {structuredMulticall} from "../../contexts/vault-data-context/multicall-structured-result";
+import * as HopPoolAbi from "../../resources/abis/HopPoolAbi.json";
+import * as HopTracker from "../../resources/abis/HopTrackerAbi.json";
+
 export interface HopPoolStats {
   optimalYield: {
     [token: string]: {
@@ -22,15 +29,15 @@ export interface HopPoolStats {
   }
 }
 
-export const getHopApr = async (token: string) => {
+export const getHopApr = async (token: string,
+                                hopPrice: number,
+                                usdcPrice: number,
+                                hopOutput: { hopPool: Address, hopTracker: Address }) => {
   const poolStats = await getHopPoolStats()
   const chain = 'arbitrum'
-  // HOP this HOP protocol is returning different APRs for the optimalYield and pools field depending
-  // on if the stakingRewards field is present or not
-  if (!poolStats?.stakingRewards?.[token]) {
-    return poolStats?.pools?.[token]?.[chain]?.apr * 100;
-  }
-  return poolStats?.optimalYield?.[token]?.[chain]?.apr * 100 + poolStats?.pools?.[token]?.[chain]?.apr * 100
+  const {rewardRate, rewardPerToken, totalSupply, virtualPrice} = await getHOPMulticallData(hopOutput.hopPool, hopOutput.hopTracker)
+  const {apr} = await getHOPRewardsAprAndApy(rewardRate, rewardPerToken, totalSupply, virtualPrice, hopPrice, usdcPrice)
+  return apr + poolStats?.pools?.[token]?.[chain]?.apr * 100
 }
 
 async function getHopPoolStats() {
@@ -68,4 +75,75 @@ async function getPoolStatsFile(): Promise<HopPoolStats> {
     throw new Error('expected data')
   }
   return json.data
+}
+
+async function getHOPMulticallData(hopPoolAddress: Address, hopTrackerAddress: Address): Promise<{[key: string] :BigNumber}> {
+  const pool = {
+    abi: HopPoolAbi.abi,
+    address: hopPoolAddress
+  }
+
+  const tracker = {
+    abi: HopTracker.abi,
+    address: hopTrackerAddress
+  }
+
+  const rewardRateFn = {
+    ...pool,
+    functionName: 'rewardRate',
+  }
+
+  const rewardPerTokenFn = {
+    ...pool,
+    functionName: 'rewardPerToken',
+  }
+
+  const totalSupplyFn = {
+    ...pool,
+    functionName: 'totalSupply',
+  }
+
+
+  const virtualPriceFn = {
+    ...tracker,
+    functionName: 'getVirtualPrice',
+  }
+
+  const data = await structuredMulticall(hopPoolAddress as Address, [rewardRateFn, rewardPerTokenFn, totalSupplyFn, virtualPriceFn])
+  const {
+    rewardRate,
+    rewardPerToken,
+    totalSupply,
+  } = data[hopPoolAddress as Address][hopPoolAddress as Address] as { [key: string]: BigNumber }
+
+  const {
+    getVirtualPrice
+  } = data[hopPoolAddress as Address][hopTrackerAddress as Address]
+  return {rewardRate, rewardPerToken, totalSupply, virtualPrice: getVirtualPrice as BigNumber} as {[key: string] :BigNumber}
+}
+
+async function getHOPRewardsAprAndApy(
+  rewardRate: BigNumber,
+  rewardPerToken: BigNumber,
+  totalSupply: BigNumber,
+  virtualPrice: BigNumber,
+  hopPrice: number,
+  usdcPrice: number
+): Promise<{apy: number, apr: number}> {
+  const precision = BigNumber.from(10).pow(18)
+  const totalRewardsPerDay = rewardRate.mul(86400) // multiply by 1 day
+  const rewardTokenUsdPriceBn = ethers.utils.parseUnits(hopPrice.toString(), 18)
+  const usdcPriceBn = ethers.utils.parseUnits(usdcPrice.toString(), 18)
+
+  const lpTokenPrice = usdcPriceBn.mul(virtualPrice).div(precision)
+
+  const rateBn = totalRewardsPerDay
+    .mul(rewardTokenUsdPriceBn)
+    .mul(precision)
+    .div(totalSupply.mul(lpTokenPrice))
+
+  const rate = Number(formatUnits(rateBn.toString(), 18))
+  const apr = rate * 365 * 100
+  const apy = ((1 + rate) ** 365 - 1) * 100
+  return {apr, apy}
 }
