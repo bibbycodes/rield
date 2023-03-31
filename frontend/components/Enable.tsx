@@ -5,7 +5,6 @@ import {Strategy} from "../model/strategy";
 import {useGetUserDepositedInVault} from '../hooks/useGetUserDepositedInVault';
 import {ConnectKitButton} from 'connectkit';
 import {VaultDataContext} from '../contexts/vault-data-context/VaultDataContext';
-import { buttonColor, buttonHoverColor } from '../pages';
 
 interface StrategyDetailsModalProps {
   openModal: () => void,
@@ -46,12 +45,15 @@ export default function Enable({
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => handleClick("deposit")}
-          className={`text-tPrimary ${buttonColor} hover:bg-${buttonHoverColor} p-3 rounded-lg uppercase disabled:text-tSecondary disabled:border-tSecondary`}
+          className={`text-tPrimary bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient p-3 rounded-lg 
+          hover:from-accentSecondary hover:to-accentSecondaryGradient 
+          uppercase disabled:text-tSecondary disabled:border-tSecondary`}
         >Deposit
         </button>
         <button
           disabled={!isWithdrawEnabled()}
-          className={`disabled:text-tSecondary disabled:border-tSecondary p-3 rounded-lg border-2 text-white border-[#6F47EF] hover:border-${buttonHoverColor} hover:text-${buttonHoverColor} uppercase`}
+          className={`disabled:text-tSecondary disabled:border-tSecondary p-3 rounded-lg border-2 text-white
+           border-accentPrimary hover:border-accentSecondaryGradient uppercase`}
           onClick={() => handleClick('withdraw')}
         >Withdraw
         </button>
@@ -63,7 +65,9 @@ export default function Enable({
         {({show}) => {
           return (
             <button onClick={show}
-                    className={`w-full text-tPrimary ${buttonColor} bg-[4FD9B3] hover:bg-${buttonHoverColor} p-3 rounded-lg uppercase`}>
+                    className={`w-full text-tPrimary bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient
+                     hover:from-accentSecondary hover:to-accentSecondaryGradient
+                     p-3 rounded-lg uppercase`}>
               Connect Wallet
             </button>
           );

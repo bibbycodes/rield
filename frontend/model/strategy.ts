@@ -29,7 +29,7 @@ export interface Strategy {
   tokenLogoUrl: string;
   decimals: number;
   description: string;
-  status: 'ACTIVE' | 'DISABLED' | 'SOON';
+  status: 'ACTIVE' | 'DISABLED' | 'SOON' | 'HIDDEN';
   coolDownPeriod: number;
   protocolUrl: string;
   tokenUrl: string;
@@ -208,7 +208,7 @@ export const strategies: Strategy[] = [
     protocolUrl: "https://app.hop.exchange/#/pools?token=ETH",
     tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${hopUsdt.tokenAddress}`,
     decimals: 6,
-    status: 'SOON',
+    status: 'HIDDEN',
     coolDownPeriod: 0,
     hasWithdrawalSchedule: false,
     abi: abi,

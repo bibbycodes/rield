@@ -53,7 +53,7 @@ export default function StrategyCard({
   }
 
   return (
-    <div className={`${cardGradient} border-[#181E2F] border-solid border-2 rounded-2xl p-2`}>
+    <div className={`${cardGradient} border-[#181E2F] border-solid border-2 rounded-2xl p-2 ${status === 'HIDDEN' ? 'hidden' : ''}`}>
       <div className="p-4">
         <StrategyLogos strategy={strategy}></StrategyLogos>
         <div className={`flex`}>
