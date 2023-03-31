@@ -8,11 +8,10 @@ import { APYsContext } from "../contexts/ApyContext";
 import { WithLoader } from "./WithLoader";
 import { BigNumber, ethers } from 'ethers';
 import NonSSRWrapper from './NonSSRWrapper';
-import {roundToNDecimals} from "../utils/formatters";
+import { formatDollarAmount, roundToNDecimals } from "../utils/formatters";
 import * as capEth from "../resources/vault-details/deploy_cap_eth-output.json";
 import * as capUSDC from "../resources/vault-details/deploy_cap_usdc-output.json";
 import {cardGradient} from "../pages";
-import LoadingButton from './LoadingButton';
 
 export default function StrategyCard({
                                        strategy,
@@ -34,7 +33,7 @@ export default function StrategyCard({
     const balanceInUsd = ethers.utils.formatUnits(
       amount.mul((prices[strategy.coinGeckoId] * 10000).toFixed(0)).div(10000),
       strategy.decimals);
-    return roundToNDecimals(+balanceInUsd, 2)
+    return formatDollarAmount(+balanceInUsd, 2)
   }
 
   const formatStakedAmountInToken = (amount: BigNumber) => {

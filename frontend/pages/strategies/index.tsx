@@ -7,14 +7,13 @@ import { Toast } from "../../components/Toast";
 import { AccountBalance, WalletOutlined } from '@mui/icons-material';
 import { useGetTVL } from "../../hooks/useGetTVL";
 import { ToolBarDataItem } from "../../components/ToolBarDataItem";
-import { useAccount } from "wagmi";
 import NonSSRWrapper from '../../components/NonSSRWrapper';
+import { formatDollarAmount } from '../../utils/formatters';
 
 export default function Compound() {
   const [isStrategyDetailsModalOpen, setIsStrategyDetailsModalOpen] = useState<boolean>(false);
   const {totalDollarAmountDeposited} = useTotalDollarAmountDeposited()
   const {tvl, isLoading: tvlLoading} = useGetTVL()
-  const {isConnected} = useAccount()
 
   return <>
     <Toast/>
@@ -28,7 +27,7 @@ export default function Compound() {
       <NonSSRWrapper>
         {<ToolBarDataItem
             MuiIcon={AccountBalance}
-            value={tvl.toFixed(2)}
+            value={formatDollarAmount(tvl)}
             label={"TVL"}
             isLoading={tvlLoading}
         />}
