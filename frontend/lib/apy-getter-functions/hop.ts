@@ -37,7 +37,6 @@ export const getHopApr = async (token: string,
   const chain = 'arbitrum'
   const {rewardRate, rewardPerToken, totalSupply, virtualPrice} = await getHOPMulticallData(hopOutput.hopPool, hopOutput.hopTracker)
   const {apr} = await getHOPRewardsAprAndApy(rewardRate, rewardPerToken, totalSupply, virtualPrice, hopPrice, usdcPrice)
-
   return apr + poolStats?.pools?.[token]?.[chain]?.apr * 100
 }
 
