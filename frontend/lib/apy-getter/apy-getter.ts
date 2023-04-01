@@ -43,6 +43,7 @@ export class ApyGetter {
   }
 
   async getApyForAllStrategies() {
+    console.log('Getting all APYs');
     return {
       [capWethPool.strategyAddress]: await this.getApy(capWethPool.strategyAddress as Address),
       [capUsdcPool.strategyAddress]: await this.getApy(capUsdcPool.strategyAddress as Address),
