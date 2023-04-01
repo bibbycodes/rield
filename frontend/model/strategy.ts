@@ -9,15 +9,9 @@ import * as hopUsdt from "../resources/vault-details/deploy_hop_usdt-output.json
 import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
-import crypto from 'crypto'
 import {ADDRESS_ZERO} from "../lib/apy-getter-functions/cap";
 
-const randomAddress = () => {
-  const randomBytes = crypto.randomBytes(20);
-  return `0x${randomBytes.toString("hex")}`;
-}
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 export interface Strategy {
   id: number;
   name: string;

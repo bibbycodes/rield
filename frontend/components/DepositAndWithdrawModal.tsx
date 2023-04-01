@@ -22,6 +22,7 @@ import { VaultDataContext } from '../contexts/vault-data-context/VaultDataContex
 import { useApproveToken } from '../hooks/useApproveToken';
 import { bgColor } from "../pages";
 import LoadingButton from './LoadingButton';
+import { ZERO_ADDRESS } from '../model/strategy';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -40,7 +41,6 @@ export interface StrategyDetailsModalProps {
 }
 
 export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDetailsModalProps) {
-  const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
   const {action, selectedStrategy} = useContext(SelectedStrategyContext)
   const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress, decimals} = selectedStrategy;
   const {address: userAddress} = useAccount();

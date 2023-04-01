@@ -41,7 +41,7 @@ const VaultDataContextProvider = ({children}: {
     const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy, userAddress) : getMultiCallDataForErc20Vault(strategy, userAddress)
     const data = await structuredMulticall(strategy.strategyAddress, multiCallData)
-    const vaultDataForStrategy = transformMultiCallData(data, isEthVault ? ethStrategies : erc20Strategies)[strategy.vaultAddress]
+    const vaultDataForStrategy = transformMultiCallData(data, [strategy])[strategy.vaultAddress]
     setVaultsData({
       ...vaultsData,
       [strategy.vaultAddress]: vaultDataForStrategy
