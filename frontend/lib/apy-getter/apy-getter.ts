@@ -43,7 +43,6 @@ export class ApyGetter {
   }
 
   async getApyForAllStrategies() {
-    console.log('Getting all APYs');
     return {
       [capWethPool.strategyAddress]: await this.getApy(capWethPool.strategyAddress as Address),
       [capUsdcPool.strategyAddress]: await this.getApy(capUsdcPool.strategyAddress as Address),
@@ -52,7 +51,7 @@ export class ApyGetter {
       [gns.strategyAddress]: await this.getApy(gns.strategyAddress as Address),
       [bfr.strategyAddress]: await this.getApy(bfr.strategyAddress as Address),
       [hopUsdc.strategyAddress]: await this.getApy(hopUsdc.strategyAddress as Address),
-      // [hopUsdt.strategyAddress]: await this.getApy(hopUsdt.strategyAddress as Address),
+      [hopUsdt.strategyAddress]: await this.getApy(hopUsdt.strategyAddress as Address),
     }
   }
 }
