@@ -51,7 +51,7 @@ export class ApyGetter {
       [gns.strategyAddress]: await this.getApy(gns.strategyAddress as Address),
       [bfr.strategyAddress]: await this.getApy(bfr.strategyAddress as Address),
       [hopUsdc.strategyAddress]: await this.getApy(hopUsdc.strategyAddress as Address),
-      // [hopUsdt.strategyAddress]: await this.getApy(hopUsdt.strategyAddress as Address),
+      [hopUsdt.strategyAddress]: await this.getApy(hopUsdt.strategyAddress as Address),
     }
   }
 }
