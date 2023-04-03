@@ -29,7 +29,9 @@ abstract contract UniSwapRoutes is Ownable {
     function registerRoute(address[] memory route, uint24[] memory fee) public onlyOwner {
         bytes memory path = UniswapV3Utils.routeToPath(route, fee);
         routesByToken[route[0]] = Route(route, fee, path);
-        IERC20(route[0]).safeApprove(unirouter, type(uint).max);
+        if (IERC20(route[0]).allowance(address(this), unirouter) != type(uint).max) {
+            IERC20(route[0]).safeApprove(unirouter, type(uint).max);
+        }
     }
 
     function setUniRouter(address _unirouter) public onlyOwner {

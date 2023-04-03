@@ -123,7 +123,7 @@ contract RldLpTokenVault is ERC20, Ownable, ReentrancyGuard {
      * from the strategy and pay up the token holder. A proportional number of IOU
      * tokens are burned in the process.
      */
-    function withdraw(uint256 _shares) public {
+    function withdraw(uint256 _shares) public virtual {
         // (vault_want_bal * (withdrawal_amount / total_supply_vault_token)
         // ratio of want in proportion to withdrawal amount
         uint256 userOwedWant = (balance() * _shares) / totalSupply();
