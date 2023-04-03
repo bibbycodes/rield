@@ -5,7 +5,6 @@ import * as glp from "../resources/vault-details/deploy_glp-output.json";
 import * as gns from "../resources/vault-details/deploy_gns-output.json";
 import * as bfr from "../resources/vault-details/deploy_bfr-output.json";
 import * as hopUsdc from "../resources/vault-details/deploy_hop_usdc-output.json";
-import * as hopUsdt from "../resources/vault-details/deploy_hop_usdt-output.json";
 import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
