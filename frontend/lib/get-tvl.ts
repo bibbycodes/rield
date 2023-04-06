@@ -93,8 +93,10 @@ export class TvlGetter {
       functionName: 'balance',
     }
 
+    const additionalCalls = getStrategySpecificCalls(strategy)
     return [
       vaultWantBalance,
+      ...additionalCalls
     ]
   }
 

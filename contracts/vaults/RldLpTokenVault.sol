@@ -128,19 +128,7 @@ contract RldLpTokenVault is ERC20, Ownable, ReentrancyGuard {
         // ratio of want in proportion to withdrawal amount
         uint256 userOwedWant = (balance() * _shares) / totalSupply();
         _burn(msg.sender, _shares);
-        // how much want is in the vault
-        uint vaultWantBal = want().balanceOf(address(this));
-        // if the vault has less want than the user is withdrawing,
-        // we need to withdraw from the strategy
-        if (vaultWantBal < userOwedWant) {
-            uint _withdraw = userOwedWant - vaultWantBal;
-            strategy.withdraw(_withdraw);
-            uint _after = want().balanceOf(address(this));
-            uint _diff = _after - vaultWantBal;
-            if (_diff < _withdraw) {
-                userOwedWant = vaultWantBal + _diff;
-            }
-        }
+        strategy.withdraw(userOwedWant);
 
         uint inputTokenBal = inputToken().balanceOf(address(this));
         inputToken().safeTransfer(msg.sender, inputTokenBal);

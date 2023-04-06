@@ -80,7 +80,7 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
         path[0] = rewardToken;
         path[1] = inputToken;
         uint24[] memory fees = new uint24[](1);
-        fees[0] = 10000;
+        fees[0] = 3000;
         registerRoute(path, fees);
         address[] memory tokens = new address[](1);
         tokens[0] = rewardToken;

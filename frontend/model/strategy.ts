@@ -6,6 +6,7 @@ import * as gns from "../resources/vault-details/deploy_gns-output.json";
 import * as bfr from "../resources/vault-details/deploy_bfr-output.json";
 import * as hopUsdc from "../resources/vault-details/deploy_hop_usdc-output.json";
 import * as hopUsdt from "../resources/vault-details/deploy_hop_usdt-output.json";
+import * as hopEth from "../resources/vault-details/deploy_hop_eth-output.json";
 import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
@@ -207,6 +208,28 @@ export const strategies: Strategy[] = [
     hasWithdrawalSchedule: false,
     abi: abi,
     coinGeckoId: "tether",
+    type: "Auto Compound",
+    performanceFee: 5
+  },
+  {
+    id: 8,
+    name: "HOP-ETH",
+    protocol: "HOP",
+    tokenSymbol: "ETH",
+    tokenAddress: hopEth.tokenAddress as Address,
+    vaultAddress: hopEth.vaultAddress as Address,
+    strategyAddress: hopEth.strategyAddress as Address,
+    protocolLogoUrl: "/hop-logo.svg",
+    tokenLogoUrl: "/eth-token.svg",
+    description: "HOP",
+    protocolUrl: "https://app.hop.exchange/#/pools?token=ETH",
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${hopEth.tokenAddress}`,
+    decimals: 18,
+    status: 'ACTIVE',
+    coolDownPeriod: 0,
+    hasWithdrawalSchedule: false,
+    abi: ethVaultAbi,
+    coinGeckoId: "ethereum",
     type: "Auto Compound",
     performanceFee: 5
   },

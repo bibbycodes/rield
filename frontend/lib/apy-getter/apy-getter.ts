@@ -7,6 +7,7 @@ import * as gns from "../../resources/vault-details/deploy_gns-output.json";
 import * as bfr from "../../resources/vault-details/deploy_bfr-output.json";
 import * as hopUsdc from "../../resources/vault-details/deploy_hop_usdc-output.json";
 import * as hopUsdt from "../../resources/vault-details/deploy_hop_usdt-output.json";
+import * as hopEth from "../../resources/vault-details/deploy_hop_eth-output.json";
 import {getCapApr} from "../apy-getter-functions/cap";
 import {getGmxGlpApr} from "../apy-getter-functions/gmx";
 import {Prices} from "../../contexts/TokenPricesContext";
@@ -37,6 +38,8 @@ export class ApyGetter {
         return getHopApr('USDC', this.prices['hop-protocol'], this.prices['usd-coin'], hopUsdc as any)
       case hopUsdt.strategyAddress:
         return getHopApr('USDT', this.prices['hop-protocol'], this.prices['tether'], hopUsdt as any)
+      case hopEth.strategyAddress:
+        return getHopApr('ETH', this.prices['hop-protocol'], this.prices['ethereum'], hopEth as any)
       default:
         return 0
     }
@@ -52,6 +55,7 @@ export class ApyGetter {
       [bfr.strategyAddress]: await this.getApy(bfr.strategyAddress as Address),
       [hopUsdc.strategyAddress]: await this.getApy(hopUsdc.strategyAddress as Address),
       [hopUsdt.strategyAddress]: await this.getApy(hopUsdt.strategyAddress as Address),
+      [hopEth.strategyAddress]: await this.getApy(hopEth.strategyAddress as Address),
     }
   }
 }

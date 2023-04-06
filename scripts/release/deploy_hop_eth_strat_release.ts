@@ -17,7 +17,7 @@ async function main() {
   console.log("Deploying contracts with the account:", deployer.address);
   //
   const Vault = await ethers.getContractFactory("RldEthLpTokenVault");
-  const vault: RldEthLpTokenVault = (await Vault.deploy("RLD_HOP_ETH", "RLD_HOP_ETH", token)) as RldEthLpTokenVault;
+  const vault: RldEthLpTokenVault = (await Vault.deploy("RLD_HOP_ETH", "RLD_HOP_ETH")) as RldEthLpTokenVault;
   await vault.deployed();
 
   const SingleStakeStrategy = await ethers.getContractFactory("HopPoolStrategy");
