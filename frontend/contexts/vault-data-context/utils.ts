@@ -142,6 +142,11 @@ export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Add
     functionName: 'getPricePerFullShare',
   }
 
+  const vaultTotalSupply = {
+    ...vault,
+    functionName: 'totalSupply'
+  }
+
   const vaultWantBalance = {
     ...vault,
     functionName: 'balance',
@@ -170,6 +175,7 @@ export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Add
   const additionalCalls = getStrategySpecificCalls(strategy)
   return [
     vaultBalance,
+    vaultTotalSupply,
     vaultPricePerFullShare,
     vaultWantBalance,
     paused,

@@ -23,15 +23,27 @@ export const useTotalDollarAmountDeposited = () => {
                                         totalSupply: BigNumber,
                                         additionalData: any) => {
     let userStaked = formatUnits(balance.mul(pricePerShare).div(BigNumber.from(10).pow(decimals)), decimals)
-    if ((strategy.name === 'HOP-USDT' || strategy.name === 'HOP-USDC') && additionalData) {
-      const vaultPortion = totalSupply.gt(0) ? balance.mul(BigNumber.from(10).pow(18)).div(totalSupply) : 0;
-      userStaked = formatUnits(
-        additionalData.hopPoolBalance
-          .mul(additionalData.hopVirtualPrice)
-          .mul(vaultPortion)
-          .div(BigNumber.from(10).pow(18))
-          .div(BigNumber.from(10).pow(18))
-          .div(BigNumber.from(10).pow(12)), 6);
+    if (additionalData) {
+      if (strategy.name === 'HOP-USDT' || strategy.name === 'HOP-USDC') {
+        const vaultPortion = totalSupply.gt(0) ? balance.mul(BigNumber.from(10).pow(18)).div(totalSupply) : 0;
+        userStaked = formatUnits(
+          additionalData.hopPoolBalance
+            .mul(additionalData.hopVirtualPrice)
+            .mul(vaultPortion)
+            .div(BigNumber.from(10).pow(18))
+            .div(BigNumber.from(10).pow(18))
+            .div(BigNumber.from(10).pow(12)), 6);
+      }
+      if (strategy.name === 'HOP-ETH') {
+        const vaultPortion = totalSupply.gt(0) ? balance.mul(BigNumber.from(10).pow(18)).div(totalSupply) : 0;
+        userStaked = formatUnits(
+          additionalData.hopPoolBalance
+            .mul(additionalData.hopVirtualPrice)
+            .mul(vaultPortion)
+            .div(BigNumber.from(10).pow(18))
+            .div(BigNumber.from(10).pow(18)), 18);
+      }
+
     }
     return parseFloat(userStaked) * price
   }

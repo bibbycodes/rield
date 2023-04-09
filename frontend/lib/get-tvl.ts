@@ -1,11 +1,11 @@
-import {erc20Strategies, ethStrategies, strategies, Strategy} from "../model/strategy";
-import {Prices} from "../contexts/TokenPricesContext";
-import {getStrategySpecificCalls, VaultData} from "../contexts/vault-data-context/utils";
-import {Address} from "wagmi";
-import {formatUnits} from "ethers/lib/utils";
-import {BigNumber} from "ethers";
-import {VaultsData} from "../contexts/vault-data-context/VaultDataContext";
-import {ADDRESS_ZERO} from "./apy-getter-functions/cap";
+import { erc20Strategies, ethStrategies, strategies, Strategy } from "../model/strategy";
+import { Prices } from "../contexts/TokenPricesContext";
+import { getStrategySpecificCalls, VaultData } from "../contexts/vault-data-context/utils";
+import { Address } from "wagmi";
+import { formatUnits } from "ethers/lib/utils";
+import { BigNumber } from "ethers";
+import { VaultsData } from "../contexts/vault-data-context/VaultDataContext";
+import { ADDRESS_ZERO } from "./apy-getter-functions/cap";
 import * as RldVault from "../resources/abis/RldTokenVault.json";
 import * as RldEthVault from "../resources/abis/BeefyETHVault.json";
 import {
@@ -21,6 +21,7 @@ export const getTvl = () => {
 export class TvlGetter {
   constructor(private prices: Prices) {
   }
+
   getTvl = async (): Promise<number> => {
     if (Object.keys(this.prices).length > 0) {
       const vaultsData = await this.getVaultsData()
@@ -35,8 +36,13 @@ export class TvlGetter {
           }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
           const price = this.prices[coinGeckoId]
           let vaultTvl = parseFloat(vaultWantBalance?.toString()) / (10 ** decimals)
-          if ((name === 'HOP-USDC' || name === 'HOP-USDT') && additionalData) {
-            vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6));
+          if (additionalData) {
+            if (name === 'HOP-USDC' || name === 'HOP-USDT') {
+              vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6));
+            }
+            if (name === 'HOP-ETH') {
+              vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)), 18));
+            }
           }
           const vaultTvlInDollars = vaultTvl * price
           return acc + vaultTvlInDollars
@@ -46,7 +52,7 @@ export class TvlGetter {
     }
   }
 
-  getVaultsData = async(): Promise<VaultsData> => {
+  getVaultsData = async (): Promise<VaultsData> => {
     const {
       erc20VaultCallData,
       ethVaultCallData

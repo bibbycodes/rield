@@ -34,14 +34,25 @@ export const useGetUserDepositedInVault = (strategy: Strategy) => {
       totalSupply
     } = vaultsData[strategy.vaultAddress]
     let userStaked = calculateUserStaked(vaultBalance as BigNumber, vaultPricePerFullShare as BigNumber);
-    if ((strategy.name === 'HOP-USDC' || strategy.name === 'HOP-USDT') && additionalData) {
-      const vaultPortion = totalSupply.gt(0) ? vaultBalance.mul(BigNumber.from(10).pow(18)).div(totalSupply) : 0;
-      userStaked = additionalData.hopPoolBalance.mul(
-        additionalData.hopVirtualPrice)
-        .mul(vaultPortion)
-        .div(BigNumber.from(10).pow(18))
-        .div(BigNumber.from(10).pow(18))
-        .div(BigNumber.from(10).pow(12))
+    if (additionalData) {
+      if (strategy.name === 'HOP-USDC' || strategy.name === 'HOP-USDT') {
+        const vaultPortion = totalSupply.gt(0) ? vaultBalance.mul(BigNumber.from(10).pow(18)).div(totalSupply) : 0;
+        userStaked = additionalData.hopPoolBalance.mul(
+          additionalData.hopVirtualPrice)
+          .mul(vaultPortion)
+          .div(BigNumber.from(10).pow(18))
+          .div(BigNumber.from(10).pow(18))
+          .div(BigNumber.from(10).pow(12))
+      }
+      if (strategy.name === 'HOP-ETH') {
+        const vaultPortion = totalSupply.gt(0) ? vaultBalance.mul(BigNumber.from(10).pow(18)).div(totalSupply) : 0;
+        userStaked = additionalData.hopPoolBalance.mul(
+          additionalData.hopVirtualPrice)
+          .mul(vaultPortion)
+          .div(BigNumber.from(10).pow(18))
+          .div(BigNumber.from(10).pow(18));
+      }
+
     }
     setUserStaked(userStaked)
   }, [vaultsData[strategy.vaultAddress]])
