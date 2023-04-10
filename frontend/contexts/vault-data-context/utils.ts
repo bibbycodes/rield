@@ -7,6 +7,8 @@ import * as genericStrategy from "../../resources/abis/CapSingleStakeStrategy.js
 import * as erc20 from "../../resources/abis/erc20.json";
 import * as hopUsdc from "../../resources/vault-details/deploy_hop_usdc-output.json";
 import * as hopUsdt from "../../resources/vault-details/deploy_hop_usdt-output.json";
+import * as hopEth from "../../resources/vault-details/deploy_hop_eth-output.json";
+import * as hopDai from "../../resources/vault-details/deploy_hop_dai-output.json";
 import { BigNumber } from "ethers";
 import { extractHopAdditionalData, getHopVaultContextData } from './hop-vault-context';
 import { StructuredMulticallResult } from './multicall-structured-result';
@@ -141,6 +143,11 @@ export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Add
     functionName: 'getPricePerFullShare',
   }
 
+  const vaultTotalSupply = {
+    ...vault,
+    functionName: 'totalSupply'
+  }
+
   const vaultWantBalance = {
     ...vault,
     functionName: 'balance',
@@ -166,14 +173,17 @@ export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Add
     functionName: 'lastPauseTime',
   }
 
+  const additionalCalls = getStrategySpecificCalls(strategy)
   return [
     vaultBalance,
+    vaultTotalSupply,
     vaultPricePerFullShare,
     vaultWantBalance,
     paused,
     lastHarvest,
     lastPoolDepositTime,
-    lastPauseTime
+    lastPauseTime,
+    ...additionalCalls
   ]
 }
 
@@ -224,6 +234,10 @@ export const getStrategySpecificCalls = (strategy: Strategy) => {
       return getHopVaultContextData(hopUsdc, strategy);
     case hopUsdt.strategyAddress:
       return getHopVaultContextData(hopUsdt, strategy);
+    case hopEth.strategyAddress:
+      return getHopVaultContextData(hopEth, strategy);
+    case hopDai.strategyAddress:
+      return getHopVaultContextData(hopDai, strategy);
     default:
       return []
   }
@@ -235,6 +249,10 @@ export const extractStrategySpecificData = (strategy: Strategy, data: Structured
       return {...extractHopAdditionalData(hopUsdc, strategy, data)};
     case hopUsdt.strategyAddress:
       return {...extractHopAdditionalData(hopUsdt, strategy, data)};
+    case hopEth.strategyAddress:
+      return {...extractHopAdditionalData(hopEth, strategy, data)};
+    case hopDai.strategyAddress:
+      return {...extractHopAdditionalData(hopDai, strategy, data)};
     default:
       return null
   }

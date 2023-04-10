@@ -1,12 +1,12 @@
-import {useContext, useEffect, useState} from "react";
-import {VaultDataContext} from "../contexts/vault-data-context/VaultDataContext";
-import {TokenPricesContext} from "../contexts/TokenPricesContext";
-import {Strategy} from "../model/strategy";
-import {VaultData} from "../contexts/vault-data-context/utils";
-import {Address} from "wagmi";
-import {BigNumber} from 'ethers';
-import {formatUnits} from 'ethers/lib/utils';
-import {TvlGetter} from "../lib/get-tvl";
+import { useContext, useEffect, useState } from "react";
+import { VaultDataContext } from "../contexts/vault-data-context/VaultDataContext";
+import { TokenPricesContext } from "../contexts/TokenPricesContext";
+import { Strategy } from "../model/strategy";
+import { VaultData } from "../contexts/vault-data-context/utils";
+import { Address } from "wagmi";
+import { BigNumber } from 'ethers';
+import { formatUnits } from 'ethers/lib/utils';
+import { TvlGetter } from "../lib/get-tvl";
 
 export const useGetTVL = () => {
   const {vaultsData} = useContext(VaultDataContext)
@@ -37,8 +37,13 @@ export const useGetTVL = () => {
           }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
           const price = prices[coinGeckoId]
           let vaultTvl = parseFloat(vaultWantBalance.toString()) / (10 ** decimals)
-          if ((name === 'HOP-USDC' || name === 'HOP-USDT') && additionalData) {
-            vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6));
+          if (additionalData) {
+            if (name === 'HOP-USDC' || name === 'HOP-USDT') {
+              vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6));
+            }
+            if (name === 'HOP-ETH' || name === 'HOP-DAI') {
+              vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)), 18));
+            }
           }
           acc[vaultAddress] = vaultTvl * price
           return acc

@@ -153,7 +153,8 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
       return '0.00'
     }
 
-    return parseFloat(value).toFixed(6)
+    const commaIndex = value.indexOf('.');
+    return commaIndex !== -1 ? value.slice(0, commaIndex + 6) : value;
   }
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
