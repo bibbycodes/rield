@@ -19,13 +19,13 @@ const APYsContextProvider = ({children}: {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const {prices} = useContext(TokenPricesContext)
   const apyGetter = new ApyGetter(staticArbProvider, prices)
-  
+
   useEffect(() => {
     Object.keys(prices).length ?
       apyGetter.getApyForAllStrategies().then(
         (APYs) => {
           const apysWithFees = Object.keys(APYs).reduce((acc, strategyAddress) => {
-            return {...acc, [strategyAddress]: calculateApyWithFee(APYs[strategyAddress] as number, 5, 365)}
+            return {...acc, [strategyAddress]: calculateApyWithFee(APYs[strategyAddress] as number, 2, 365)}
           }, {})
           setApys(apysWithFees)
           setIsLoading(false)
