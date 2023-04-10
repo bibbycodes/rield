@@ -34,7 +34,7 @@ export const useTotalDollarAmountDeposited = () => {
             .div(BigNumber.from(10).pow(18))
             .div(BigNumber.from(10).pow(12)), 6);
       }
-      if (strategy.name === 'HOP-ETH') {
+      if (strategy.name === 'HOP-ETH' || strategy.name === 'HOP-DAI') {
         const vaultPortion = totalSupply.gt(0) ? balance.mul(BigNumber.from(10).pow(18)).div(totalSupply) : 0;
         userStaked = formatUnits(
           additionalData.hopPoolBalance

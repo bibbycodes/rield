@@ -40,7 +40,7 @@ export class TvlGetter {
             if (name === 'HOP-USDC' || name === 'HOP-USDT') {
               vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6));
             }
-            if (name === 'HOP-ETH') {
+            if (name === 'HOP-ETH' || name === 'HOP-DAI') {
               vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)), 18));
             }
           }

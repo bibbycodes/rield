@@ -7,6 +7,7 @@ import * as bfr from "../resources/vault-details/deploy_bfr-output.json";
 import * as hopUsdc from "../resources/vault-details/deploy_hop_usdc-output.json";
 import * as hopUsdt from "../resources/vault-details/deploy_hop_usdt-output.json";
 import * as hopEth from "../resources/vault-details/deploy_hop_eth-output.json";
+import * as hopDai from "../resources/vault-details/deploy_hop_dai-output.json";
 import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
@@ -230,6 +231,28 @@ export const strategies: Strategy[] = [
     hasWithdrawalSchedule: false,
     abi: ethVaultAbi,
     coinGeckoId: "ethereum",
+    type: "Auto Compound",
+    performanceFee: 5
+  },
+  {
+    id: 9,
+    name: "HOP-DAI",
+    protocol: "HOP",
+    tokenSymbol: "DAI",
+    tokenAddress: hopDai.tokenAddress as Address,
+    vaultAddress: hopDai.vaultAddress as Address,
+    strategyAddress: hopDai.strategyAddress as Address,
+    protocolLogoUrl: "/hop-logo.svg",
+    tokenLogoUrl: "/dai-logo.png",
+    description: "HOP",
+    protocolUrl: "https://app.hop.exchange/#/pools?token=ETH",
+    tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${hopUsdt.tokenAddress}`,
+    decimals: 18,
+    status: 'ACTIVE',
+    coolDownPeriod: 0,
+    hasWithdrawalSchedule: false,
+    abi: abi,
+    coinGeckoId: "dai",
     type: "Auto Compound",
     performanceFee: 5
   },

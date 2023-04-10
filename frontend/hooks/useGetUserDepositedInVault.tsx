@@ -44,7 +44,7 @@ export const useGetUserDepositedInVault = (strategy: Strategy) => {
           .div(BigNumber.from(10).pow(18))
           .div(BigNumber.from(10).pow(12))
       }
-      if (strategy.name === 'HOP-ETH') {
+      if (strategy.name === 'HOP-ETH' || strategy.name === 'HOP-DAI') {
         const vaultPortion = totalSupply.gt(0) ? vaultBalance.mul(BigNumber.from(10).pow(18)).div(totalSupply) : 0;
         userStaked = additionalData.hopPoolBalance.mul(
           additionalData.hopVirtualPrice)
