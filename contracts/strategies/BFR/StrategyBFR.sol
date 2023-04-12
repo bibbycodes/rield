@@ -9,12 +9,17 @@ import "../../interfaces/bfr/IBFRTracker.sol";
 import "../Common/StratFeeManager.sol";
 import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/common/IUniswapRouterV3.sol";
+import "../Common/UniSwapRoutes.sol";
+import "hardhat/console.sol";
 
-contract StrategyBFR is StrategyManager, GasFeeThrottler {
+contract StrategyBFR is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable {
     using SafeERC20 for IERC20;
 
-    address public native;
+    address public rewardToken;
     address public wantToken;
+    address public vault;
+    address public arbToken; //= 0x912CE59144191C1204E64559FE8253a0e49E6548;
+    address public wethToken; //= 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 
     address public chef;
     address public rewardStorage;
@@ -38,12 +43,47 @@ contract StrategyBFR is StrategyManager, GasFeeThrottler {
 
     constructor(
         address _chef,
-        CommonAddresses memory _commonAddresses
-    ) StrategyManager(_commonAddresses) {
+        address _vault,
+        address _uniRouter,
+        address _wantToken,
+        address _arbToken,
+        address _rewardToken,
+        address _wethToken
+    ) {
         chef = _chef;
         rewardStorage = IBFRRouter(chef).feeBfrTracker();
         balanceTracker = IBFRRouter(chef).stakedBfrTracker();
         devFeeAddress = _msgSender();
+        wantToken = _wantToken;
+        vault = _vault;
+        rewardToken = _rewardToken;
+        arbToken = _arbToken;
+        wethToken = _wethToken;
+        setRewardRouteParams(_uniRouter);
+        IERC20(wantToken).safeApprove(balanceTracker, type(uint).max);
+    }
+
+    function setRewardRouteParams(address unirouter) internal {
+        setUniRouter(unirouter);
+        address[] memory path1 = new address[](2);
+        path1[0] = rewardToken;
+        path1[1] = wantToken;
+        uint24[] memory fees = new uint24[](1);
+        fees[0] = 3000;
+        registerRoute(path1, fees);
+
+        address[] memory path2 = new address[](3);
+        path2[0] = arbToken;
+        path2[1] = wethToken;
+        path2[2] = wantToken;
+        uint24[] memory fees2 = new uint24[](2);
+        fees2[0] = 500;
+        fees2[1] = 3000;
+        registerRoute(path2, fees2);
+        address[] memory tokens = new address[](2);
+        tokens[0] = wantToken;
+        tokens[1] = arbToken;
+        setTokens(tokens);
     }
 
     function want() external view returns (address) {
@@ -77,7 +117,7 @@ contract StrategyBFR is StrategyManager, GasFeeThrottler {
         emit Withdraw(wantTokenBal);
     }
 
-    function beforeDeposit() external virtual override {
+    function beforeDeposit() external virtual {
         if (harvestOnDeposit) {
             require(msg.sender == vault, "!vault");
             _harvest();
@@ -93,10 +133,10 @@ contract StrategyBFR is StrategyManager, GasFeeThrottler {
         IBFRRouter(chef).compound();
         // Claim and re-stake esBFR and multiplier points
         IBFRTracker(rewardStorage).claim(address(this));
-        uint256 nativeBal = IERC20(native).balanceOf(address(this));
+        uint256 nativeBal = IERC20(rewardToken).balanceOf(address(this));
         if (nativeBal > 0) {
-            chargeFees();
             swapRewards();
+            chargeFees();
             uint256 wantTokenHarvested = balanceOfWant();
             deposit();
             lastHarvest = block.timestamp;
@@ -106,32 +146,18 @@ contract StrategyBFR is StrategyManager, GasFeeThrottler {
 
     // performance fees
     function chargeFees() internal {
-        uint256 devFeeAmount = IERC20(native).balanceOf(address(this)) * DEV_FEE / DIVISOR;
-        uint256 stakingFeeAmount = IERC20(native).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
-        IERC20(native).safeTransfer(devFeeAddress, devFeeAmount);
+        uint256 devFeeAmount = IERC20(wantToken).balanceOf(address(this)) * DEV_FEE / DIVISOR;
+        uint256 stakingFeeAmount = IERC20(wantToken).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
+        console.log(devFeeAmount);
+        uint256 wantBal = IERC20(wantToken).balanceOf(address(this));
+        console.log(wantBal);
+        IERC20(wantToken).safeTransfer(devFeeAddress, devFeeAmount);
 
         if (stakingFeeAmount > 0) {
-            IERC20(native).safeTransfer(stakingAddress, stakingFeeAmount);
+            IERC20(wantToken).safeTransfer(stakingAddress, stakingFeeAmount);
         }
 
         emit ChargedFees(DEV_FEE, devFeeAmount + stakingFeeAmount);
-    }
-
-    // Adds liquidity to AMM and gets more LP tokens.
-    function swapRewards() internal virtual {
-        uint256 nativeBal = IERC20(native).balanceOf(address(this));
-        if (nativeBal > 0) {
-            IUniswapRouterV3.ExactInputSingleParams memory params = IUniswapRouterV3.ExactInputSingleParams({
-                tokenIn: native,
-                tokenOut: wantToken,
-                fee: 3000,
-                recipient: address(this),
-                amountIn: nativeBal,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
-            IUniswapRouterV3(unirouter).exactInputSingle(params);
-        }
     }
 
     // calculate the total underlaying 'wantToken' held by the strat.
@@ -211,12 +237,14 @@ contract StrategyBFR is StrategyManager, GasFeeThrottler {
 
     function _giveAllowances() internal {
         IERC20(wantToken).safeApprove(balanceTracker, type(uint).max);
-        IERC20(native).safeApprove(unirouter, type(uint).max);
+        IERC20(rewardToken).safeApprove(unirouter, type(uint).max);
+        IERC20(arbToken).safeApprove(unirouter, type(uint).max);
     }
 
     function _removeAllowances() internal {
         IERC20(wantToken).safeApprove(balanceTracker, 0);
-        IERC20(native).safeApprove(unirouter, 0);
+        IERC20(rewardToken).safeApprove(unirouter, 0);
+        IERC20(arbToken).safeApprove(unirouter, 0);
     }
 
     function nativeToWant() external view virtual returns (address[] memory) {}

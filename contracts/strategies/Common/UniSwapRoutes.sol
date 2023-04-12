@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin-4/contracts/access/Ownable.sol";
 import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../utils/UniswapV3Utils.sol";
+import "hardhat/console.sol";
 
 abstract contract UniSwapRoutes is Ownable {
     using SafeERC20 for IERC20;
