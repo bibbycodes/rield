@@ -21,6 +21,7 @@ abstract contract UniSwapRoutes is Ownable {
     address[] tokens;
 
     function swapReward(address token) internal {
+        console.log(token);
         uint256 tokenBalance = IERC20(token).balanceOf(address(this));
         if (tokenBalance > 0) {
             UniswapV3Utils.swap(unirouter, routesByToken[token].path, tokenBalance);

@@ -81,7 +81,7 @@ contract StrategyBFR is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable {
         fees2[1] = 3000;
         registerRoute(path2, fees2);
         address[] memory tokens = new address[](2);
-        tokens[0] = wantToken;
+        tokens[0] = rewardToken;
         tokens[1] = arbToken;
         setTokens(tokens);
     }
@@ -133,8 +133,11 @@ contract StrategyBFR is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable {
         IBFRRouter(chef).compound();
         // Claim and re-stake esBFR and multiplier points
         IBFRTracker(rewardStorage).claim(address(this));
-        uint256 nativeBal = IERC20(rewardToken).balanceOf(address(this));
-        if (nativeBal > 0) {
+        console.log(rewardToken);
+        uint256 rewardTokenBalance = IERC20(rewardToken).balanceOf(address(this));
+        console.log(rewardTokenBalance);
+        if (rewardTokenBalance > 0) {
+            console.log("hello");
             swapRewards();
             chargeFees();
             uint256 wantTokenHarvested = balanceOfWant();
