@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin-4/contracts/access/Ownable.sol";
 import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../utils/UniswapV3Utils.sol";
+import "hardhat/console.sol";
 
 abstract contract UniSwapRoutes is Ownable {
     using SafeERC20 for IERC20;
@@ -20,6 +21,7 @@ abstract contract UniSwapRoutes is Ownable {
     address[] tokens;
 
     function swapReward(address token) internal {
+        console.log(token);
         uint256 tokenBalance = IERC20(token).balanceOf(address(this));
         if (tokenBalance > 0) {
             UniswapV3Utils.swap(unirouter, routesByToken[token].path, tokenBalance);
