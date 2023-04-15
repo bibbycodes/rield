@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import { Providers } from "../lib/Providers";
 import { ReactElement } from 'react';
 import { NextPage } from 'next';
+import {Analytics} from "@mui/icons-material";
 
 export type NextPageWithProviders<P = {}, IP = P> = NextPage<P, IP> & {
   getLayoutAndProvider?: (page: ReactElement) => ReactElement<any, any> | null
@@ -14,11 +15,16 @@ type AppPropsWithLayout = AppProps & {
 }
 
 function getDefaultLayoutAndProvider(page: ReactElement) {
-  return <Providers>
-    <Layout>
-      {page}
-    </Layout>
-  </Providers>;
+  return(
+    <>
+      <Providers>
+        <Layout>
+          {page}
+        </Layout>
+      </Providers>
+      <Analytics/>
+    </>
+    ) 
 }
 
 export default function App({Component, pageProps}: AppPropsWithLayout) {
