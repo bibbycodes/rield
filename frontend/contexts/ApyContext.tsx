@@ -1,10 +1,10 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { Address, useNetwork } from "wagmi";
-import { calculateApyWithFee } from "../utils/calculator";
-import { ApyGetter } from "../lib/apy-getter/apy-getter";
-import { availableStrategies } from "../model/strategy";
-import { TokenPricesContext } from "./TokenPricesContext";
-import { staticArbProvider } from '../utils/static-provider';
+import {createContext, ReactNode, useContext, useEffect, useState} from "react";
+import {Address, useNetwork} from "wagmi";
+import {calculateApyWithFee} from "../utils/calculator";
+import {ApyGetter} from "../lib/apy-getter/apy-getter";
+import {strategies} from "../model/strategy";
+import {TokenPricesContext} from "./TokenPricesContext";
+import {staticArbProvider} from '../utils/static-provider';
 
 const APYsContext = createContext<{ apys: { [strategy: Address]: number }, isLoading: boolean }>({
   apys: {},
@@ -20,19 +20,18 @@ const APYsContextProvider = ({children}: {
   const {prices} = useContext(TokenPricesContext)
   const apyGetter = new ApyGetter(staticArbProvider, prices)
 
-
   useEffect(() => {
     Object.keys(prices).length ?
       apyGetter.getApyForAllStrategies().then(
         (APYs) => {
           const apysWithFees = Object.keys(APYs).reduce((acc, strategyAddress) => {
-            return {...acc, [strategyAddress]: calculateApyWithFee(APYs[strategyAddress] as number, 5, 365)}
+            return {...acc, [strategyAddress]: calculateApyWithFee(APYs[strategyAddress] as number, 2, 365)}
           }, {})
           setApys(apysWithFees)
           setIsLoading(false)
         }
       )
-      : setApys(availableStrategies
+      : setApys(strategies
         .filter(strategy => strategy.status !== 'DISABLED')
         .reduce((acc, strategy) => {
         return {...acc, [strategy.strategyAddress]: 0}

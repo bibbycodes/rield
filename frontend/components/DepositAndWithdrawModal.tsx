@@ -18,6 +18,11 @@ import { WithLoader } from './WithLoader';
 import IconButton from '@mui/material/IconButton';
 import WarningIcon from '@mui/icons-material/Warning';
 import { ADDRESS_ZERO } from '../lib/apy-getter-functions/cap';
+import { VaultDataContext } from '../contexts/vault-data-context/VaultDataContext';
+import { useApproveToken } from '../hooks/useApproveToken';
+import { bgColor } from "../pages";
+import LoadingButton from './LoadingButton';
+import { ZERO_ADDRESS } from '../model/strategy';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -49,12 +54,26 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const tokenBalanceBN = tokenBalanceData?.value
   const vaultTokenBalanceBn = vaultTokenBalanceData?.value
   const [visibleAmount, setVisibleAmount] = useState<string>('0')
+  const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
+  const {
+    approve,
+    isLoading: approveLoading
+  } = useApproveToken(tokenAddress, vaultAddress, userAddress, selectedStrategy, refetchForStrategy);
   const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys?.[strategyAddress]
+  const isApproved = visibleAmount < '0' || vaultsData[vaultAddress]?.allowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals))
+  const showApprove = action === 'deposit' && tokenAddress !== ZERO_ADDRESS && !isApproved
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
   const amount = useCalculateSendAmount(visibleAmount, action, decimals, userStaked, vaultTokenBalanceBn)
-  const actions = useContractActions({vaultAddress, amount, abi, decimals: selectedStrategy.decimals, tokenAddress})
+  const actions = useContractActions({
+    vaultAddress,
+    amount,
+    abi,
+    decimals: selectedStrategy.decimals,
+    tokenAddress,
+    isApproved: !showApprove
+  })
 
   const handleClose = () => {
     setVisibleAmount('0')
@@ -134,7 +153,8 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
       return '0.00'
     }
 
-    return parseFloat(value).toFixed(6)
+    const commaIndex = value.indexOf('.');
+    return commaIndex !== -1 ? value.slice(0, commaIndex + 6) : value;
   }
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -160,9 +180,9 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
         <Box
           sx={style}
           id={"input-container"}
-          className={`bg-backgroundPrimary border-none text-tPrimary flex p-4 flex-col rounded-lg`}
+          className={`${bgColor} border-none text-tPrimary flex p-5 flex-col rounded-2xl`}
         >
-          <div className={"flex pb-2"}>
+          <div className={`flex pb-2`}>
             <Typography id="modal-modal-title" variant="h6" component="h2" className="capitalize">
               {action}
             </Typography>
@@ -227,10 +247,26 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           )}
 
           <Box className={`flex flex-row justify-between`}>
-            <button
-              className={`bg-accentPrimary rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
-              onClick={() => performAction(action)}>{action}
-            </button>
+            {showApprove &&
+                <LoadingButton loading={approveLoading}
+                               className={`w-full h-16 mt-6 uppercase rounded-lg text-tPrimary w-full`}
+                               onClick={() => approve()}>
+                    <button
+                        className={`bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient
+                        hover:from-accentSecondary hover:to-accentSecondaryGradient 
+                        rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
+                        onClick={() => approve()}
+                    >Approve
+                    </button>
+                </LoadingButton>
+            }
+            {!showApprove &&
+                <button
+                    className={`bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient
+                        hover:from-accentSecondary hover:to-accentSecondaryGradient 
+                        rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
+                    onClick={() => performAction(action)}>{action}
+                </button>}
           </Box>
 
           <WithLoader isLoading={isLoading} className={`mt-4`} height={`1.5rem`} width={`6rem`} type={'rectangular'}>

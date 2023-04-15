@@ -13,15 +13,17 @@ contract UniswapV3RouterMock is IUniswapRouterV3WithDeadline {
     }
 
     function exactInput(IUniswapRouterV3WithDeadline.ExactInputParams memory params) external payable override returns (uint256 amountOut) {
-        uint8 decimalsIn = ERC20(UniswapV3Utils.pathToRoute(params.path)[0]).decimals();
-        uint8 decimalsOut = ERC20(UniswapV3Utils.pathToRoute(params.path)[1]).decimals();
+        uint256 routeLength = UniswapV3Utils.pathToRoute(params.path).length;
+        uint24 decimalsIn = ERC20(UniswapV3Utils.pathToRoute(params.path)[0]).decimals();
+        uint24 decimalsOut = ERC20(UniswapV3Utils.pathToRoute(params.path)[routeLength - 1]).decimals();
         ERC20(UniswapV3Utils.pathToRoute(params.path)[0]).transferFrom(msg.sender, address(this), params.amountIn);
         if (decimalsIn > decimalsOut) {
             params.amountIn = params.amountIn / (10 ** (decimalsIn - decimalsOut));
         } else if (decimalsIn < decimalsOut) {
             params.amountIn = params.amountIn * (10 ** (decimalsOut - decimalsIn));
         }
-        ERC20(UniswapV3Utils.pathToRoute(params.path)[1]).transfer(msg.sender, params.amountIn);
+        ERC20(UniswapV3Utils.pathToRoute(params.path)[routeLength - 1]).transfer(msg.sender, params.amountIn);
+        console.log(params.amountIn);
         return params.amountIn;
     }
 

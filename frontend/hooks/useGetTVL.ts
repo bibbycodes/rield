@@ -1,9 +1,12 @@
-import {useContext, useEffect, useState} from "react";
-import {VaultDataContext} from "../contexts/vault-data-context/VaultDataContext";
-import {TokenPricesContext} from "../contexts/TokenPricesContext";
-import {Strategy} from "../model/strategy";
-import {VaultData} from "../contexts/vault-data-context/utils";
-import {Address} from "wagmi";
+import { useContext, useEffect, useState } from "react";
+import { VaultDataContext } from "../contexts/vault-data-context/VaultDataContext";
+import { TokenPricesContext } from "../contexts/TokenPricesContext";
+import { Strategy } from "../model/strategy";
+import { VaultData } from "../contexts/vault-data-context/utils";
+import { Address } from "wagmi";
+import { BigNumber } from 'ethers';
+import { formatUnits } from 'ethers/lib/utils';
+import { TvlGetter } from "../lib/get-tvl";
 
 export const useGetTVL = () => {
   const {vaultsData} = useContext(VaultDataContext)
@@ -13,24 +16,10 @@ export const useGetTVL = () => {
   const [tvl, setTvl] = useState<number>(0)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [tvlMap, setTvlMap] = useState<{ [address: string]: number }>({})
+  const tvlGetter = new TvlGetter(prices)
 
-  const getTvl = (): number => {
-    if (Object.keys(prices).length > 0) {
-      return Object.keys(vaultsData)
-        .reduce((acc: number, curr: string) => {
-          const {
-            vaultWantBalance,
-            coinGeckoId,
-            decimals
-          }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
-          const price = prices[coinGeckoId]
-          const vaultTvl = parseFloat(vaultWantBalance?.toString()) / (10 ** decimals)
-          const vaultTvlInDollars = vaultTvl * price
-          return acc + vaultTvlInDollars
-        }, 0 as number)
-    } else {
-      return 0
-    }
+  const getTvl = async (): Promise<number> => {
+    return await tvlGetter.getTvl()
   }
 
   const getTvlMap = () => {
@@ -42,10 +31,20 @@ export const useGetTVL = () => {
             vaultWantBalance,
             coinGeckoId,
             vaultAddress,
-            decimals
+            decimals,
+            additionalData,
+            name
           }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
           const price = prices[coinGeckoId]
-          const vaultTvl = parseFloat(vaultWantBalance.toString()) / (10 ** decimals)
+          let vaultTvl = parseFloat(vaultWantBalance.toString()) / (10 ** decimals)
+          if (additionalData) {
+            if (name === 'HOP-USDC' || name === 'HOP-USDT') {
+              vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)).div(BigNumber.from(10).pow(12)), 6));
+            }
+            if (name === 'HOP-ETH' || name === 'HOP-DAI') {
+              vaultTvl = parseFloat(formatUnits(additionalData.hopPoolBalance.mul(additionalData.hopVirtualPrice).div(BigNumber.from(10).pow(18)), 18));
+            }
+          }
           acc[vaultAddress] = vaultTvl * price
           return acc
         }, tvlMap)
@@ -54,8 +53,10 @@ export const useGetTVL = () => {
   }
 
   const updateTvl = () => {
-    const tvl = getTvl()
-    setTvl(tvl)
+    getTvl().then(tvl => {
+      console.log({tvl})
+      setTvl(tvl)
+    })
     const tvlMap = getTvlMap()
     setTvlMap(tvlMap)
     setIsLoading(false)

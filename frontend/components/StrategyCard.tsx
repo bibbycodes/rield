@@ -3,14 +3,15 @@ import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault"
 import Enable from './Enable';
 import { StrategyLogos } from "./StrategyLogos";
 import { TokenPricesContext } from "../contexts/TokenPricesContext";
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { APYsContext } from "../contexts/ApyContext";
 import { WithLoader } from "./WithLoader";
 import { BigNumber, ethers } from 'ethers';
 import NonSSRWrapper from './NonSSRWrapper';
-import {roundToNDecimals} from "../utils/formatters";
+import { formatDollarAmount, roundToNDecimals } from "../utils/formatters";
 import * as capEth from "../resources/vault-details/deploy_cap_eth-output.json";
 import * as capUSDC from "../resources/vault-details/deploy_cap_usdc-output.json";
+import {cardGradient} from "../pages";
 
 export default function StrategyCard({
                                        strategy,
@@ -21,7 +22,6 @@ export default function StrategyCard({
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys[strategy.strategyAddress]
   const {status} = strategy
-  const primaryToSecondary = 'bg-gradient-to-r from-backgroundSecondaryGradient to-backgroundSecondary'
 
   // TODO: Move this to a useGetUserStaked
   const getUserStakedInDollars = (amount: BigNumber) => {
@@ -33,14 +33,14 @@ export default function StrategyCard({
     const balanceInUsd = ethers.utils.formatUnits(
       amount.mul((prices[strategy.coinGeckoId] * 10000).toFixed(0)).div(10000),
       strategy.decimals);
-    return roundToNDecimals(+balanceInUsd, 2)
+    return formatDollarAmount(+balanceInUsd, 2)
   }
 
   const formatStakedAmountInToken = (amount: BigNumber) => {
     const numberAmount = parseFloat(ethers.utils.formatUnits(amount, strategy.decimals))
     return roundToNDecimals(numberAmount, 6)
   }
-  
+
   const getApy = (apy: number) => {
     if ([capEth.strategyAddress, capUSDC.strategyAddress].includes(strategy.strategyAddress)) {
       return `~${apy}`
@@ -53,7 +53,7 @@ export default function StrategyCard({
   }
 
   return (
-    <div className={`${primaryToSecondary} rounded-2xl p-2`}>
+    <div className={`${cardGradient} border-[#181E2F] border-solid border-2 rounded-2xl p-2 ${status === 'HIDDEN' ? 'hidden' : ''}`}>
       <div className="p-4">
         <StrategyLogos strategy={strategy}></StrategyLogos>
         <div className={`flex`}>

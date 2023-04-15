@@ -1,5 +1,4 @@
 import {useContext} from 'react';
-import {useApproveToken} from '../hooks/useApproveToken';
 import {useAccount} from 'wagmi';
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
 import {Strategy} from "../model/strategy";
@@ -16,19 +15,15 @@ export default function Enable({
                                  openModal,
                                  strategy,
                                }: StrategyDetailsModalProps) {
-  const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-  const {tokenAddress, vaultAddress, coolDownPeriod} = strategy
-  const {address} = useAccount();
+  const {vaultAddress, coolDownPeriod} = strategy
   const {userStaked} = useGetUserDepositedInVault(strategy)
   const {setAction, setSelectedStrategy} = useContext(SelectedStrategyContext)
-  const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
+  const {vaultsData} = useContext(VaultDataContext)
   const vaultData = vaultsData[vaultAddress]
-  const {approve} = useApproveToken(tokenAddress, vaultAddress, address, strategy, refetchForStrategy);
-  const isApproved = vaultsData[vaultAddress]?.allowance?.gt(0)
   const lastPoolDepositTime = vaultData?.lastPoolDepositTime?.toNumber() ? vaultData.lastPoolDepositTime.toNumber() * 1000 : 0
   const {isConnected} = useAccount()
-  const showApprove = tokenAddress !== ZERO_ADDRESS && !isApproved
-  const accentPrimaryGradient = 'bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient'
+  // const hoverBorderColor = `hover:border-[#7E1FE7]`
+  // const accentPrimaryGradient = 'bg-gradient-to-b from-[#7E1FE7] to-[#5C2DC5]'
 
   const handleClick = (action: TransactionAction) => {
     setAction(action)
@@ -37,7 +32,7 @@ export default function Enable({
   }
 
   const isWithdrawEnabled = () => {
-    const userHasBalance = userStaked?.gte(0)
+    const userHasBalance = userStaked?.gt(0)
     if (strategy.hasWithdrawalSchedule) {
       const isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod = Date.now() - lastPoolDepositTime > coolDownPeriod
       return userHasBalance && isTimeElapsedSinceLastDepositMoreThanCoolDownPeriod
@@ -46,36 +41,33 @@ export default function Enable({
   }
 
   return <div>
-    {(isConnected && !showApprove) && (
+    {(isConnected) && (
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => handleClick("deposit")}
-          className={`text-tPrimary ${accentPrimaryGradient} hover:bg-accentSecondary p-3 rounded-lg uppercase disabled:text-tSecondary disabled:border-tSecondary`}
+          className={`text-tPrimary bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient p-3 rounded-lg 
+          hover:from-accentSecondary hover:to-accentSecondaryGradient 
+          uppercase disabled:text-tSecondary disabled:border-tSecondary`}
         >Deposit
         </button>
         <button
           disabled={!isWithdrawEnabled()}
-          className={`disabled:text-tSecondary disabled:border-tSecondary p-3 rounded-lg border-2 text-accentPrimary border-accentPrimary hover:text-accentSecondary hover:border-accentSecondary uppercase`}
+          className={`disabled:text-tSecondary disabled:border-tSecondary p-3 rounded-lg border-2 text-white
+           border-accentPrimary hover:border-accentSecondaryGradient uppercase`}
           onClick={() => handleClick('withdraw')}
         >Withdraw
         </button>
       </div>
     )}
 
-    {isConnected
-      && showApprove && (
-        <button
-          className={`w-full text-tPrimary ${accentPrimaryGradient} hover:bg-accentSecondary p-3 rounded-lg uppercase`}
-          onClick={() => approve()}
-        >Approve</button>
-      )}
-
     {!isConnected &&
       <ConnectKitButton.Custom>
         {({show}) => {
           return (
             <button onClick={show}
-                    className={`w-full text-tPrimary ${accentPrimaryGradient} hover:bg-accentSecondary p-3 rounded-lg uppercase`}>
+                    className={`w-full text-tPrimary bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient
+                     hover:from-accentSecondary hover:to-accentSecondaryGradient
+                     p-3 rounded-lg uppercase`}>
               Connect Wallet
             </button>
           );
