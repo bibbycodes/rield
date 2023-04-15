@@ -2,24 +2,19 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../interfaces/strategy/ITokenStrategy.sol";
-import "./RldTokenVault.sol";
 import "../interfaces/vaults/IRldTokenVault.sol";
-import "../utils/UniswapV3Utils.sol";
-import "hardhat/console.sol";
 
 /**
  * @dev Implementation of a vault to deposit funds for yield optimizing.
  * This is the contract that receives funds and that users interface with.
  * The yield optimizing strategy itself is implemented in a separate 'Strategy.sol' contract.
  */
-contract RldYieldGeneratingIndexVault is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+contract RldYieldGeneratingIndexVault is ERC20, Ownable, ReentrancyGuard {
 
     struct VaultDetails {
         string name;
@@ -38,20 +33,16 @@ contract RldYieldGeneratingIndexVault is ERC20Upgradeable, OwnableUpgradeable, R
     uint256 MULTIPLIER;
     uint256 DIVISOR = 10 ** (decimals() + 10);
 
-    function initialize(
+    constructor (
         string memory _name,
         string memory _symbol,
         address _inputTokenAddress,
         address _uniRouter
-    ) public initializer {
-        __ERC20_init(_name, _symbol);
-        __Ownable_init();
-        __ReentrancyGuard_init();
+    ) ERC20(_name, _symbol) {
         inputTokenAddress = _inputTokenAddress;
         uniRouter = _uniRouter;
-        _giveAllowance(uniRouter, inputTokenAddress);
-        MULTIPLIER = decimals() - inputTokenDecimals();
-        MULTIPLIER = decimals() - inputTokenDecimals();
+//        _giveAllowance(uniRouter, inputTokenAddress);
+//        MULTIPLIER = decimals() - inputTokenDecimals();
     }
 
     function wants() public view returns (address[] memory) {
@@ -62,7 +53,7 @@ contract RldYieldGeneratingIndexVault is ERC20Upgradeable, OwnableUpgradeable, R
         }
         return wants;
     }
-    
+
     function totalAllocation() public view returns (uint256) {
         uint256 totalAllocation = 0;
         for (uint i = 0; i < vaults.length; i++) {
@@ -75,7 +66,7 @@ contract RldYieldGeneratingIndexVault is ERC20Upgradeable, OwnableUpgradeable, R
     function inputToken() public view returns (IERC20Upgradeable) {
         return IERC20Upgradeable(inputTokenAddress);
     }
-    
+
     function inputTokenDecimals() public view returns (uint8) {
         return ERC20Upgradeable(inputTokenAddress).decimals();
     }
@@ -122,7 +113,7 @@ contract RldYieldGeneratingIndexVault is ERC20Upgradeable, OwnableUpgradeable, R
     function swapToVaultWantToken(uint256 amount, VaultDetails memory vaultDetails) internal returns (uint256) {
         return swapTokens(amount, inputTokenAddress, vaultDetails.want, vaultDetails.uniFee);
     }
-    
+
 
     function swapToInputToken(uint256 amount, VaultDetails memory vaultDetails) internal returns (uint256) {
         return swapTokens(amount, vaultDetails.want, inputTokenAddress, vaultDetails.uniFee);
@@ -155,12 +146,12 @@ contract RldYieldGeneratingIndexVault is ERC20Upgradeable, OwnableUpgradeable, R
         _giveAllowance(uniRouter, want);
     }
 
-//    // TODO deal with any remaining rewards    
+//    // TODO deal with any remaining rewards
 //    function removeVault(address vaultAddress) public onlyOwner {
 //        VaultDetails memory vault = addressToVaultDetails[vaultAddress];
 //        IRldTokenVault vaultContract = IRldTokenVault(vaultAddress);
 //        delete vaults[vault.index];
-//        
+//
 //        ITokenStrategy(vault.strategyAddress).harvest();
 //        vaultContract.withdrawAll();
 //        for (uint i = vault.index; i < vaults.length - 1; i++) {
@@ -168,10 +159,10 @@ contract RldYieldGeneratingIndexVault is ERC20Upgradeable, OwnableUpgradeable, R
 //            vaults[i] = vaults[i + 1];
 //            _vault.index = i + 1;
 //        }
-//        
+//
 //        removedVaultWantBalance = IERC20(vaultDetails.want).balanceOf(address(this));
-//        
-//        
+//
+//
 //        for (uint i = 0; i < vaults.length; i++) {
 //            VaultDetails memory _vault = vault[i];
 //            IRldTokenVault _vaultContract = IRldTokenVault(_vault.vaultAddress);
@@ -291,7 +282,7 @@ contract RldYieldGeneratingIndexVault is ERC20Upgradeable, OwnableUpgradeable, R
             } else {
                 amountToWithdraw = userSharesOfVault;
             }
-            
+
             vault.withdraw(amountToWithdraw);
             uint afterVaultWantBalance = vault.want().balanceOf(address(this));
 
