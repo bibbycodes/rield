@@ -98,7 +98,7 @@ describe("HOP ERC20 Strategy", () => {
       deployer,
       alice,
       bob,
-      usdcToken,
+      bfrToken: usdcToken,
       lpToken,
       rewardToken,
       hopPool: hopPoolMock,

@@ -63,7 +63,7 @@ describe("Cap ERC20 Strategy", () => {
       deployer,
       alice,
       bob,
-      usdcToken,
+      bfrToken: usdcToken,
       capPool: capPoolMock,
       capRewards: capRewardsMock
     };

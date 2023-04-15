@@ -26,7 +26,7 @@ contract RldTokenVault is ERC20, Ownable, ReentrancyGuard {
     }
 
     function initStrategy(address _strategy) external onlyOwner {
-        require(address(strategy) != address(0), "Strategy already set");
+        require(address(strategy) == address(0), "Strategy already set");
         strategy = ITokenStrategy(_strategy);
     }
 
