@@ -2,15 +2,15 @@ import hre, { ethers } from "hardhat";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
-  const vaultAddress = '0x2848EbD2E8A78cd4cCDF58a16776E0dE61BaE7B9'
+  const vaultAddress = '0x07105b2f273EC8E9584237FD1FA40E1236AF1f53'
 
-  // await hre.run("verify:verify", {
-  //   address: vaultAddress,
-  //   constructorArguments: [
-  //     'RLD_BFR',
-  //     'RLD_BFR'
-  //   ]
-  // });
+  await hre.run("verify:verify", {
+    address: vaultAddress,
+    constructorArguments: [
+      'RLD_BFR',
+      'RLD_BFR'
+    ]
+  });
 
   const bfrRewardRouter = '0xbD5FBB3b2610d34434E316e1BABb9c3751567B67'
   const usdcToken = '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8'
@@ -20,7 +20,7 @@ async function main() {
   const wethToken = '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1'
 
   await hre.run("verify:verify", {
-    address: '0x5DF96E9d656f23cfe763150E8C91A5955D53483c',
+    address: '0x9b3c37c45Ac29A2205b35c5a586a34fddb5e9f47',
     constructorArguments: [
     bfrRewardRouter,
     vaultAddress,

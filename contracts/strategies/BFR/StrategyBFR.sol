@@ -147,9 +147,9 @@ contract StrategyBFR is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable {
 
     // performance fees
     function chargeFees() internal {
-        uint256 devFeeAmount = IERC20(wantToken).balanceOf(address(this)) * DEV_FEE / DIVISOR;
-        uint256 stakingFeeAmount = IERC20(wantToken).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
         uint256 wantBal = IERC20(wantToken).balanceOf(address(this));
+        uint256 devFeeAmount = wantBal * DEV_FEE / DIVISOR;
+        uint256 stakingFeeAmount = wantBal * STAKING_FEE / DIVISOR;
         IERC20(wantToken).safeTransfer(devFeeAddress, devFeeAmount);
 
         if (stakingFeeAmount > 0) {
