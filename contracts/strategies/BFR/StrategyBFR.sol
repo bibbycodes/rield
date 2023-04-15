@@ -10,7 +10,6 @@ import "../Common/StratFeeManager.sol";
 import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/common/IUniswapRouterV3.sol";
 import "../Common/UniSwapRoutes.sol";
-import "hardhat/console.sol";
 
 contract StrategyBFR is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable {
     using SafeERC20 for IERC20;
@@ -65,11 +64,13 @@ contract StrategyBFR is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable {
 
     function setRewardRouteParams(address unirouter) internal {
         setUniRouter(unirouter);
-        address[] memory path1 = new address[](2);
+        address[] memory path1 = new address[](3);
         path1[0] = rewardToken;
-        path1[1] = wantToken;
-        uint24[] memory fees = new uint24[](1);
-        fees[0] = 3000;
+        path1[1] = wethToken;
+        path1[2] = wantToken;
+        uint24[] memory fees = new uint24[](2);
+        fees[0] = 500;
+        fees[1] = 10000;
         registerRoute(path1, fees);
 
         address[] memory path2 = new address[](3);
@@ -133,11 +134,8 @@ contract StrategyBFR is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable {
         IBFRRouter(chef).compound();
         // Claim and re-stake esBFR and multiplier points
         IBFRTracker(rewardStorage).claim(address(this));
-        console.log(rewardToken);
         uint256 rewardTokenBalance = IERC20(rewardToken).balanceOf(address(this));
-        console.log(rewardTokenBalance);
         if (rewardTokenBalance > 0) {
-            console.log("hello");
             swapRewards();
             chargeFees();
             uint256 wantTokenHarvested = balanceOfWant();
@@ -151,9 +149,7 @@ contract StrategyBFR is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable {
     function chargeFees() internal {
         uint256 devFeeAmount = IERC20(wantToken).balanceOf(address(this)) * DEV_FEE / DIVISOR;
         uint256 stakingFeeAmount = IERC20(wantToken).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
-        console.log(devFeeAmount);
         uint256 wantBal = IERC20(wantToken).balanceOf(address(this));
-        console.log(wantBal);
         IERC20(wantToken).safeTransfer(devFeeAddress, devFeeAmount);
 
         if (stakingFeeAmount > 0) {
