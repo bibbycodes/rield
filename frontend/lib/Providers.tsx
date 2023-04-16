@@ -25,28 +25,26 @@ export const client = createClient(
 export const Providers = ({children}: { children: ReactNode }) => {
   const router = useRouter()
   useEffect(() => {
-    // Track page views
-    const handleRouteChange = () => posthog?.capture('$pageview')
+    const handleRouteChange = (route: any) => {
+      posthog?.capture('PAGE_VIEW:' + route)
+    }
     router.events.on('routeChangeComplete', handleRouteChange)
 
     return () => {
       router.events.off('routeChangeComplete', handleRouteChange)
     }
-  }, [router.events])
-
+  }, [])
+  
   if (typeof window !== 'undefined') {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
       api_host: 'https://app.posthog.com',
-      // Enable debug mode in development
-      loaded: (posthog) => {
-        if (process.env.NODE_ENV === 'development') posthog.debug()
-      }
+      autocapture: true,
     })
   }
 
   return (
-    <WagmiConfig client={client}>
-      <PostHogProvider client={posthog}>
+    <PostHogProvider client={posthog}>
+      <WagmiConfig client={client}>
         <ConnectKitProvider>
           <ThemeProvider theme={muiTheme}>
             <VaultDataContextProvider>
@@ -62,7 +60,7 @@ export const Providers = ({children}: { children: ReactNode }) => {
             </VaultDataContextProvider>
           </ThemeProvider>
         </ConnectKitProvider>
-      </PostHogProvider>
-    </WagmiConfig>
+      </WagmiConfig>
+    </PostHogProvider>
   );
 }
