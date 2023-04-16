@@ -23,6 +23,7 @@ import { useApproveToken } from '../hooks/useApproveToken';
 import { bgColor } from "../pages";
 import LoadingButton from './LoadingButton';
 import { ZERO_ADDRESS } from '../model/strategy';
+import {usePostHog} from "posthog-js/react";
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -44,6 +45,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const {action, selectedStrategy} = useContext(SelectedStrategyContext)
   const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress, decimals} = selectedStrategy;
   const {address: userAddress} = useAccount();
+  const posthog = usePostHog()
   const {data: tokenBalanceData} = useBalance({
     token: tokenAddress !== ADDRESS_ZERO ? tokenAddress : undefined,
     address: userAddress,
@@ -115,6 +117,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
     } else {
       showToast(`Amount must be greater than 0`, 'error')
     }
+    posthog?.capture(`TX_MODAL:${action}`, {action, strategy: selectedStrategy.name, amount: visibleAmount})
   }
 
   function showToast(msg: string, severity: ToastSeverity) {

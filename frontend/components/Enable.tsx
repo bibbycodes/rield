@@ -5,6 +5,7 @@ import {Strategy} from "../model/strategy";
 import {useGetUserDepositedInVault} from '../hooks/useGetUserDepositedInVault';
 import {ConnectKitButton} from 'connectkit';
 import {VaultDataContext} from '../contexts/vault-data-context/VaultDataContext';
+import { usePostHog } from 'posthog-js/react'
 
 interface StrategyDetailsModalProps {
   openModal: () => void,
@@ -22,13 +23,20 @@ export default function Enable({
   const vaultData = vaultsData[vaultAddress]
   const lastPoolDepositTime = vaultData?.lastPoolDepositTime?.toNumber() ? vaultData.lastPoolDepositTime.toNumber() * 1000 : 0
   const {isConnected} = useAccount()
+  const posthog = usePostHog()
   // const hoverBorderColor = `hover:border-[#7E1FE7]`
   // const accentPrimaryGradient = 'bg-gradient-to-b from-[#7E1FE7] to-[#5C2DC5]'
 
   const handleClick = (action: TransactionAction) => {
     setAction(action)
     setSelectedStrategy(strategy)
+    posthog?.capture(`STRATEGY_CARD:${action}`, {action, strategy: strategy.name})
     openModal()
+  }
+  
+  const handleConnect = (show: any) => {
+    posthog?.capture(`PRESSED:CONNECT`, {strategy: strategy.name})
+    show()
   }
 
   const isWithdrawEnabled = () => {
@@ -64,7 +72,7 @@ export default function Enable({
       <ConnectKitButton.Custom>
         {({show}) => {
           return (
-            <button onClick={show}
+            <button onClick={() => handleConnect(show)}
                     className={`w-full text-tPrimary bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient
                      hover:from-accentSecondary hover:to-accentSecondaryGradient
                      p-3 rounded-lg uppercase`}>

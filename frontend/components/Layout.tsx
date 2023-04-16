@@ -6,6 +6,8 @@ import NonSSRWrapper from './NonSSRWrapper';
 import Image from "next/image";
 import BurgerMenu from './BurgerMenu';
 import {useRouter} from 'next/router'
+import {usePostHog} from "posthog-js/react";
+import {Address} from "wagmi";
 
 export default function Layout({children}: PropsWithChildren) {
   const router = useRouter()
@@ -14,6 +16,16 @@ export default function Layout({children}: PropsWithChildren) {
   const outerDivStyle = isLandingPage ? 'bg-backgroundPrimary' : `pt-2 pb-10 px-3 sm:px-10`
   // const navGradient = "bg-gradient-to-r from-[#0E1420] to-[#1A1C48]"
   const navGradient = "bg-gradient-to-r from-[#3F37AA] to-[#8F18F7]"
+  const posthog = usePostHog()
+  
+  const onClick = (event: string) => {
+    posthog?.capture('PRESSED:' + event)
+  }
+  
+  const onConnect = (address: Address | string) => {
+    onClick('CONNECT')
+    posthog?.identify(address.toString())
+  }
   return (
     <>
       <Head>
@@ -42,13 +54,17 @@ export default function Layout({children}: PropsWithChildren) {
                 </Link>
               </div>
               <div className={`flex flex-row justify-center items-center ml-auto`}>
-                <div className="px-5 hidden md:block"><Link target="_blank" rel="noopener noreferrer"
+                <div 
+                  className="px-5 hidden md:block"
+                  onClick={() => onClick('DOCS')}
+                ><Link target="_blank" rel="noopener noreferrer"
                                                             href='https://rld-1.gitbook.io/rld/'>Docs</Link></div>
                 <div className="px-5 hidden md:block"><Link href='/strategies'>Strategies</Link></div>
                 <div className="ml-auto">
                   {!isLandingPage ? (<NonSSRWrapper>
                     <ConnectKitButton.Custom>
-                      {({isConnected, show, truncatedAddress, ensName}) => {
+                      {({isConnected, show, truncatedAddress, address, ensName}) => {
+                        if (isConnected) onConnect(address as Address)
                         console.log(truncatedAddress)
                         return (
                           <button className={`bg-backgroundPrimary rounded-lg p-3 text-sm hover:bg-accentPrimary`}
