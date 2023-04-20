@@ -9,189 +9,153 @@ import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../Common/StratFeeManager.sol";
 import "../../utils/GasFeeThrottler.sol";
 import "../../utils/Manager.sol";
+import "../utils/UniswapV3Utils.sol";
 import "../Common/Stoppable.sol";
 import "../Common/UniSwapRoutes.sol";
 import "../../interfaces/hop/IHopTokenTracker.sol";
 import "../../interfaces/hop/IHopRewardPool.sol";
-import "../../interfaces/vaults/IRldTokenVault.sol";
+import "../../interfaces/strategy/ITokenStrategy.sol";
 
 contract YgiPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
     using SafeERC20 for IERC20;
 
-    address public inputToken; // USDC, ETH, etc
-    IRldTokenVault[] public vaults;
+    address public vault;
+    address public inputToken;
+    address public uniRouter;
 
+    struct YgiComponent {
+        string name;
+        address inputToken;
+        ITokenStrategy strategy;
+        uint256 allocation;
+        Route route;
+    }
+
+    uint256 totalAllocation;
+
+    YgiComponent[] public ygiComponents;
     uint256 DIVISOR;
-    uint8 public hopTokenIdx;
-    uint8 public inputTokenIdx;
-
-    uint256 public DEV_FEE;
-    uint256 STAKING_FEE = 0;
-    uint MAX_FEE;
-    uint24 public maxDepositSlippage = 5;
-    uint24 public maxWithdrawSlippage = 5;
-    uint24 public maxSwapSlippage = 5;
-
     uint256 public lastPoolDepositTime;
-    bool public harvestOnDeposit;
-    uint256 public lastHarvest;
 
-    event StratHarvest(address indexed harvester, uint256 wantTokenHarvested, uint256 tvl);
-    event Deposit(uint256 tvl);
-    event PendingDeposit(uint256 totalPending);
-    event Withdraw(uint256 tvl);
-    event ChargedFees(uint256 fees, uint256 amount);
+    event Deposit(uint256 deposited, uint256 amountToMint);
+    event Withdraw(uint256 withdrawRatio, uint256 withdrawAmount);
 
     constructor(
         address _vault,
-        address _pool,
-        address _tracker,
-        address _rewardToken,
-        address _token,
-        address _hopToken,
-        address unirouter
+        address _unirouter
     ) {
         vault = _vault;
-        pool = _pool;
-        tracker = _tracker;
-        rewardToken = _rewardToken;
-        inputToken = _token;
-        hopToken = _hopToken;
-        lpToken = IHopTokenTracker(tracker).swapStorage().lpToken;
-        hopTokenIdx = IHopTokenTracker(tracker).getTokenIndex(hopToken);
-        inputTokenIdx = IHopTokenTracker(tracker).getTokenIndex(inputToken);
-        DEV_FEE = 5 * 10 ** (ERC20(inputToken).decimals() - 2);
-        MAX_FEE = 5 * 10 ** (ERC20(inputToken).decimals() - 1);
         DIVISOR = 10 ** ERC20(inputToken).decimals();
-        devFeeAddress = _msgSender();
         _giveAllowances();
-        setRewardRouteParams(unirouter);
     }
 
-    function setRewardRouteParams(address unirouter) internal {
-        setUniRouter(unirouter);
-        address[] memory path = new address[](2);
-        path[0] = rewardToken;
-        path[1] = inputToken;
-        uint24[] memory fees = new uint24[](1);
-        fees[0] = 3000;
-        registerRoute(path, fees);
-        address[] memory tokens = new address[](1);
-        tokens[0] = rewardToken;
-        setTokens(tokens);
+    // TODO: Handle vaults with ETH as input (inputToken = address(0))
+    function registerYgiComponent(
+        string calldata name,
+        address inputToken,
+        address strategyAddress,
+        uint24 allocation,
+        Route route
+    ) public onlyOwner {
+        // todo: rebalance here
+        YgiComponent memory ygiComponent = YgiComponent(
+            name,
+            inputToken,
+            ITokenStrategy(strategyAddress),
+            allocation,
+            route
+        );
+        totalAllocation += allocation;
+        unirouter = _unirouter;
+        ygiComponents.push(ygiComponent);
+        _giveAllowance(uniRouter, inputToken);
     }
 
-
-    function want() external view returns (address) {
-        return lpToken;
-    }
-
-    function deposit() public whenNotStopped {
-        uint256 tokenBalance = IERC20(inputToken).balanceOf(address(this));
-        if (tokenBalance > 0) {
-            uint256[] memory amounts = new uint256[](2);
-            amounts[0] = tokenBalance;
-            amounts[1] = 0;
-            uint256 minAmount = _calculateMinAmount(tokenBalance);
-            IHopTokenTracker(tracker).addLiquidity(amounts, minAmount, block.timestamp + (86400));
-            uint256 lpTokenBal = IERC20(lpToken).balanceOf(address(this));
-            IHopRewardPool(pool).stake(lpTokenBal);
-            lastPoolDepositTime = block.timestamp;
-            emit Deposit(balanceOf());
+    function deregisterYgiComponent(
+        string calldata name
+    ) public onlyOwner {
+        for (uint i = 0; i < ygiComponents.length; i++) {
+            if (keccak256(abi.encodePacked(ygiComponents[i].name)) == keccak256(abi.encodePacked(name))) {
+                totalAllocation -= ygiComponents[i].allocation;
+                sunsetStrategy(ygiComponents[i].strategy);
+                ygiComponents[i] = ygiComponents[ygiComponents.length - 1];
+                ygiComponents.pop();
+                break;
+            }
         }
     }
 
     /**
-     * @dev Calculates the minimum amount of LP tokens to be received for a given amount of input tokens.
-     * This is used to mitigate front-running attacks on the addLiquidity function.
-     * @param amount The amount of input tokens to be converted to LP tokens.
+     * @dev The entrypoint of funds into the system. People deposit with this function
+     * into the vault. The vault is then in charge of sending funds into the strategy.
      */
-    function _calculateMinAmount(uint256 amount) internal view returns (uint256) {
-        uint256[] memory amounts = new uint256[](2);
-        amounts[0] = amount;
-        amounts[1] = 0;
-        uint256 lpAmountForTokens = IHopTokenTracker(tracker).calculateTokenAmount(address(this), amounts, true);
-        return lpAmountForTokens * (100 - maxDepositSlippage) / 100;
+    function deposit(uint _totalAmount) external nonReentrant whenNotStopped returns (uint256) {
+        uint256 memory amountToMint = 0;
+        for (uint i = 0; i < ygiComponents.length; i++) {
+            uint256 allocation = ygiComponents[i].allocation;
+            uint256 amount = (_totalAmount * (allocation * 10 ** MULTIPLIER / totalAllocation())) / 10 ** MULTIPLIER;
+            uint amountReceived = swapTokens(amount, ygiComponents[i].route);
+            if (amountReceived > 0) {
+                amountToMint += amountReceived;
+                IERC20(ygiComponents[i].inputToken).transfer(ygiComponents[i].strategy, amountReceived);
+                ygiComponents[i].strategy.deposit();
+            }
+        }
+        emit Deposit(_totalAmount, amountToMint);
+        return amountToMint;
     }
 
-    function _withdraw(uint256 _amount) internal {
+    function swapTokens(uint256 amount, Route calldata route) internal returns (uint256) {
+        if (route.path.length == 0) {
+            return amount;
+        }
+        if (amount > 0) {
+            return UniswapV3Utils.swap(uniRouter, route.path, amount);
+        }
+        return 0;
+    }
+
+    function _giveAllowance(address spender, address token) internal {
+        IERC20Upgradeable(token).safeApprove(spender, type(uint).max);
+    }
+
+    /**
+     * @dev Function to exit the system. The vault will withdraw the required tokens
+     * from the strategy and pay up the token holder. A proportional number of IOU
+     * tokens are burned in the process.
+     */
+    function withdraw(uint256 _ratio, bool skipOnWithdrawFail) external {
         require(msg.sender == vault, "!vault");
-        uint256 wantTokenBal = IERC20(lpToken).balanceOf(address(this));
-        uint256 beforeInputTokenBal = IERC20(inputToken).balanceOf(address(this));
-
-        if (wantTokenBal < _amount) {
-            uint256 amountToWithdraw = (_amount - wantTokenBal);
-            IHopRewardPool(pool).withdraw(amountToWithdraw);
+        uint256 withdrawnAmount = 0;
+        for (uint i = 0; i < ygiComponents.length; i++) {
+            YgiComponent memory ygiComponent = ygiComponents[i];
+            ITokenStrategy strategy = ygiComponent.strategy;
+            uint256 amountToWithdraw = normalizeAmount(strategy.balance() * _ratio / DIVISOR, strategy.decimals());
+            try strategy.withdraw(amountToWithdraw) returns (bool success) {
+                success = true;
+            } catch {
+                if (!skipOnWithdrawFail) {
+                    revert("Withdrawal failed");
+                } else {
+                    emit WithdrawFailureSkipped();
+                }
+            }
+            uint256 wantBal = strategy.want().balanceOf(address(this));
+            if (wantBal > 0) {
+                withdrawnAmount += swapToInputToken(wantBal, ygiComponent);
+            }
         }
 
-        uint256[] memory minAmounts = _calculateMinWithdrawAmounts(_amount);
-        IHopTokenTracker(tracker).removeLiquidity(_amount, minAmounts, block.timestamp + (86400));
-        uint256 hopTokenBal = IERC20(hopToken).balanceOf(address(this));
-        uint256 minSwapAmount = _calculateMinSwapAmount(hopTokenBal);
-        IHopTokenTracker(tracker).swap(hopTokenIdx, inputTokenIdx, hopTokenBal, minSwapAmount, block.timestamp + (86400));
+        inputToken().safeTransfer(vault, withdrawnAmount);
+        emit Withdraw(_ratio, withdrawnAmount);
+    }
 
-        uint256 amountToSend = IERC20(inputToken).balanceOf(address(this));
-        if (beforeInputTokenBal > 0) {
-            amountToSend = amountToSend - beforeInputTokenBal;
+    function normalizeAmount(uint256 amount, uint256 decimals) internal pure returns (uint256) {
+        uint256 inputDecimals = ERC20(inputToken).decimals();
+        if (decimals > inputDecimals) {
+            return amount / (10 ** (decimals - inputDecimals));
         }
-        IERC20(inputToken).safeTransfer(vault, amountToSend);
-        emit Withdraw(balanceOf());
-    }
-
-    function _calculateMinWithdrawAmounts(uint256 amount) internal view returns (uint256[] memory) {
-        uint256[] memory minAmounts = new uint256[](2);
-        uint256[] memory tokenAmounts = IHopTokenTracker(tracker).calculateRemoveLiquidity(address(this), amount);
-        tokenAmounts[0] = tokenAmounts[0] * (100 - maxWithdrawSlippage) / 100;
-        tokenAmounts[1] = tokenAmounts[1] * (100 - maxWithdrawSlippage) / 100;
-        return minAmounts;
-    }
-
-    function _calculateMinSwapAmount(uint256 amount) internal view returns (uint256) {
-        uint256 minSwapAmount = IHopTokenTracker(tracker).calculateSwap(hopTokenIdx, inputTokenIdx, amount);
-        minSwapAmount = minSwapAmount * (100 - maxSwapSlippage) / 100;
-        return minSwapAmount;
-    }
-
-    function withdraw(uint256 _amount) external {
-        _withdraw(_amount);
-    }
-
-    function beforeDeposit() external virtual {
-        if (harvestOnDeposit && !stopped()) {
-            require(msg.sender == vault, "!vault");
-            _harvest();
-        }
-    }
-
-    function harvest() external gasThrottle virtual {
-        _harvest();
-    }
-
-    // compounds earnings and charges performance fee
-    function _harvest() internal whenNotStopped {
-        IHopRewardPool(pool).getReward();
-        swapRewards();
-        uint256 tokenBal = IERC20(inputToken).balanceOf(address(this));
-        if (tokenBal > 0) {
-            chargeFees();
-            uint256 inputTokenHarvested = IERC20(inputToken).balanceOf(address(this));
-            deposit();
-            lastHarvest = block.timestamp;
-            emit StratHarvest(msg.sender, inputTokenHarvested, balanceOf());
-        }
-    }
-
-    // performance fees
-    function chargeFees() internal {
-        uint256 devFeeAmount = IERC20(inputToken).balanceOf(address(this)) * DEV_FEE / DIVISOR;
-        uint256 stakingFeeAmount = IERC20(inputToken).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
-        IERC20(inputToken).safeTransfer(devFeeAddress, devFeeAmount);
-
-        if (stakingFeeAmount > 0) {
-            IERC20(inputToken).safeTransfer(stakingAddress, stakingFeeAmount);
-        }
-
-        emit ChargedFees(DEV_FEE, devFeeAmount + stakingFeeAmount);
+        return amount * (10 ** (inputDecimals - decimals));
     }
 
     // calculate the total underlying 'wantToken' held by the strat.
@@ -209,66 +173,18 @@ contract YgiPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
         return IHopRewardPool(pool).balanceOf(address(this));
     }
 
-    // returns rewards unharvested
-    function rewardsAvailable() public view returns (uint256) {
-        return IHopRewardPool(pool).earned();
-    }
-
-
-    function setHarvestOnDeposit(bool _harvestOnDeposit) external onlyManagerAndOwner {
-        harvestOnDeposit = _harvestOnDeposit;
-    }
-
-    function setDevFee(uint fee) external onlyManagerAndOwner {
-        require(fee + STAKING_FEE <= MAX_FEE, "fee too high");
-        DEV_FEE = fee;
-    }
-
-    function setStakingFee(uint fee) external onlyManagerAndOwner {
-        require(fee + DEV_FEE <= MAX_FEE, "fee too high");
-        STAKING_FEE = fee;
-    }
-
-    function getDevFee() external view returns (uint256) {
-        return DEV_FEE;
-    }
-
-    function getStakingFee() external view returns (uint256) {
-        return STAKING_FEE;
-    }
-
-    function setStakingAddress(address _stakingAddress) external onlyOwner {
-        stakingAddress = _stakingAddress;
-    }
-
-    function setDevFeeAddress(address _devFeeAddress) external onlyOwner {
-        devFeeAddress = _devFeeAddress;
-    }
-
-    function setShouldGasThrottle(bool _shouldGasThrottle) external onlyOwner {
-        shouldGasThrottle = _shouldGasThrottle;
-    }
-
-    function setMaxDepositSlippage(uint24 _maxDepositSlippage) external onlyOwner {
-        maxDepositSlippage = _maxDepositSlippage;
-    }
-
-    function setMaxWithdrawSlippage(uint24 _maxWithdrawSlippage) external onlyOwner {
-        maxWithdrawSlippage = _maxWithdrawSlippage;
-    }
-
-    function setMaxSwapSlippage(uint24 _maxSwapSlippage) external onlyOwner {
-        maxSwapSlippage = _maxSwapSlippage;
+    function setUniRouter(address _uniRouter) public onlyOwner {
+        uniRouter = _uniRouter;
     }
 
     function panic() public onlyOwner {
         stop();
-        IHopRewardPool(pool).getReward();
-        IHopRewardPool(pool).exit();
+        // todo: exit all strats
     }
 
+    // todo: function for wayward tokens
+
     function stop() public onlyOwner {
-        _harvest();
         _stop();
         _removeAllowances();
     }
