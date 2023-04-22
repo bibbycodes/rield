@@ -26,6 +26,10 @@ export default function Layout({children}: PropsWithChildren) {
     onClick('CONNECT')
     posthog?.identify(address.toString())
   }
+  
+  const isSameRoute = (route: string) => {
+    return router.pathname === route
+  }
   return (
     <>
       <Head>
@@ -59,13 +63,12 @@ export default function Layout({children}: PropsWithChildren) {
                   onClick={() => onClick('DOCS')}
                 ><Link target="_blank" rel="noopener noreferrer"
                                                             href='https://rld-1.gitbook.io/rld/'>Docs</Link></div>
-                <div className="px-5 hidden md:block"><Link href='/strategies'>Strategies</Link></div>
+                {!isSameRoute('/strategies') && <div className="px-5 hidden md:block"><Link href='/strategies'>Strategies</Link></div>}
                 <div className="ml-auto">
-                  {!isLandingPage ? (<NonSSRWrapper>
+                  <NonSSRWrapper>
                     <ConnectKitButton.Custom>
                       {({isConnected, show, truncatedAddress, address, ensName}) => {
                         if (isConnected) onConnect(address as Address)
-                        console.log(truncatedAddress)
                         return (
                           <button className={`bg-backgroundPrimary rounded-lg p-3 text-sm hover:bg-accentPrimary`}
                                   onClick={show}>
@@ -74,13 +77,7 @@ export default function Layout({children}: PropsWithChildren) {
                         );
                       }}
                     </ConnectKitButton.Custom>
-                  </NonSSRWrapper>) : (
-                    <Link href='/strategies'>
-                      <button className={`bg-backgroundPrimary rounded-lg p-2 text-md hover:bg-accentPrimary`}>
-                        Enter App
-                      </button>
-                    </Link>
-                  )}
+                  </NonSSRWrapper>
                 </div>
                 <BurgerMenu/>
               </div>
