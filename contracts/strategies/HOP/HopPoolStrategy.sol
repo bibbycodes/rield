@@ -195,7 +195,7 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
 
         if (stakingFeeAmount > 0) {
             IERC20(inputToken).safeTransfer(stakingAddress, stakingFeeAmount);
-        }
+            }
 
         emit ChargedFees(DEV_FEE, devFeeAmount + stakingFeeAmount);
     }

@@ -2,8 +2,9 @@
 
 pragma solidity ^0.8.0;
 import "@openzeppelin-4/contracts/access/Ownable.sol";
+import "./DevUtils.sol";
 
-abstract contract Manager is Ownable {
+abstract contract Manager {
     address private _manager;
 
     event ManagerTransferred(address indexed previousManager, address indexed newManager);
