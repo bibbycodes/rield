@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../interfaces/common/IUniswapRouterETH.sol";
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract UniswapV2RouterMock is IUniswapRouterETH {
     constructor(){

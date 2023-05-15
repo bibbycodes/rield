@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 import "../interfaces/cap/ICapETHPool.sol";
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract CapETHPoolMock is ICapETHPool {
     address immutable rewardsContract;

@@ -2,8 +2,8 @@
 //
 //pragma solidity ^0.8.0;
 //
-//import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
-//import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
+//import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+//import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 //import "../Common/StratFeeManager.sol";
 //import "../../utils/GasFeeThrottler.sol";
 //import "../../interfaces/cap/ICapETHV4Pool.sol";
@@ -54,7 +54,7 @@
 //            emit PendingDeposit(balanceOf());
 //            return;
 //        }
-//        
+//
 //        if (address(this).balance > 0) {
 //            ICapETHV4Pool(pool).deposit{value : address(this).balance}(0);
 //            lastPoolDepositTime = block.timestamp;

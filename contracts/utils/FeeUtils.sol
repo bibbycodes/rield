@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./Manager.sol";
 
-contract FeeUtils {
+abstract contract FeeUtils is Manager{
     uint256 public DEV_FEE;
     uint256 STAKING_FEE = 0;
     uint MAX_FEE;
-    constructor(){
-
-    }
-
     function getDevFee() external view returns (uint256) {
         return DEV_FEE;
     }

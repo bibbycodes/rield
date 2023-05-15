@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
-import "@openzeppelin-4/contracts/access/Ownable.sol";
-import "./DevUtils.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-abstract contract Manager {
+abstract contract Manager is Ownable {
     address private _manager;
 
     event ManagerTransferred(address indexed previousManager, address indexed newManager);

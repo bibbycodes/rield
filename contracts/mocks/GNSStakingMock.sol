@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../interfaces/common/IUniswapRouterV3.sol";
 import "../interfaces/common/IUniswapRouterV3WithDeadline.sol";
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../utils/UniswapV3Utils.sol";
 import "../interfaces/gns/IGNSStakingProxy.sol";
 
