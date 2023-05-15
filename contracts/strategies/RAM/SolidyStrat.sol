@@ -9,12 +9,14 @@ import "../../utils/GasFeeThrottler.sol";
 import "../Common/UniSwapRoutes.sol";
 import "../Common/Stoppable.sol";
 import "../../interfaces/ram/ISolidlyRouter.sol";
+import "../../interfaces/ram/ISolidlyPair.sol";
 import "../../interfaces/ram/IGuageStaker.sol";
 import "../../interfaces/ram/IGuage.sol";
 import "../../utils/Manager.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "../../utils/FeeUtils.sol";
 
-contract SolidlyLp is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable, Pausable {
+contract SolidlyLp is FeeUtils, GasFeeThrottler, UniSwapRoutes, Stoppable, Pausable {
     using SafeERC20 for IERC20;
 
     // Tokens used
@@ -23,10 +25,6 @@ contract SolidlyLp is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable, Pausab
     address public want; //LP Token
     address public lpToken0; //WETH
     address public lpToken1; //ARB
-
-    // Fee collecting addresses
-    address public stakingAddress;
-    address public devFeeAddress;
 
     // Third party contracts
     address public gauge; //0x46dcafbb2c9d479827f69bec9314e13741f21058
@@ -38,6 +36,7 @@ contract SolidlyLp is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable, Pausab
     uint256 DIVISOR;
     bool public isStable;
 
+    bool public spiritHarvest;
     bool public harvestOnDeposit;
     uint256 public lastPoolDepositTime;
     uint256 public lastHarvest;
@@ -126,7 +125,7 @@ contract SolidlyLp is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable, Pausab
         emit Withdraw(balanceOf());
     }
 
-    function beforeDeposit() external virtual override {
+    function beforeDeposit() external virtual {
         if (harvestOnDeposit) {
             require(msg.sender == vault, "!vault");
             _harvest(tx.origin);
@@ -168,12 +167,7 @@ contract SolidlyLp is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable, Pausab
             ISolidlyRouter(unirouter).swapExactTokensForTokens(totalFeeAmount, 0, rewardTokenToFeeTokenRoute, address(this), block.timestamp);
             uint256 feeTokenBal = IERC20(feeToken).balanceOf(address(this));
             uint256 devFeeInFeeToken = feeTokenBal * devFeeAmount / DIVISOR;
-            IERC20(feeToken).safeTransfer(devFeeInFeeToken, callFeeAmount);
 
-            if (stakingFeeAmount > 0) {
-                uint256 stakingFeeInFeeToken = feeTokenBal * stakingFeeAmount / DIVISOR;
-                IERC20(feeToken).safeTransfer(stakingFeeInFeeToken, callFeeAmount);
-            }
             emit ChargedFees(DEV_FEE + STAKING_FEE, devFeeAmount + stakingFeeAmount);
         }
     }
@@ -186,8 +180,8 @@ contract SolidlyLp is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable, Pausab
 
         // NB stable pools use a different model for LP compared to volatile
         if (isStable) {
-            uint256 lp0Decimals = 10**IERC20(lpToken0).decimals();
-            uint256 lp1Decimals = 10**IERC20(lpToken1).decimals();
+            uint256 lp0Decimals = 10**ERC20(lpToken0).decimals();
+            uint256 lp1Decimals = 10**ERC20(lpToken1).decimals();
             uint256 out0 = ISolidlyRouter(unirouter).getAmountsOut(lp0Amt, rewardTokenToLp0TokenRoute)[rewardTokenToLp0TokenRoute.length] * 1e18 / lp0Decimals;
             uint256 out1 = ISolidlyRouter(unirouter).getAmountsOut(lp1Amt, rewardTokenToLp1TokenRoute)[rewardTokenToLp1TokenRoute.length] * 1e18 / lp1Decimals;
             (uint256 amountA, uint256 amountB,) = ISolidlyRouter(unirouter).quoteAddLiquidity(lpToken0, lpToken1, isStable, out0, out1);
@@ -230,6 +224,10 @@ contract SolidlyLp is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable, Pausab
     // returns rewards unharvested
     function rewardsAvailable() public view returns (uint256) {
         return spiritHarvest ? IGauge(gauge).earned(gaugeStaker) : IGauge(gauge).earned(rewardToken, gaugeStaker);
+    }
+
+    function setSpiritHarvest(bool _spiritHarvest) external onlyManagerAndOwner {
+        spiritHarvest = _spiritHarvest;
     }
 
     function setGaugeStaker(address _gaugeStaker) external onlyOwner {
