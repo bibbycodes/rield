@@ -1,19 +1,18 @@
-import {expect} from "chai";
-import {ethers} from "hardhat";
-import {BigNumber, BigNumberish} from "ethers";
-import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
-import type {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { BigNumber, BigNumberish } from "ethers";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
   GMXRouterMock,
   GNSStakingMock,
   RldTokenVault,
-  RldYieldGeneratingIndexVault,
   TokenMock,
-  UniswapV3RouterMock
+  UniswapV3RouterMock,
+  YgiPoolStrategy
 } from "../../typechain-types";
-import {parseEther, parseUnits} from "ethers/lib/utils";
-import {StrategyGNS} from "../../typechain-types";
-import {PromiseOrValue} from "../../typechain-types/common";
+import { parseEther, parseUnits } from "ethers/lib/utils";
+import { StrategyGNS } from "../../typechain-types";
 
 const closeTo = async (
   a: BigNumberish,
@@ -55,7 +54,7 @@ describe("YGI Vault", () => {
       await gnsRouterMock.deployed();
 
       const GnsVault = await ethers.getContractFactory("RldTokenVault");
-      const gnsVault: RldTokenVault = (await GnsVault.deploy()) as RldTokenVault;
+      const gnsVault: RldTokenVault = (await GnsVault.deploy("gns_AUTO_C", "gns_AUTO_C")) as RldTokenVault;
       await gnsVault.deployed();
 
       const gnsCommonAddresses = {
@@ -73,7 +72,7 @@ describe("YGI Vault", () => {
       ) as StrategyGNS;
       await gnsStrategy.deployed();
 
-      await gnsVault.initialize(gnsStrategy.address, "gns_AUTO_C", "gns_AUTO_C")
+      await gnsVault.initStrategy(gnsStrategy.address)
 
       // GMX
       const gmxToken: TokenMock = (await Token.deploy("GMX", "GMX", 18)) as TokenMock;
@@ -87,7 +86,7 @@ describe("YGI Vault", () => {
       await gmxRouterMock.deployed();
 
       const GmxVault = await ethers.getContractFactory("RldTokenVault");
-      const gmxVault: RldTokenVault = (await GmxVault.deploy()) as RldTokenVault;
+      const gmxVault: RldTokenVault = (await GmxVault.deploy('GMX', 'GMX')) as RldTokenVault;
       await gmxVault.deployed();
 
       const gmxCommonAddresses = {
@@ -104,54 +103,55 @@ describe("YGI Vault", () => {
         gmxCommonAddresses
       );
       await gmxStrategy.deployed();
-      await gmxVault.initialize(gmxStrategy.address, "GMX_AUTO_C", "GMX_AUTO_C")
+      await gmxVault.initStrategy(gmxStrategy.address)
 
       // Master Vault
-      const MasterVault = await ethers.getContractFactory("RldYieldGeneratingIndexVault");
-      const masterVault: RldYieldGeneratingIndexVault = (await MasterVault.deploy()) as RldYieldGeneratingIndexVault;
-      await masterVault.deployed();
       const inputToken = await Token.deploy("USDC", "USDC", inputTokenDecimals) as TokenMock;
 
       //  Mints
       await inputToken.deployed();
+      const MasterVault = await ethers.getContractFactory("YgiPoolStrategy");
+      const masterVault: YgiPoolStrategy = (await MasterVault.deploy(
+        inputToken.address,
+        uniSwapMock.address
+      )) as YgiPoolStrategy;
+      await masterVault.deployed();
+
       await inputToken.mintFor(alice.address, inputTokenDecimals === 6 ? TEN_USDC : TEN_ETHER);
       await inputToken.mintFor(bob.address, inputTokenDecimals === 6 ? TEN_USDC : TEN_ETHER);
       await inputToken.mintFor(uniSwapMock.address, inputTokenDecimals === 6 ? TEN_USDC : TEN_ETHER);
 
       await ethToken.mintFor(gmxRouterMock.address, TEN_ETHER.mul(100));
       await ethToken.mintFor(uniSwapMock.address, TEN_ETHER.mul(100));
-      
+
       await gmxToken.mintFor(uniSwapMock.address, TEN_ETHER.mul(100));
       await gmxToken.mintFor(gmxRouterMock.address, TEN_ETHER.mul(100));
 
       await daiToken.mintFor(gnsRouterMock.address, TEN_ETHER.mul(100));
       await daiToken.mintFor(uniSwapMock.address, TEN_ETHER.mul(100));
-      
+
       await gnsToken.mintFor(uniSwapMock.address, TEN_ETHER.mul(100));
 
-      await masterVault.initialize(
-        "RLD_YGI_GMX_GNS",
-        "RLD_YGI_GMX_GNS",
-        inputToken.address,
-        uniSwapMock.address,
-      )
-
-      await masterVault.registerVault(
+      await masterVault.registerYgiComponent(
         "GNS",
         gnsToken.address,
-        gnsStrategy.address,
         gnsVault.address,
+        ethers.utils.parseEther('70'),
+        [inputToken.address, gnsToken.address],
         [3000],
-        ONE_ETHER.div(2)
+        [gnsToken.address, inputToken.address],
+        [3000]
       );
 
-      await masterVault.registerVault(
+      await masterVault.registerYgiComponent(
         "GMX",
         gmxToken.address,
-        gmxStrategy.address,
         gmxVault.address,
+        ethers.utils.parseEther('30'),
+        [inputToken.address, gmxToken.address],
         [3000],
-        ONE_ETHER.div(2)
+        [gmxToken.address, inputToken.address],
+        [3000]
       );
 
       return {
@@ -181,420 +181,81 @@ describe("YGI Vault", () => {
     expect(await masterVault.owner()).to.equal(deployer.address);
   })
 
-  it("Input Token is the USDC token address", async () => {
-    const {masterVault, usdcToken} = await getFixture(6);
-    expect(await masterVault.inputToken()).to.equal(usdcToken.address);
-  })
+  it("Should return the correct total value in the vault", async () => {
+    const { alice, bob, usdcToken, uniSwapMock, masterVault, gnsVault, gmxVault } = await getFixture(6);
+    const aliceDeposit = ONE_USDC.mul(1);
+    const bobDeposit = ONE_USDC.mul(2);
+    await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
+    await usdcToken.connect(bob).approve(masterVault.address, bobDeposit);
+    await masterVault.connect(alice).deposit(aliceDeposit);
+    await masterVault.connect(bob).deposit(bobDeposit);
+    expect(await gnsVault.totalSupply()).to.be.closeTo(ethers.utils.parseEther('2.1'), ethers.utils.parseUnits('0.01', 6));
+    expect(await gmxVault.totalSupply()).to.be.closeTo(ethers.utils.parseEther('0.9'), ethers.utils.parseUnits('0.01', 6));
+  });
 
-  it("Vault decimals is 18", async () => {
-    const {masterVault} = await getFixture(6);
-    expect(await masterVault.decimals()).to.equal(18);
-  })
+  it("Should emit a Deposit event with the correct amount", async () => {
+    const { alice, usdcToken, masterVault } = await getFixture(6);
+    const amountToDeposit = ONE_USDC.mul(10);
+    await usdcToken.connect(alice).approve(masterVault.address, amountToDeposit);
 
-  describe("Deposit", () => {
-    it("Depositing into Master vault sends funds in proportion to weights for each vault", async () => {
-      const {alice, masterVault, usdcToken, gmxVault, gnsVault} = await getFixture(6);
-      expect(await masterVault.totalSupply()).to.equal(0);
+    await expect(masterVault.connect(alice).deposit(amountToDeposit))
+      .to.emit(masterVault, "Deposit")
+      .withArgs(amountToDeposit);
+  });
 
-      await usdcToken.connect(alice).approve(masterVault.address, TEN_USDC);
-      await masterVault.connect(alice)
-        .deposit(TEN_USDC);
+  it("Should update the user's balance in the mapping", async () => {
+    const { alice, usdcToken, masterVault } = await getFixture(6);
+    const amountToDeposit = ONE_USDC.mul(10);
+    await usdcToken.connect(alice).approve(masterVault.address, amountToDeposit);
 
-      expect(await masterVault.totalSupply()).to.equal(TEN_ETHER);
-      expect(await gmxVault.balanceOf(masterVault.address)).to.equal(TEN_ETHER.div(2));
-      expect(await gnsVault.balanceOf(masterVault.address)).to.equal(TEN_ETHER.div(2));
-      expect(await masterVault.balanceOf(alice.address)).to.equal(TEN_ETHER);
-    })
+    await masterVault.connect(alice).deposit(amountToDeposit);
 
-    it("Mints token for bob and alice in proportion to their deposits", async () => {
-      const {alice, bob, masterVault, usdcToken, gmxVault, gnsVault} = await getFixture(6);
-      await usdcToken.connect(alice).approve(masterVault.address, TEN_USDC);
-      await masterVault.connect(alice)
-        .deposit(TEN_USDC);
+    const userBalance = await masterVault.userToVaultToAmount(alice.address, masterVault.address);
+    expect(userBalance).to.equal(amountToDeposit);
+  });
 
-      await usdcToken.connect(bob).approve(masterVault.address, TEN_USDC);
-      await masterVault.connect(bob)
-        .deposit(TEN_USDC);
+  it("Should update the lastPoolDepositTime", async () => {
+    const { alice, usdcToken, masterVault } = await getFixture(6);
+    const amountToDeposit = ONE_USDC.mul(10);
+    await usdcToken.connect(alice).approve(masterVault.address, amountToDeposit);
 
-      expect(await masterVault.totalSupply()).to.equal(TEN_ETHER.mul(2));
-      expect(await gmxVault.balanceOf(masterVault.address)).to.equal(TEN_ETHER);
-      expect(await gnsVault.balanceOf(masterVault.address)).to.equal(TEN_ETHER);
-      expect(await masterVault.balanceOf(alice.address)).to.equal(TEN_ETHER);
-      expect(await masterVault.balanceOf(bob.address)).to.equal(TEN_ETHER);
-    })
-    //
-    // it("Deposits are disabled when the strat is stopped", async () => {
-    //   const {alice, masterVault, strategy, usdcToken, capPool} = await loadFixture(setupFixture);
-    //   const stopTx = await strategy.stop();
-    //   await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-    //   await expect(vault.connect(alice).deposit(ONE_USDC)).to.be.revertedWith("Stoppable: stopped");
-    //   await expect(stopTx).to.emit(strategy, "Stopped");
-    //   await expect(await usdcToken.allowance(strategy.address, capPool.address)).to.equal(0);
-    // })
-    //
-    // it("Deposits are enabled when the strat is resumed", async () => {
-    //   const {alice, vault, strategy, usdcToken} = await loadFixture(setupFixture);
-    //   await strategy.stop();
-    //   const resumeTx = await strategy.resume();
-    //   await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-    //   await vault.connect(alice).deposit(ONE_USDC)
-    //   await expect(resumeTx).to.emit(strategy, "Resumed");
-    //   expect(await vault.balanceOf(alice.address)).to.equal(ONE_USDC);
-    // })
-  })
-  //
-  describe("Withdraw", () => {
-    it("Withdraws funds in proportion to weights for each vault", async () => {
-      const {alice, masterVault, usdcToken, gmxVault, gnsVault} = await getFixture(6);
-      await usdcToken.connect(alice).approve(masterVault.address, TEN_USDC);
-      await masterVault.connect(alice).deposit(TEN_USDC);
+    await masterVault.connect(alice).deposit(amountToDeposit);
 
-      expect(await masterVault.totalSupply()).to.equal(TEN_ETHER);
-      expect(await gmxVault.balanceOf(masterVault.address)).to.equal(TEN_ETHER.div(2));
-      expect(await gnsVault.balanceOf(masterVault.address)).to.equal(TEN_ETHER.div(2));
-      expect(await masterVault.balanceOf(alice.address)).to.equal(TEN_ETHER);
+    const lastDepositTime = await masterVault.lastPoolDepositTime();
+    expect(lastDepositTime).to.not.equal(0);
+  });
 
-      const aliceShares = await masterVault.balanceOf(alice.address);
-      await masterVault.connect(alice).withdraw(aliceShares);
+  it("Should revert if the user tries to deposit zero amount", async () => {
+    const { alice, masterVault } = await getFixture(6);
 
-      expect(await masterVault.totalSupply()).to.equal(0);
-      expect(await gmxVault.balanceOf(masterVault.address)).to.equal(0);
-      expect(await gnsVault.balanceOf(masterVault.address)).to.equal(0);
-      expect(await masterVault.balanceOf(alice.address)).to.equal(0);
-      expect(await usdcToken.balanceOf(alice.address)).to.equal(TEN_USDC);
-    })
-    
-    it("Withdraws funds in proportion to weights for each vault for multiple depositors", async () => {
-      const {alice, bob, masterVault, usdcToken, gmxVault, gnsVault} = await getFixture(6);
-      await usdcToken.connect(alice).approve(masterVault.address, TEN_USDC);
-      await masterVault.connect(alice).deposit(TEN_USDC);
+    await expect(masterVault.connect(alice).deposit(0)).to.be.revertedWith("Cannot deposit zero amount");
+  });
 
-      await usdcToken.connect(bob).approve(masterVault.address, TEN_USDC);
-      await masterVault.connect(bob).deposit(TEN_USDC.div(5));
+  it("Should revert if the user has not approved the transfer of tokens", async () => {
+    const { alice, usdcToken, masterVault } = await getFixture(6);
+    const amountToDeposit = ONE_USDC.mul(10);
 
-      const aliceShares = await masterVault.balanceOf(alice.address);
-      await masterVault.connect(alice).withdraw(aliceShares);
+    await expect(masterVault.connect(alice).deposit(amountToDeposit)).to.be.revertedWith(
+      "ERC20: transfer amount exceeds allowance"
+    );
+  });
 
-      const bobShares = await masterVault.balanceOf(bob.address);
-      await masterVault.connect(bob).withdraw(bobShares);
+  it("Should allow withdrawing", async () => {
+    const { alice, usdcToken, uniSwapMock, masterVault } = await getFixture(6);
+    const aliceDeposit = ONE_USDC.mul(10);
+    await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
+    await masterVault.connect(alice).deposit(aliceDeposit);
+    await masterVault.connect(alice).withdraw(ONE_USDC, false);
+    expect(await usdcToken.balanceOf(alice.address)).to.be.closeTo(ONE_USDC.mul(10), ONE_USDC.div(10));
+  });
 
-      expect(await masterVault.totalSupply()).to.equal(0);
-      expect(await gmxVault.balanceOf(masterVault.address)).to.equal(0);
-      expect(await gnsVault.balanceOf(masterVault.address)).to.equal(0);
-      expect(await masterVault.balanceOf(alice.address)).to.equal(0);
-      
-      await closeTo(await usdcToken.balanceOf(alice.address), TEN_USDC, 2);
-      await closeTo(TEN_USDC, await usdcToken.balanceOf(bob.address), 2);
-    })
+  it("Should not allow withdrawing more than deposited", async () => {
+    const { alice, usdcToken, uniSwapMock, masterVault } = await getFixture(6);
+    const aliceDeposit = ONE_USDC.mul(10);
+    await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
+    await masterVault.connect(alice).deposit(aliceDeposit);
+    await expect(masterVault.connect(alice).withdraw(ethers.utils.parseUnits('1.01', 6), false)).to.be.revertedWith("Ratio too high");
+  });
 
-  })
-  describe("Harvest", () => {
-    it("Compounds, claims and restakes, owner takes 5% of pf, rest goes back into strategies", async () => {
-      const {alice, masterVault, usdcToken, gmxStrategy, daiToken, ethToken, gnsStrategy, deployer} = await getFixture(6);
-      await usdcToken.connect(alice).approve(masterVault.address, TEN_USDC);
-      await masterVault.connect(alice).deposit(TEN_USDC);
 
-      expect(await masterVault.totalSupply()).to.equal(TEN_ETHER);
-      expect(await masterVault.balanceOf(alice.address)).to.equal(TEN_ETHER);
-
-      await gmxStrategy.harvest();
-      await gnsStrategy.harvest();
-
-      const aliceShares = await masterVault.balanceOf(alice.address);
-      await masterVault.connect(alice).withdraw(aliceShares);
-
-      const gmxCompoundAmountInEth = parseEther("1").div(2)
-      const gmxCompoundAmountInUsdc = parseUnits("1", 6).div(2)
-      const ownerFeeGmxInEth = gmxCompoundAmountInEth.div(20); //5% of harvest
-      const ownerFeeGmxInUsdc = gmxCompoundAmountInUsdc.div(20);
-      const gmxUserHarvestAmountInUsdc = gmxCompoundAmountInUsdc.sub(ownerFeeGmxInUsdc);
-
-      const gnsHarvestAmount = ONE_ETHER.div(2);
-      const gnsHarvestAmountInTermsOfUsdc = ONE_USDC.div(2)
-      const gnsOwnerCut = gnsHarvestAmount.div(20); //5% of harvest
-      const gnsOwnerCutInTermsOfUsdc = gnsHarvestAmountInTermsOfUsdc.div(20);
-      const gnsUserHarvestAmount = gnsHarvestAmountInTermsOfUsdc.sub(gnsOwnerCutInTermsOfUsdc);
-      
-      const expectedAliceUsdc = TEN_USDC
-        .add(gmxUserHarvestAmountInUsdc)
-        .add(gnsUserHarvestAmount)
-      
-      expect(await daiToken.balanceOf(deployer.address)).to.equal(gnsOwnerCut);
-      expect(await usdcToken.balanceOf(alice.address)).to.equal(expectedAliceUsdc);
-      expect(await ethToken.balanceOf(deployer.address)).to.equal(ownerFeeGmxInEth);
-    })
-
-    it("Compounds, claims and restakes, owner takes 5% of pf, rest goes back into strategies for multiple depositors", async () => {
-      const {alice, bob, masterVault, usdcToken, gmxStrategy, daiToken, ethToken, gnsStrategy, deployer} = await getFixture(6);
-      await usdcToken.connect(alice).approve(masterVault.address, TEN_USDC);
-      await masterVault.connect(alice).deposit(TEN_USDC);
-
-      await usdcToken.connect(bob).approve(masterVault.address, TEN_USDC);
-      await masterVault.connect(bob).deposit(TEN_USDC);
-
-      expect(await masterVault.totalSupply()).to.equal(TEN_ETHER.mul(2));
-      expect(await masterVault.balanceOf(alice.address)).to.equal(TEN_ETHER);
-      expect(await masterVault.balanceOf(bob.address)).to.equal(TEN_ETHER);
-
-      await gmxStrategy.harvest();
-      await gnsStrategy.harvest();
-
-      const aliceShares = await masterVault.balanceOf(alice.address);
-      const bobShares = await masterVault.balanceOf(bob.address);
-      await masterVault.connect(alice).withdraw(aliceShares);
-      await masterVault.connect(bob).withdraw(bobShares);
-
-      const gmxCompoundAmountInEth = parseEther("1")
-      const gmxCompoundAmountInUsdc = parseUnits("1", 6)
-      const ownerFeeGmxInEth = gmxCompoundAmountInEth.div(20); //5% of harvest
-      const ownerFeeGmxInUsdc = gmxCompoundAmountInUsdc.div(20);
-      const gmxUserHarvestAmountInUsdc = gmxCompoundAmountInUsdc.sub(ownerFeeGmxInUsdc).div(2)
-
-      const gnsHarvestAmount = ONE_ETHER;
-      const gnsHarvestAmountInTermsOfUsdc = ONE_USDC
-      const gnsOwnerCut = gnsHarvestAmount.div(20); //5% of harvest
-      const gnsOwnerCutInTermsOfUsdc = gnsHarvestAmountInTermsOfUsdc.div(20);
-      const gnsUserHarvestAmount = gnsHarvestAmountInTermsOfUsdc.sub(gnsOwnerCutInTermsOfUsdc).div(2);
-
-      const expectedUserAmountAfterHarvest = TEN_USDC
-        .add(gmxUserHarvestAmountInUsdc)
-        .add(gnsUserHarvestAmount)
-
-      expect(await daiToken.balanceOf(deployer.address)).to.equal(gnsOwnerCut);
-      expect(await usdcToken.balanceOf(alice.address)).to.equal(expectedUserAmountAfterHarvest);
-      expect(await usdcToken.balanceOf(bob.address)).to.equal(expectedUserAmountAfterHarvest);
-      expect(await ethToken.balanceOf(deployer.address)).to.equal(ownerFeeGmxInEth);
-    })
-    //
-    //   it("Sends performance fees to staking contract address when a protocolStakingFee is set", async () => {
-    //
-    //   })
-    // })
-    //
-    // describe("Withdraw", () => {
-    //   it("Withdrawing after harvest returns tokens to depositor with additional harvest", async () => {
-    //     const {alice, vault, strategy, capPool, usdcToken, deployer} = await loadFixture(setupFixture);
-    //     expect(await vault.totalSupply()).to.equal(0);
-    //     await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-    //     await vault.connect(alice)
-    //       .deposit(ONE_USDC);
-    //
-    //     expect(await vault.totalSupply()).to.equal(ONE_USDC);
-    //     expect(await capPool.deposits(strategy.address)).to.equal(ONE_USDC);
-    //     expect(await usdcToken.balanceOf(alice.address)).to.equal(parseUnits("999", 6));
-    //     expect(await vault.balanceOf(alice.address)).to.equal(ONE_USDC);
-    //
-    //     await strategy.harvest();
-    //
-    //     const aliceShares = await vault.balanceOf(alice.address);
-    //     await vault.connect(alice).withdraw(aliceShares);
-    //
-    //     const claimAmount = parseUnits("1", 6);
-    //     const claimAmountUserPart = claimAmount.sub(parseUnits("0.05", 6));
-    //     // 5% fee to deployer
-    //     const ownerFee = claimAmount.sub(parseUnits("0.95", 6));
-    //
-    //     const expectedAliceGmx = ONE_THOUSAND_USDC.add(claimAmountUserPart);
-    //
-    //     expect(await vault.totalSupply()).to.equal(0);
-    //     expect(await vault.balanceOf(alice.address)).to.equal(0);
-    //     expect(await usdcToken.balanceOf(alice.address)).to.equal(expectedAliceGmx);
-    //     expect(await usdcToken.balanceOf(deployer.address)).to.equal(ownerFee);
-    //   })
-    //
-    //   it("Withdraw in proportion to the shares sent as an argument", async () => {
-    //     const {alice, vault, strategy, capPool, usdcToken, deployer} = await loadFixture(setupFixture);
-    //     expect(await vault.totalSupply()).to.equal(0);
-    //     await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-    //     await vault.connect(alice)
-    //       .deposit(ONE_USDC);
-    //
-    //     expect(await vault.totalSupply()).to.equal(ONE_USDC);
-    //     expect(await capPool.deposits(strategy.address)).to.equal(ONE_USDC);
-    //     expect(await usdcToken.balanceOf(alice.address)).to.equal(parseUnits("999", 6));
-    //     expect(await vault.balanceOf(alice.address)).to.equal(ONE_USDC);
-    //
-    //     await strategy.harvest();
-    //
-    //     const aliceShares = await vault.balanceOf(alice.address);
-    //     await vault.connect(alice).withdraw(aliceShares.div(2));
-    //
-    //     const claimAmount = parseUnits("1", 6);
-    //     const claimAmountUserPart = claimAmount.sub(parseUnits("0.05", 6));
-    //     const ownerFee = claimAmount.sub(parseUnits("0.95", 6));
-    //     const expectedAliceWithdrawAmount = parseUnits("999.5", 6).add(claimAmountUserPart.div(2));
-    //
-    //     expect(await vault.totalSupply()).to.equal(parseUnits("0.5", 6));
-    //     expect(await usdcToken.balanceOf(alice.address)).to.equal(expectedAliceWithdrawAmount);
-    //     expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 6));
-    //     expect(await usdcToken.balanceOf(deployer.address)).to.equal(ownerFee);
-    //   })
-    //
-    //   it("Returns want amounts requested for withdrawal by multiple parties", async () => {
-    //     const {alice, vault, strategy, capPool, bob, usdcToken} = await loadFixture(setupFixture);
-    //     await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-    //     await usdcToken.connect(bob).approve(vault.address, TEN_USDC);
-    //
-    //     expect(await vault.totalSupply()).to.equal(0);
-    //
-    //     await vault.connect(alice)
-    //       .deposit(ONE_USDC);
-    //
-    //     await vault.connect(bob)
-    //       .deposit(ONE_USDC);
-    //
-    //     expect(await vault.totalSupply()).to.equal(parseUnits("2", 6));
-    //     expect(await capPool.deposits(strategy.address)).to.equal(parseUnits("2", 6));
-    //     expect(await vault.balanceOf(alice.address)).to.equal(ONE_USDC);
-    //     expect(await vault.balanceOf(bob.address)).to.equal(ONE_USDC);
-    //
-    //     await vault.connect(alice).withdraw(parseUnits("0.5", 6))
-    //     expect(await usdcToken.balanceOf(alice.address)).to.equal(parseUnits("999.5", 6));
-    //     expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 6));
-    //     expect(await capPool.deposits(strategy.address)).to.equal(parseUnits("1.5", 6));
-    //
-    //     await vault.connect(bob).withdraw(parseUnits("0.5", 6))
-    //     expect(await usdcToken.balanceOf(bob.address)).to.equal(parseUnits("999.5", 6));
-    //     expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 6));
-    //     expect(await capPool.deposits(strategy.address)).to.equal(parseUnits("1", 6));
-    //
-    //     expect(await vault.totalSupply()).to.equal(parseUnits("1", 6));
-    //     expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 6));
-    //     expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 6));
-    //   })
-    //
-    //   it("Returns want amounts requested for withdrawal by multiple parties with additional harvest", async () => {
-    //     const {alice, vault, strategy, capPool, bob, deployer, usdcToken} = await loadFixture(setupFixture);
-    //     await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-    //     await usdcToken.connect(bob).approve(vault.address, TEN_USDC);
-    //
-    //     expect(await vault.totalSupply()).to.equal(0);
-    //
-    //     await vault.connect(alice)
-    //       .deposit(ONE_USDC);
-    //
-    //     await vault.connect(bob)
-    //       .deposit(ONE_USDC);
-    //
-    //     expect(await vault.totalSupply()).to.equal(parseUnits("2", 6));
-    //     expect(await capPool.deposits(strategy.address)).to.equal(parseUnits("2", 6));
-    //     expect(await vault.balanceOf(alice.address)).to.equal(ONE_USDC);
-    //     expect(await vault.balanceOf(bob.address)).to.equal(ONE_USDC);
-    //
-    //     const ownerFee = parseUnits("0.05", 6);
-    //
-    //     await strategy.harvest()
-    //
-    //     const capPoolBalanceOfStrategyAfterHarvest = parseUnits("3", 6).sub(ownerFee);
-    //     const expectedEthBalanceForAliceAndBob = (ONE_USDC.add(parseUnits("0.475", 6)).div(2));
-    //
-    //     // NB after harvest, one LP token is worth 1.35 ETH for each party
-    //     await vault.connect(alice).withdraw(parseUnits("0.5", 6))
-    //     expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 6));
-    //     expect(await capPool.deposits(strategy.address)).to.equal(capPoolBalanceOfStrategyAfterHarvest.sub(expectedEthBalanceForAliceAndBob));
-    //
-    //     const capPoolRemainingBalanceOfStrategyAfterAliceWithdraw = capPoolBalanceOfStrategyAfterHarvest.sub(expectedEthBalanceForAliceAndBob);
-    //
-    //     await vault.connect(bob).withdraw(parseUnits("0.5", 6))
-    //     expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 6));
-    //     expect(await capPool.deposits(strategy.address)).to.equal(capPoolRemainingBalanceOfStrategyAfterAliceWithdraw.sub(expectedEthBalanceForAliceAndBob));
-    //
-    //     expect(await vault.totalSupply()).to.equal(parseUnits("1", 6));
-    //     expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 6));
-    //     expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 6));
-    //   })
-    //
-    // })
-    //
-    // describe("Utils", () => {
-    //   describe("Pausing and un-pausing", () => {
-    //
-    //     it("Deposits are enabled when the strat is paused", async () => {
-    //       const {alice, vault, strategy, usdcToken} = await loadFixture(setupFixture);
-    //       const pauseTx = await strategy.pause();
-    //       await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-    //       const depositTx = await vault.connect(alice).deposit(ONE_USDC)
-    //       await expect(pauseTx).to.emit(strategy, 'StratHarvest');
-    //       await expect(depositTx).to.emit(strategy, 'PendingDeposit');
-    //       await expect(await usdcToken.balanceOf(strategy.address)).to.equal(ONE_USDC);
-    //     })
-    //
-    //     it("Gives allowances for the Cap Pools when un-paused", async () => {
-    //       const {alice, vault, strategy, usdcToken, capPool} = await loadFixture(setupFixture);
-    //       await strategy.pause();
-    //       await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-    //       const depositTx = await vault.connect(alice).deposit(ONE_USDC)
-    //       const unpauseTx = await strategy.unpause();
-    //       await expect(depositTx).to.emit(strategy, 'PendingDeposit');
-    //       await expect(unpauseTx).to.emit(strategy, 'Deposit');
-    //       await expect(await usdcToken.balanceOf(strategy.address)).to.equal(0);
-    //       await expect(await capPool.getCurrencyBalance(strategy.address)).to.equal(ONE_USDC.add(parseUnits('0.95', 6)).mul(CAP_MULTIPLIER));
-    //     })
-    //
-    //     it("Gives right amounts of USDC to each depositor between pauses", async () => {
-    //       const {alice, bob, vault, strategy, usdcToken, capPool} = await loadFixture(setupFixture);
-    //       const bobStartBalance = await usdcToken.balanceOf(bob.address);
-    //       const aliceStartBalance = await usdcToken.balanceOf(alice.address);
-    //       await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-    //       await vault.connect(alice).deposit(ONE_USDC)
-    //       await strategy.pause();
-    //       await usdcToken.connect(bob).approve(vault.address, TEN_USDC);
-    //       await vault.connect(bob).deposit(ONE_USDC)
-    //       await vault.connect(bob).withdrawAll()
-    //       await vault.connect(alice).withdrawAll()
-    //       await expect(await usdcToken.balanceOf(strategy.address)).to.equal(0);
-    //       await expect(await capPool.getCurrencyBalance(strategy.address)).to.equal(0);
-    //       await closeTo(bobStartBalance, await usdcToken.balanceOf(bob.address), 1)
-    //       const reward = parseUnits('0.95', 6);
-    //       await closeTo(reward.add(aliceStartBalance), await usdcToken.balanceOf(alice.address), 1)
-    //     })
-    //
-    //     it("Removes allowances for the Cap Pools when paused", async () => {
-    //
-    //     })
-    //
-    //     it("Reverts when depositing while paused", async () => {
-    //
-    //     })
-    //
-    //     it("Allows users to withdraw while paused", async () => {
-    //
-    //     })
-    //   })
-    //
-    //   describe("Panic", () => {
-    //     it("Collects rewards from the strategy and withdraws all funds from the pool", async () => {
-    //
-    //     })
-    //
-    //     it("Pauses the strategy", async () => {
-    //
-    //     })
-    //   })
-    //
-    //   describe("Performance Fees", () => {
-    //     it("Can change the fee for the devs", async () => {
-    //       const {strategy} = await loadFixture(setupFixture);
-    //       await strategy.setDevFee(parseUnits("0.5", 6));
-    //       expect(await strategy.getDevFee()).to.equal(parseUnits("0.5", 6));
-    //     })
-    //
-    //     it("Can change the fee for the staking contract", async () => {
-    //       const {strategy} = await loadFixture(setupFixture);
-    //       await strategy.setStakingFee(parseUnits("0.1", 6));
-    //       expect(await strategy.getStakingFee()).to.equal(parseUnits("0.1", 6));
-    //     })
-    //
-    //     it("Only the owner can modify fees", async () => {
-    //       const {strategy, alice} = await loadFixture(setupFixture);
-    //       await expect(strategy.connect(alice).setDevFee(parseEther("0.5"))).to.be.revertedWith("Manageable: caller is not the manager or owner");
-    //     })
-    //
-    //     it("Combined fees cannot exceed 50%", async () => {
-    //       const {strategy} = await loadFixture(setupFixture);
-    //       await strategy.setDevFee(parseUnits("0.5", 6));
-    //       await expect(strategy.setStakingFee(parseUnits("0.001", 6))).to.be.revertedWith("fee too high")
-    //     })
-    //   })
-  })
 });

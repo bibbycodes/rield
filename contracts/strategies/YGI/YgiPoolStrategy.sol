@@ -2,33 +2,36 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
-
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../Common/StratFeeManager.sol";
-import "../../utils/GasFeeThrottler.sol";
-import "../../utils/Manager.sol";
-import "../utils/UniswapV3Utils.sol";
-import "../Common/Stoppable.sol";
-import "../Common/UniSwapRoutes.sol";
-import "../../interfaces/hop/IHopTokenTracker.sol";
-import "../../interfaces/hop/IHopRewardPool.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "../../utils/UniswapV3Utils.sol";
 import "../../interfaces/strategy/ITokenStrategy.sol";
+import "../../interfaces/vaults/IRldVault.sol";
+import "../Common/Stoppable.sol";
 
-contract YgiPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
+contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
     using SafeERC20 for IERC20;
+    uint8 constant MULTIPLIER = 18;
 
-    address public vault;
     address public inputToken;
     address public uniRouter;
+
+    struct Route {
+        address[] aToBRoute;
+        uint24[] aToBFees;
+        bytes path;
+    }
 
     struct YgiComponent {
         string name;
         address inputToken;
-        ITokenStrategy strategy;
+        IRldVault vault;
         uint256 allocation;
         Route route;
+        Route backRoute;
     }
 
     uint256 totalAllocation;
@@ -36,51 +39,76 @@ contract YgiPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
     YgiComponent[] public ygiComponents;
     uint256 DIVISOR;
     uint256 public lastPoolDepositTime;
+    mapping(address => mapping(address => uint256)) public userToVaultToAmount;
 
-    event Deposit(uint256 deposited, uint256 amountToMint);
+    event Deposit(uint256 deposited);
     event Withdraw(uint256 withdrawRatio, uint256 withdrawAmount);
+    event WithdrawFailureSkipped();
 
     constructor(
-        address _vault,
-        address _unirouter
+        address _inputToken,
+        address _uniRouter
     ) {
-        vault = _vault;
-        DIVISOR = 10 ** ERC20(inputToken).decimals();
-        _giveAllowances();
+        uniRouter = _uniRouter;
+        inputToken = _inputToken;
+        DIVISOR = 10 ** ERC20(_inputToken).decimals();
     }
+
+    // todo: rebalance
 
     // TODO: Handle vaults with ETH as input (inputToken = address(0))
     function registerYgiComponent(
         string calldata name,
-        address inputToken,
-        address strategyAddress,
-        uint24 allocation,
-        Route route
+        address _inputToken,
+        address vaultAddress,
+        uint256 allocation,
+        address[] memory _route,
+        uint24[] memory _fee,
+        address[] memory _backRoute,
+        uint24[] memory _backFee
     ) public onlyOwner {
-        // todo: rebalance here
+        Route memory route = Route(_route, _fee, UniswapV3Utils.routeToPath(_route, _fee));
+        Route memory backRoute = Route(_backRoute, _backFee, UniswapV3Utils.routeToPath(_backRoute, _backFee));
         YgiComponent memory ygiComponent = YgiComponent(
             name,
-            inputToken,
-            ITokenStrategy(strategyAddress),
+            _inputToken,
+            IRldVault(vaultAddress),
             allocation,
-            route
+            route,
+            backRoute
         );
         totalAllocation += allocation;
-        unirouter = _unirouter;
         ygiComponents.push(ygiComponent);
-        _giveAllowance(uniRouter, inputToken);
+        _giveAllowance(uniRouter, _route[0]);
+        _giveAllowance(uniRouter, _backRoute[0]);
+        _giveAllowance(uniRouter, _inputToken);
+        _giveAllowance(vaultAddress, _inputToken);
     }
 
     function deregisterYgiComponent(
-        string calldata name
+        string calldata name,
+        bool skipOnFail
     ) public onlyOwner {
         for (uint i = 0; i < ygiComponents.length; i++) {
             if (keccak256(abi.encodePacked(ygiComponents[i].name)) == keccak256(abi.encodePacked(name))) {
                 totalAllocation -= ygiComponents[i].allocation;
-                sunsetStrategy(ygiComponents[i].strategy);
+                sunsetStrategy(ygiComponents[i], skipOnFail);
                 ygiComponents[i] = ygiComponents[ygiComponents.length - 1];
                 ygiComponents.pop();
                 break;
+            }
+        }
+    }
+
+    function sunsetStrategy(YgiComponent memory component, bool skipOnFail) internal {
+        IRldVault vault = component.vault;
+        uint256 balance = vault.balanceOf(address(this));
+
+        try vault.withdraw(balance) {
+            swapTokens(ERC20(component.inputToken).balanceOf(address(this)), component.backRoute);
+        } catch {
+            if (!skipOnFail) {
+                revert("WithdrawAll failed");
             }
         }
     }
@@ -89,23 +117,23 @@ contract YgiPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
      * @dev The entrypoint of funds into the system. People deposit with this function
      * into the vault. The vault is then in charge of sending funds into the strategy.
      */
-    function deposit(uint _totalAmount) external nonReentrant whenNotStopped returns (uint256) {
-        uint256 memory amountToMint = 0;
+    function deposit(uint _totalAmount) public nonReentrant whenNotStopped {
+        IERC20(inputToken).safeTransferFrom(msg.sender, address(this), _totalAmount);
         for (uint i = 0; i < ygiComponents.length; i++) {
             uint256 allocation = ygiComponents[i].allocation;
-            uint256 amount = (_totalAmount * (allocation * 10 ** MULTIPLIER / totalAllocation())) / 10 ** MULTIPLIER;
+            uint256 amount = (_totalAmount * (allocation * 10 ** MULTIPLIER / totalAllocation)) / 10 ** MULTIPLIER;
             uint amountReceived = swapTokens(amount, ygiComponents[i].route);
             if (amountReceived > 0) {
-                amountToMint += amountReceived;
-                IERC20(ygiComponents[i].inputToken).transfer(ygiComponents[i].strategy, amountReceived);
-                ygiComponents[i].strategy.deposit();
+                uint256 vaultBalanceBefore = ygiComponents[i].vault.balanceOf(address(this));
+                ygiComponents[i].vault.deposit(amountReceived);
+                uint256 vaultBalanceAfter = ygiComponents[i].vault.balanceOf(address(this));
+                userToVaultToAmount[msg.sender][address(ygiComponents[i].vault)] += vaultBalanceAfter - vaultBalanceBefore;
             }
         }
-        emit Deposit(_totalAmount, amountToMint);
-        return amountToMint;
+        emit Deposit(_totalAmount);
     }
 
-    function swapTokens(uint256 amount, Route calldata route) internal returns (uint256) {
+    function swapTokens(uint256 amount, Route memory route) internal returns (uint256) {
         if (route.path.length == 0) {
             return amount;
         }
@@ -116,7 +144,9 @@ contract YgiPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
     }
 
     function _giveAllowance(address spender, address token) internal {
-        IERC20Upgradeable(token).safeApprove(spender, type(uint).max);
+        if (IERC20(token).allowance(address(this), spender) < type(uint).max) {
+            IERC20(token).safeApprove(spender, type(uint).max);
+        }
     }
 
     /**
@@ -124,15 +154,20 @@ contract YgiPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
      * from the strategy and pay up the token holder. A proportional number of IOU
      * tokens are burned in the process.
      */
-    function withdraw(uint256 _ratio, bool skipOnWithdrawFail) external {
-        require(msg.sender == vault, "!vault");
-        uint256 withdrawnAmount = 0;
+    function withdraw(uint256 _ratio, bool skipOnWithdrawFail) external nonReentrant {
+        require(_ratio <= DIVISOR, "Ratio too high");
+        uint256 withdrawnTotalAmount = 0;
         for (uint i = 0; i < ygiComponents.length; i++) {
-            YgiComponent memory ygiComponent = ygiComponents[i];
-            ITokenStrategy strategy = ygiComponent.strategy;
-            uint256 amountToWithdraw = normalizeAmount(strategy.balance() * _ratio / DIVISOR, strategy.decimals());
-            try strategy.withdraw(amountToWithdraw) returns (bool success) {
-                success = true;
+            IRldVault vault = ygiComponents[i].vault;
+            uint256 balance = userToVaultToAmount[msg.sender][address(vault)];
+//            uint256 amountToWithdraw = normalizeAmount(balance * _ratio / DIVISOR, vault.decimals());
+            uint256 amountToWithdraw = balance * _ratio / DIVISOR;
+
+            uint256 vaultBalanceBefore = ygiComponents[i].vault.balanceOf(address(this));
+            //todo check this again: seeems insecure??
+            try vault.withdraw(amountToWithdraw){
+                uint256 vaultBalanceAfter = ygiComponents[i].vault.balanceOf(address(this));
+                userToVaultToAmount[msg.sender][address(ygiComponents[i].vault)] -= vaultBalanceBefore - vaultBalanceAfter;
             } catch {
                 if (!skipOnWithdrawFail) {
                     revert("Withdrawal failed");
@@ -140,37 +175,22 @@ contract YgiPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
                     emit WithdrawFailureSkipped();
                 }
             }
-            uint256 wantBal = strategy.want().balanceOf(address(this));
-            if (wantBal > 0) {
-                withdrawnAmount += swapToInputToken(wantBal, ygiComponent);
+            uint256 withdrawnBalance = IERC20(ygiComponents[i].inputToken).balanceOf(address(this));
+            if (withdrawnBalance > 0) {
+                withdrawnTotalAmount += swapTokens(withdrawnBalance, ygiComponents[i].backRoute);
             }
         }
 
-        inputToken().safeTransfer(vault, withdrawnAmount);
-        emit Withdraw(_ratio, withdrawnAmount);
+        IERC20(inputToken).safeTransfer(msg.sender, withdrawnTotalAmount);
+        emit Withdraw(_ratio, withdrawnTotalAmount);
     }
 
-    function normalizeAmount(uint256 amount, uint256 decimals) internal pure returns (uint256) {
+    function normalizeAmount(uint256 amount, uint256 decimals) internal view returns (uint256) {
         uint256 inputDecimals = ERC20(inputToken).decimals();
         if (decimals > inputDecimals) {
-            return amount / (10 ** (decimals - inputDecimals));
+            return amount * (10 ** (decimals - inputDecimals));
         }
-        return amount * (10 ** (inputDecimals - decimals));
-    }
-
-    // calculate the total underlying 'wantToken' held by the strat.
-    function balanceOf() public view returns (uint256) {
-        return balanceOfWant() + balanceOfPool();
-    }
-
-    // it calculates how much 'wantToken' this contract holds.
-    function balanceOfWant() public view returns (uint256) {
-        return IERC20(lpToken).balanceOf(address(this));
-    }
-
-    // it calculates how much 'wantToken' the strategy has working in the farm.
-    function balanceOfPool() public view returns (uint256) {
-        return IHopRewardPool(pool).balanceOf(address(this));
+        return amount / (10 ** (inputDecimals - decimals));
     }
 
     function setUniRouter(address _uniRouter) public onlyOwner {
@@ -179,33 +199,15 @@ contract YgiPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
 
     function panic() public onlyOwner {
         stop();
-        // todo: exit all strats
     }
 
     // todo: function for wayward tokens
 
     function stop() public onlyOwner {
         _stop();
-        _removeAllowances();
     }
 
     function resume() public onlyOwner {
         _resume();
-        _giveAllowances();
-        deposit();
-    }
-
-    function _giveAllowances() internal {
-        IERC20(lpToken).safeApprove(pool, type(uint).max);
-        IERC20(lpToken).safeApprove(tracker, type(uint).max);
-        IERC20(inputToken).safeApprove(tracker, type(uint).max);
-        IERC20(hopToken).safeApprove(tracker, type(uint).max);
-    }
-
-    function _removeAllowances() internal {
-        IERC20(lpToken).safeApprove(pool, 0);
-        IERC20(lpToken).safeApprove(tracker, 0);
-        IERC20(inputToken).safeApprove(tracker, 0);
-        IERC20(hopToken).safeApprove(tracker, 0);
     }
 }

@@ -6,7 +6,6 @@ import "../interfaces/common/IUniswapRouterV3.sol";
 import "../interfaces/common/IUniswapRouterV3WithDeadline.sol";
 import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
 import "../utils/UniswapV3Utils.sol";
-import "hardhat/console.sol";
 
 contract UniswapV3RouterMock is IUniswapRouterV3WithDeadline {
     constructor(){
@@ -23,7 +22,6 @@ contract UniswapV3RouterMock is IUniswapRouterV3WithDeadline {
             params.amountIn = params.amountIn * (10 ** (decimalsOut - decimalsIn));
         }
         ERC20(UniswapV3Utils.pathToRoute(params.path)[routeLength - 1]).transfer(msg.sender, params.amountIn);
-        console.log(params.amountIn);
         return params.amountIn;
     }
 
