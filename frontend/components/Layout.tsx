@@ -12,21 +12,21 @@ import {Address} from "wagmi";
 export default function Layout({children}: PropsWithChildren) {
   const router = useRouter()
   const isLandingPage = router.pathname === '/'
-  const navHeight = isLandingPage ? 'h-16' : 'h-64'
+  const navHeight = isLandingPage ? 'h-16' : 'h-44'
   const outerDivStyle = isLandingPage ? 'bg-backgroundPrimary' : `pt-2 pb-10 px-3 sm:px-10`
   // const navGradient = "bg-gradient-to-r from-[#0E1420] to-[#1A1C48]"
   const navGradient = "bg-gradient-to-r from-[#3F37AA] to-[#8F18F7]"
   const posthog = usePostHog()
-  
+
   const onClick = (event: string) => {
     posthog?.capture('PRESSED:' + event)
   }
-  
+
   const onConnect = (address: Address | string) => {
     onClick('CONNECT')
     posthog?.identify(address.toString())
   }
-  
+
   const isSameRoute = (route: string) => {
     return router.pathname === route
   }
@@ -58,7 +58,7 @@ export default function Layout({children}: PropsWithChildren) {
                 </Link>
               </div>
               <div className={`flex flex-row justify-center items-center ml-auto`}>
-                <div 
+                <div
                   className="px-5 hidden md:block"
                   onClick={() => onClick('DOCS')}
                 ><Link target="_blank" rel="noopener noreferrer"

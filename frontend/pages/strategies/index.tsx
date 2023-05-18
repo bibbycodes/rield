@@ -9,6 +9,7 @@ import { useGetTVL } from "../../hooks/useGetTVL";
 import { ToolBarDataItem } from "../../components/ToolBarDataItem";
 import NonSSRWrapper from '../../components/NonSSRWrapper';
 import { formatDollarAmount } from '../../utils/formatters';
+import StrategyListItem from '../../components/StrategyListItem';
 
 export default function Compound() {
   const [isStrategyDetailsModalOpen, setIsStrategyDetailsModalOpen] = useState<boolean>(false);
@@ -34,9 +35,9 @@ export default function Compound() {
       </NonSSRWrapper>
     </div>
     <div className="flex justify-center">
-      <div className={`grid md:grid-cols-2 grid-cols-1 gap-4 [&>*]:shadow-xl max-w-6xl w-full`}>
+      <div className="flex flex-col [&>*]:mb-2 [&>*]:w-[75vw]">
         {strategies
-          .map(strategy => <StrategyCard key={strategy.vaultAddress} strategy={strategy}
+          .map(strategy => <StrategyListItem key={strategy.vaultAddress} strategy={strategy}
                                          openModal={setIsStrategyDetailsModalOpen}/>)}
       </div>
       <DepositAndWithdrawModal

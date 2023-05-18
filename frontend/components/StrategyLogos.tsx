@@ -1,4 +1,4 @@
-import {Strategy} from "../model/strategy";
+import { Strategy } from "../model/strategy";
 import Image from "next/image"
 
 export const StrategyLogos = ({strategy}: { strategy: Strategy }) => {
@@ -7,19 +7,17 @@ export const StrategyLogos = ({strategy}: { strategy: Strategy }) => {
   return (
     <div className={`flex`}>
       <div className={`flex flex-grow flex-row items-center`}>
-        <Image alt={'Token Logo'} width={50} height={50} src={tokenLogoUrl} className="inline mr-3 h-12 w-12"/>
+        <Image alt={'Token Logo'} width={40} height={40} src={tokenLogoUrl} className="inline mr-3 h-10 w-10"/>
         <p
-          className="inline text-2xl font-bold text-tPrimary">{tokenSymbol}
+          className="inline text-xl text-tPrimary">{tokenSymbol}
         </p>
       </div>
-      <div>
-        <a
-          className={`inline-flex flex-row rounded-lg ${backgroundPrimaryDarker} p-2 border-solid border-backgroundPrimary border-2 hover:border-accentSecondary items-center`}
-          href={strategy.protocolUrl}>
-          <Image alt={'Protocol Logo'} width={25} height={25} src={strategy.protocolLogoUrl} className="font-thin	mr-3"/>
-          <p className={`text-sm text-tPrimary slim-text`}>{strategy.protocol}</p>
-        </a>
-      </div>
+      <a
+        className={`inline-flex flex-row rounded-lg ${backgroundPrimaryDarker} p-2 border-solid border-backgroundPrimary border-2 hover:border-accentSecondary items-center`}
+        href={strategy.protocolUrl}>
+        <Image alt={'Protocol Logo'} width={25} height={25} src={strategy.protocolLogoUrl} className="font-thin	mr-3"/>
+        <p className={`text-sm text-tPrimary slim-text`}>{strategy.protocol}</p>
+      </a>
     </div>
   )
 }

@@ -33,7 +33,7 @@ export default function Enable({
     posthog?.capture(`STRATEGY_CARD:${action}`, {action, strategy: strategy.name})
     openModal()
   }
-  
+
   const handleConnect = (show: any) => {
     posthog?.capture(`PRESSED:CONNECT`, {strategy: strategy.name})
     show()
@@ -48,7 +48,7 @@ export default function Enable({
     return userHasBalance
   }
 
-  return <div>
+  return <>
     {(isConnected) && (
       <div className="grid grid-cols-2 gap-3">
         <button
@@ -82,6 +82,6 @@ export default function Enable({
         }}
       </ConnectKitButton.Custom>
     }
-  </div>
+  </>
 }
 
