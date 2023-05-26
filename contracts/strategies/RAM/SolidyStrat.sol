@@ -18,19 +18,19 @@ contract SolidlyLpStrat is FeeUtils, GasFeeThrottler, Stoppable, Pausable {
     using SafeERC20 for IERC20;
 
     // Tokens used
-    address public feeToken; //WETH -  The token dev fees are received in
-    address public rewardToken; //RAM - The token that is rewarded for providing liquidity
+    address public feeToken; //eg WETH -  The token dev fees are received in
+    address public rewardToken; //eg RAM - The token that is rewarded for providing liquidity
     address public wantToken; //LP Token - The token representing your liquidity in the farm
-    address public lpToken0; //WETH - The first token in the LP pair
-    address public lpToken1; //ARB - The second token in the LP pair
-    address public inputToken; //WETH || USDC - The token used for single deposits
+    address public lpToken0; //eg WETH - The first token in the LP pair
+    address public lpToken1; //eg ARB - The second token in the LP pair
+    address public inputToken; //eg WETH || USDC - The token used for single deposits
     address public router; // The swapper
 
     // Third party contracts
     address public gauge; //0x69a3de5f13677fd8d7aaf350a6c65de50e970262
 
     address public vault;
-    address[] public rewards;
+    address[] public rewards; // reward tokens
 
     uint256 DIVISOR = 1 ether;
     // is it a stable or volatile pool
@@ -129,19 +129,6 @@ contract SolidlyLpStrat is FeeUtils, GasFeeThrottler, Stoppable, Pausable {
         _;
     }
 
-    // puts the funds to work
-    // single token deposit
-    function deposit() public whenNotPaused whenNotStopped {
-        uint256 inputTokenBalance = IERC20(inputToken).balanceOf(address(this));
-
-        if (inputTokenBalance > 0) {
-            addLiquidity(inputToken, inputTokenToLp0TokenRoute, inputTokenToLp1TokenRoute);
-            uint256 wantBalance = balanceOfWant();
-            IGauge(gauge).deposit(tokenId, wantBalance);
-            emit Deposit(wantBalance);
-        }
-    }
-    
     function depositWant() public whenNotPaused whenNotStopped {
         uint256 wantBalance = balanceOfWant();
         if (wantBalance > 0) {
@@ -150,35 +137,43 @@ contract SolidlyLpStrat is FeeUtils, GasFeeThrottler, Stoppable, Pausable {
         }
     }
 
+    // puts the funds to work
+    // single token deposit
+    function deposit() public whenNotPaused whenNotStopped {
+        uint256 inputTokenBalance = IERC20(inputToken).balanceOf(address(this));
+        if (inputTokenBalance > 0) {
+            addLiquidityFromSingleToken(inputToken, inputTokenToLp0TokenRoute, inputTokenToLp1TokenRoute);
+            depositWant();
+        }
+    }
+
     // deposit lp tokens simultaneously    
-    function depositLpTokens() public whenNotPaused {
+    function depositLpTokens() public whenNotPaused whenNotStopped {
         (uint256 lp0Bal, uint256 lp1Bal) = lpTokenBalances();
         require(lp0Bal > 0, '!lp0Bal');
         require(lp1Bal > 0, '!lp1Bal');
         // TODO, do we to get a quote for this?
         ISolidlyRouter(router).addLiquidity(lpToken0, lpToken1, isStable, lp0Bal, lp1Bal, 1, 1, address(this), block.timestamp);
-        IGauge(gauge).deposit(tokenId, balanceOfWant());
+        depositWant();
     }
 
     function swapLpToInputToken(uint256 amount0, uint256 amount1) internal {
         ISolidlyRouter(router).swapExactTokensForTokens(amount0, 0, lp0ToInputTokenRoute, address(this), block.timestamp);
         ISolidlyRouter(router).swapExactTokensForTokens(amount1, 0, lp1ToInputTokenRoute, address(this), block.timestamp);
     }
-
-    // withdraws funds and sends them back to the vault    
-    function withdraw(uint256 _amount, bool asInputToken) external {
+    
+    function startWithdraw(uint256 amount, uint256 wantBal) internal returns(uint256, uint256) {
         require(msg.sender == vault, "!vault");
-        uint256 wantBal = IERC20(wantToken).balanceOf(address(this));
         uint256 lp0BalBefore = IERC20(lpToken0).balanceOf(address(this));
         uint256 lp1BalBefore = IERC20(lpToken1).balanceOf(address(this));
 
-        if (wantBal < _amount) {
-            IGauge(gauge).withdraw(_amount - wantBal);
+        if (wantBal < amount) {
+            IGauge(gauge).withdraw(amount - wantBal);
             wantBal = IERC20(wantToken).balanceOf(address(this));
         }
 
-        if (wantBal > _amount) {
-            wantBal = _amount;
+        if (wantBal > amount) {
+            wantBal = amount;
         }
 
         removeLiquidity(wantBal);
@@ -188,17 +183,27 @@ contract SolidlyLpStrat is FeeUtils, GasFeeThrottler, Stoppable, Pausable {
         // Don't distribute any tokens that were sent to the contract by accident
         uint256 lp0TransferAmount = lp0BalAfter - lp0BalBefore;
         uint256 lp1TransferAmount = lp1BalAfter - lp1BalBefore;
+        return (lp0TransferAmount, lp1TransferAmount);
+    }
 
-        if (asInputToken) {
-            uint256 inputBalBefore = IERC20(inputToken).balanceOf(address(this));
-            swapLpToInputToken(lp0TransferAmount, lp1TransferAmount);
-            uint256 inputBalAfter = IERC20(inputToken).balanceOf(address(this));
-            uint256 inputBal = inputBalAfter - inputBalBefore;
-            IERC20(inputToken).safeTransfer(vault, inputBal);
-        } else {
-            IERC20(lpToken0).safeTransfer(vault, lp0TransferAmount);
-            IERC20(lpToken1).safeTransfer(vault, lp1TransferAmount);
-        }
+    
+    // withdraws funds and sends them back to the vault    
+    function withdraw(uint256 amount) external onlyVault {
+        uint256 wantBal = IERC20(wantToken).balanceOf(address(this));
+        (uint256 lp0TransferAmount, uint256 lp1TransferAmount) = startWithdraw(amount, wantBal);
+        uint256 inputBalBefore = IERC20(inputToken).balanceOf(address(this));
+        swapLpToInputToken(lp0TransferAmount, lp1TransferAmount);
+        uint256 inputBalAfter = IERC20(inputToken).balanceOf(address(this));
+        uint256 inputBal = inputBalAfter - inputBalBefore;
+        IERC20(inputToken).safeTransfer(vault, inputBal);
+        emit Withdraw(wantBal);
+    }
+
+    function withdrawAsLpTokens(uint256 amount) external onlyVault {
+        uint256 wantBal = IERC20(wantToken).balanceOf(address(this));
+        (uint256 lp0TransferAmount, uint256 lp1TransferAmount) = startWithdraw(amount, wantBal);
+        IERC20(lpToken0).safeTransfer(vault, lp0TransferAmount);
+        IERC20(lpToken1).safeTransfer(vault, lp1TransferAmount);
         emit Withdraw(wantBal);
     }
 
@@ -213,14 +218,13 @@ contract SolidlyLpStrat is FeeUtils, GasFeeThrottler, Stoppable, Pausable {
         _harvest();
     }
 
-
     // compounds earnings and charges performance fee
     function _harvest() internal whenNotPaused {
         IGauge(gauge).getReward(address(this), rewards);
         uint256 outputBal = IERC20(rewardToken).balanceOf(address(this));
         if (outputBal > 0) {
             chargeFees();
-            addLiquidity(rewardToken, rewardTokenToLp0TokenRoute, rewardTokenToLp1TokenRoute);
+            addLiquidityFromSingleToken(rewardToken, rewardTokenToLp0TokenRoute, rewardTokenToLp1TokenRoute);
             uint256 wantHarvested = balanceOfWant();
             depositWant();
             lastHarvest = block.timestamp;
@@ -232,11 +236,11 @@ contract SolidlyLpStrat is FeeUtils, GasFeeThrottler, Stoppable, Pausable {
     function chargeFees() internal {
         uint256 rewardTokenBalance = IERC20(rewardToken).balanceOf(address(this));
         uint256 totalFeeAmount = rewardTokenBalance * (DEV_FEE + STAKING_FEE) / DIVISOR;
-        
+
         if (totalFeeAmount > 0) {
             uint totalFee = DEV_FEE + STAKING_FEE;
             ISolidlyRouter(router).swapExactTokensForTokens(totalFeeAmount, 0, rewardTokenToFeeTokenRoute, address(this), block.timestamp);
-            
+
             uint256 feeTokenBalance = IERC20(feeToken).balanceOf(address(this));
             uint devFee = DEV_FEE * feeTokenBalance / totalFee;
             IERC20(feeToken).safeTransfer(devFeeAddress, devFee);
@@ -252,7 +256,7 @@ contract SolidlyLpStrat is FeeUtils, GasFeeThrottler, Stoppable, Pausable {
     }
 
     // Adds liquidity to AMM and gets more LP tokens.
-    function addLiquidity(address tokenToDeposit, ISolidlyRouter.Routes[] memory tokenToLp0Route, ISolidlyRouter.Routes[] memory tokenToLp1Route) internal {
+    function addLiquidityFromSingleToken(address tokenToDeposit, ISolidlyRouter.Routes[] memory tokenToLp0Route, ISolidlyRouter.Routes[] memory tokenToLp1Route) internal {
         uint256 outputBal = IERC20(tokenToDeposit).balanceOf(address(this));
         uint256 lp0Amt = outputBal / 2;
         uint256 lp1Amt = outputBal - lp0Amt;

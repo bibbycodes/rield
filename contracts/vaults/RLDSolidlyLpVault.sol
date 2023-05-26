@@ -92,11 +92,11 @@ contract RLDSolidlyLpVault is ERC20, Ownable, ReentrancyGuard {
      * @dev The entrypoint of funds into the system. People deposit with this function
      * into the vault. The vault is then in charge of sending funds into the strategy.
      */
-    function deposit(uint _amount) public nonReentrant {
+    function deposit(uint inputAmount) public nonReentrant {
         strategy.beforeDeposit();
         // The balance of want before transfer
         uint256 _before = balance();
-        inputToken().safeTransferFrom(msg.sender, address(this), _amount);
+        inputToken().safeTransferFrom(msg.sender, address(this), inputAmount);
         // transfer to strategy and strategy.deposit
         earn();
 
@@ -104,36 +104,34 @@ contract RLDSolidlyLpVault is ERC20, Ownable, ReentrancyGuard {
         uint256 _after = balance();
 
         // The amount of want that was transferred
-        _amount = _after - _before;
+        uint256 wantAmount = _after - _before;
 
         // Additional check for deflationary tokens
         uint256 shares = 0;
         // calculate LP tokens to mint for depositor
         if (totalSupply() == 0) {
-            shares = _amount;
+            shares = wantAmount;
         } else {
-            shares = (_amount * totalSupply()) / _before;
+            shares = (wantAmount * totalSupply()) / _before;
         }
-        console.log("shares: %s", shares);
-        console.log("amount: %s", _amount);
         _mint(msg.sender, shares);
     }
 
-    function depositLpTokens(uint _amount) public nonReentrant {
+    function depositLpTokens(uint256 amount0, uint256 amount1) public nonReentrant {
         strategy.beforeDeposit();
         // The balance of want before transfer
         uint256 _before = balance();
         
-        lpToken0().safeTransferFrom(msg.sender, address(this), _amount);
-        lpToken1().safeTransferFrom(msg.sender, address(this), _amount);
+        lpToken0().safeTransferFrom(msg.sender, address(this), amount0);
+        lpToken1().safeTransferFrom(msg.sender, address(this), amount1);
         // transfer to strategy and strategy.deposit
         earnLpTokens();
 
         // The balance of want after transfer
-         uint _after = balance();
+        uint256 _after = balance();
 
         // The amount of want that was transferred
-        _amount = _after - _before;
+        uint256 _amount = _after - _before;
 
         // Additional check for deflationary tokens
         uint256 shares = 0;
@@ -156,7 +154,7 @@ contract RLDSolidlyLpVault is ERC20, Ownable, ReentrancyGuard {
         strategy.deposit();
     }
     
-    function earnLpTokens() public  {
+    function earnLpTokens() public {
         (uint256 _bal0, uint256 _bal1) = availableLpTokens();
         lpToken0().safeTransfer(address(strategy), _bal0);
         lpToken1().safeTransfer(address(strategy), _bal1);
@@ -180,11 +178,13 @@ contract RLDSolidlyLpVault is ERC20, Ownable, ReentrancyGuard {
      * tokens are burned in the process.
      */
     function _withdraw(uint256 _shares, bool asInputToken) public virtual {
-        // (vault_want_bal * (withdrawal_amount / total_supply_vault_token)
-        // ratio of want in proportion to withdrawal amount
         uint256 userOwedWant = (balance() * _shares) / totalSupply();
         _burn(msg.sender, _shares);
-        strategy.withdraw(userOwedWant, asInputToken);
+        if (asInputToken) {
+            strategy.withdraw(userOwedWant);
+        } else {
+            strategy.withdrawAsLpTokens(userOwedWant);
+        }
         uint inputTokenBal = inputToken().balanceOf(address(this));
         inputToken().safeTransfer(msg.sender, inputTokenBal);
     }

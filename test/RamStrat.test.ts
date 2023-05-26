@@ -160,58 +160,130 @@ describe("RAM ERC20 Strategy", () => {
     expect(await vault.decimals()).to.equal(await lpToken.decimals());
   })
 
-  describe("Single Token Deposit", () => {
-    it("Depositing into vault sends want amount to strategy and stakes into pool under the strategy's address, mints token to alice", async () => {
-      const {alice, vault, strategy, gauge, usdcToken} = await loadFixture(setupFixture);
-      expect(await vault.totalSupply()).to.equal(0);
-      await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-      await vault.connect(alice)
-        .deposit(ONE_USDC);
+  describe("Deposits", () => {
+    describe("Single Token Deposit", () => {
+      it("Depositing into vault sends want amount to strategy and stakes into pool under the strategy's address, mints token to alice", async () => {
+        const {alice, vault, strategy, gauge, usdcToken} = await loadFixture(setupFixture);
+        expect(await vault.totalSupply()).to.equal(0);
+        await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+        await vault.connect(alice)
+          .deposit(ONE_USDC);
 
-      expect(await usdcToken.balanceOf(alice.address)).to.equal(TEN_USDC.sub(ONE_USDC));
-      expect(await gauge.balanceOf(strategy.address)).to.equal(ONE_ETH);
-      expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
-      expect(await vault.totalSupply()).to.equal(ONE_ETH);
+        expect(await usdcToken.balanceOf(alice.address)).to.equal(TEN_USDC.sub(ONE_USDC));
+        expect(await gauge.balanceOf(strategy.address)).to.equal(ONE_ETH);
+        expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
+        expect(await vault.totalSupply()).to.equal(ONE_ETH);
+      })
+      //
+      it("Mints token for bob and alice in proportion to their deposits", async () => {
+        const {alice, bob, vault, strategy, gauge, usdcToken} = await loadFixture(setupFixture);
+        await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+        await vault.connect(alice)
+          .deposit(ONE_USDC);
+
+        await usdcToken.connect(bob).approve(vault.address, TEN_USDC);
+        await vault.connect(bob)
+          .deposit(ONE_USDC);
+
+        expect(await vault.totalSupply()).to.equal(parseUnits("2", 18));
+        expect(await gauge.balanceOf(strategy.address)).to.equal(parseUnits("2", 18));
+        expect(await usdcToken.balanceOf(alice.address)).to.equal(TEN_USDC.sub(ONE_USDC));
+        expect(await usdcToken.balanceOf(bob.address)).to.equal(TEN_USDC.sub(ONE_USDC));
+        expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
+        expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETH);
+      })
+
+      it("Deposits are disabled when the strat is stopped", async () => {
+        const {alice, vault, strategy, usdcToken, gauge, ramToken, router} = await loadFixture(setupFixture);
+        const stopTx = await strategy.stop();
+        await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+        await expect(stopTx).to.emit(strategy, "Stopped");
+        await expect(vault.connect(alice).deposit(ONE_USDC)).to.be.revertedWith("Stoppable: stopped");
+        await expect(await usdcToken.allowance(strategy.address, gauge.address)).to.equal(0);
+        await expect(await ramToken.allowance(strategy.address, router.address)).to.equal(0);
+      })
+      //
+      it("Deposits are enabled when the strat is resumed", async () => {
+        const {alice, vault, strategy, usdcToken} = await loadFixture(setupFixture);
+        await strategy.stop();
+        const resumeTx = await strategy.resume();
+        await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+        await vault.connect(alice).deposit(ONE_USDC)
+        await expect(resumeTx).to.emit(strategy, "Resumed");
+        expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
+      })
     })
-    //
-    it("Mints token for bob and alice in proportion to their deposits", async () => {
-      const {alice, bob, vault, strategy, gauge, usdcToken} = await loadFixture(setupFixture);
-      await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-      await vault.connect(alice)
-        .deposit(ONE_USDC);
+    
+    describe("LpToken Deposits", () => {
+      it("Depositing LP tokens into vault sends want amount to strategy and stakes into pool under the strategy's address, mints token to alice", async () => {
+        const {alice, vault, strategy, gauge, arbToken, usdtToken} = await loadFixture(setupFixture);
+        await arbToken.connect(alice).approve(vault.address, TEN_ETH);
+        await usdtToken.connect(alice).approve(vault.address, TEN_ETH);
+        
+        await vault.connect(alice)
+          .depositLpTokens(ONE_ETH.div(2), ONE_ETH.div(2));
 
-      await usdcToken.connect(bob).approve(vault.address, TEN_USDC);
-      await vault.connect(bob)
-        .deposit(ONE_USDC);
+        expect(await arbToken.balanceOf(alice.address)).to.equal(TEN_ETH.sub(ONE_ETH.div(2)));
+        expect(await usdtToken.balanceOf(alice.address)).to.equal(TEN_ETH.sub(ONE_ETH.div(2)));
+        expect(await gauge.balanceOf(strategy.address)).to.equal(ONE_ETH);
+        expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
+        expect(await vault.totalSupply()).to.equal(ONE_ETH);
+      })
+      
+      it("Mints token for bob and alice in proportion to their deposits", async () => {
+        const {alice, vault, strategy, gauge, bob, arbToken, usdtToken} = await loadFixture(setupFixture);
+        await arbToken.connect(alice).approve(vault.address, TEN_ETH);
+        await usdtToken.connect(alice).approve(vault.address, TEN_ETH);
 
-      expect(await vault.totalSupply()).to.equal(parseUnits("2", 18));
-      expect(await gauge.balanceOf(strategy.address)).to.equal(parseUnits("2", 18));
-      expect(await usdcToken.balanceOf(alice.address)).to.equal(TEN_USDC.sub(ONE_USDC));
-      expect(await usdcToken.balanceOf(bob.address)).to.equal(TEN_USDC.sub(ONE_USDC));
-      expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
-      expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETH);
-    })
+        await arbToken.connect(bob).approve(vault.address, TEN_ETH);
+        await usdtToken.connect(bob).approve(vault.address, TEN_ETH);
 
-    it("Deposits are disabled when the strat is stopped", async () => {
-      const {alice, vault, strategy, usdcToken, gauge, ramToken, router} = await loadFixture(setupFixture);
-      const stopTx = await strategy.stop();
-      await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-      await expect(stopTx).to.emit(strategy, "Stopped");
-      await expect(vault.connect(alice).deposit(ONE_USDC)).to.be.revertedWith("Stoppable: stopped");
-      await expect(await usdcToken.allowance(strategy.address, gauge.address)).to.equal(0);
-      await expect(await ramToken.allowance(strategy.address, router.address)).to.equal(0);
-    })
-    //
-    it("Deposits are enabled when the strat is resumed", async () => {
-      const {alice, vault, strategy, usdcToken} = await loadFixture(setupFixture);
-      await strategy.stop();
-      const resumeTx = await strategy.resume();
-      await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-      await vault.connect(alice).deposit(ONE_USDC)
-      await expect(resumeTx).to.emit(strategy, "Resumed");
-      expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
+        await vault.connect(alice)
+          .depositLpTokens(ONE_ETH.div(2), ONE_ETH.div(2));
+
+        await vault.connect(bob)
+          .depositLpTokens(ONE_ETH.div(2), ONE_ETH.div(2));
+
+        expect(await arbToken.balanceOf(alice.address)).to.equal(TEN_ETH.sub(ONE_ETH.div(2)));
+        expect(await usdtToken.balanceOf(alice.address)).to.equal(TEN_ETH.sub(ONE_ETH.div(2)));
+
+        expect(await arbToken.balanceOf(bob.address)).to.equal(TEN_ETH.sub(ONE_ETH.div(2)));
+        expect(await usdtToken.balanceOf(bob.address)).to.equal(TEN_ETH.sub(ONE_ETH.div(2)));
+
+        expect(await gauge.balanceOf(strategy.address)).to.equal(ONE_ETH.mul(2));
+        expect(await vault.totalSupply()).to.equal(ONE_ETH.mul(2));
+
+        expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
+        expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETH);
+      })
+
+
+      it("Deposits are disabled when the strat is stopped", async () => {
+        const {alice, vault, strategy, usdcToken, arbToken, usdtToken, gauge, ramToken, router} = await loadFixture(setupFixture);
+        const stopTx = await strategy.stop();
+        await arbToken.connect(alice).approve(vault.address, TEN_ETH);
+        await usdtToken.connect(alice).approve(vault.address, TEN_ETH);
+
+        await expect(stopTx).to.emit(strategy, "Stopped");
+        await expect(vault.connect(alice).depositLpTokens(ONE_ETH.div(2), ONE_ETH.div(2))).to.be.revertedWith("Stoppable: stopped");
+        await expect(await arbToken.allowance(strategy.address, gauge.address)).to.equal(0);
+        await expect(await usdtToken.allowance(strategy.address, gauge.address)).to.equal(0);
+        await expect(await ramToken.allowance(strategy.address, router.address)).to.equal(0);
+      })
+      
+      it("Deposits are enabled when the strat is resumed", async () => {
+        const {alice, vault, strategy, arbToken, usdtToken} = await loadFixture(setupFixture);
+        await arbToken.connect(alice).approve(vault.address, TEN_ETH);
+        await usdtToken.connect(alice).approve(vault.address, TEN_ETH);
+        await strategy.stop();
+        const resumeTx = await strategy.resume();
+        await vault.connect(alice).depositLpTokens(ONE_ETH.div(2), ONE_ETH.div(2))
+        await expect(resumeTx).to.emit(strategy, "Resumed");
+        expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
+      })
     })
   })
+  
   //
   describe("Harvest", () => {
     it("Compounds, claims and restakes, owner takes 2% of pf, rest goes back into strategy", async () => {

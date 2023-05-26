@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 interface ISolidlyLpStrategy {
     function deposit() external;
 
-    function withdraw(uint256 _amount, bool asInputToken) external;
+    function withdraw(uint256 _amount) external;
+    
+    function withdrawAsLpTokens(uint256 _amount) external;
 
     function beforeDeposit() external;
 
@@ -50,5 +52,5 @@ interface ISolidlyLpStrategy {
 
     function input() external view returns (address);
 
-    function depositLpTokens() external returns (uint256);
+    function depositLpTokens() external;
 }
