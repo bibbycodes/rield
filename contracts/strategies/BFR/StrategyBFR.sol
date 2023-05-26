@@ -63,7 +63,7 @@ contract StrategyBFR is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable {
     }
 
     function setRewardRouteParams(address unirouter) internal {
-        setUniRouter(unirouter);
+        setUniRouter(router);
         address[] memory path1 = new address[](3);
         path1[0] = rewardToken;
         path1[1] = wethToken;
@@ -236,14 +236,14 @@ contract StrategyBFR is Manager, GasFeeThrottler, UniSwapRoutes, Stoppable {
 
     function _giveAllowances() internal {
         IERC20(wantToken).safeApprove(balanceTracker, type(uint).max);
-        IERC20(rewardToken).safeApprove(unirouter, type(uint).max);
-        IERC20(arbToken).safeApprove(unirouter, type(uint).max);
+        IERC20(rewardToken).safeApprove(router, type(uint).max);
+        IERC20(arbToken).safeApprove(router, type(uint).max);
     }
 
     function _removeAllowances() internal {
         IERC20(wantToken).safeApprove(balanceTracker, 0);
-        IERC20(rewardToken).safeApprove(unirouter, 0);
-        IERC20(arbToken).safeApprove(unirouter, 0);
+        IERC20(rewardToken).safeApprove(router, 0);
+        IERC20(arbToken).safeApprove(router, 0);
     }
 
     function nativeToWant() external view virtual returns (address[] memory) {}

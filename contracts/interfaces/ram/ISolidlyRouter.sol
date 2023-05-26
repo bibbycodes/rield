@@ -54,15 +54,15 @@ interface ISolidlyRouter {
         uint deadline
     ) external returns (uint amountToken, uint amountETH);
 
-    function swapExactTokensForTokensSimple(
-        uint amountIn,
-        uint amountOutMin,
-        address tokenFrom,
-        address tokenTo,
-        bool stable,
-        address to,
-        uint deadline
-    ) external returns (uint[] memory amounts);
+//    function swapExactTokensForTokensSimple(
+//        uint amountIn,
+//        uint amountOutMin,
+//        address tokenFrom,
+//        address tokenTo,
+//        bool stable,
+//        address to,
+//        uint deadline
+//    ) external returns (uint[] memory amounts);
 
     function swapExactTokensForTokens(
         uint amountIn,

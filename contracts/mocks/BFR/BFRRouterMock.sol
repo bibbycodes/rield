@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../interfaces/bfr/IBFRRouter.sol";
-import "../interfaces/bfr/IBFRTracker.sol";
+import "../../interfaces/bfr/IBFRRouter.sol";
+import "../../interfaces/bfr/IBFRTracker.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract BFRRouterMock is IBFRRouter {

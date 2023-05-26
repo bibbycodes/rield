@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "../interfaces/gmx/IGMXRouter.sol";
+import "../../interfaces/gmx/IGMXRouter.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../interfaces/gmx/IGMXTracker.sol";
+import "../../interfaces/gmx/IGMXTracker.sol";
 import "hardhat/console.sol";
 
 contract GMXRouterMock is IGMXRouter, IGMXTracker {

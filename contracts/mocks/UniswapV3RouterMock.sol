@@ -23,7 +23,6 @@ contract UniswapV3RouterMock is IUniswapRouterV3WithDeadline {
             params.amountIn = params.amountIn * (10 ** (decimalsOut - decimalsIn));
         }
         ERC20(UniswapV3Utils.pathToRoute(params.path)[routeLength - 1]).transfer(msg.sender, params.amountIn);
-        console.log(params.amountIn);
         return params.amountIn;
     }
 
