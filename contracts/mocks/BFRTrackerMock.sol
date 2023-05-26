@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/bfr/IBFRTracker.sol";
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "hardhat/console.sol";
 
 contract BFRTrackerMock is IBFRTracker {
@@ -14,7 +14,7 @@ contract BFRTrackerMock is IBFRTracker {
     mapping(address => mapping(address => uint256)) public _depositBalances;
     address bfrTokenAddress;
     address rewardTokenAddress;
-    
+
     constructor(address _bfrToken, address _rewardToken) {
         bfrTokenAddress = _bfrToken;
         rewardTokenAddress = _rewardToken;
@@ -44,7 +44,7 @@ contract BFRTrackerMock is IBFRTracker {
     function depositBalances(address user, address token) external view override returns (uint256) {
         return _depositBalances[user][token];
     }
-    
+
     function stakeForAccount(
         address _fundingAccount,
         address _account,
@@ -54,7 +54,7 @@ contract BFRTrackerMock is IBFRTracker {
         ERC20(_depositToken).safeTransferFrom(_fundingAccount, address(this), _amount);
         _depositBalances[_account][_depositToken] += _amount;
     }
-    
+
     function unstakeForAccount (
         address _account,
         address _depositToken,

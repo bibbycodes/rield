@@ -10,5 +10,5 @@ interface IRldBaseVault is IERC20 {
     function balance() external view returns (uint);
     function getPricePerFullShare() external view returns (uint256);
     function withdraw(uint256 _shares) external;
-    function strategy() external view returns (ITokenStrategy);
+    function strategy() external view returns (address);
 }

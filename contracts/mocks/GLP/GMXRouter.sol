@@ -1,7 +1,7 @@
 import "../../interfaces/gmx/IGMXRouter.sol";
 import "../../interfaces/gmx/IGLPManager.sol";
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 
 contract GMXRouter is IGMXRouter {
@@ -12,8 +12,8 @@ contract GMXRouter is IGMXRouter {
     address gmx;
 
     constructor(
-        address _feeGlpTracker, 
-        address _feeGmxTracker, 
+        address _feeGlpTracker,
+        address _feeGmxTracker,
         address _glpManager,
         address _rewardToken,
         address _gmx
@@ -29,7 +29,7 @@ contract GMXRouter is IGMXRouter {
     event UnStaked(address indexed user, uint256 amount);
     event Compound(address indexed user, uint256 amount);
     event Claimed(address indexed user, uint256 amount);
-    
+
     using SafeERC20 for ERC20;
 
     mapping(address => uint256) public gmxBalances;
@@ -40,7 +40,7 @@ contract GMXRouter is IGMXRouter {
     function feeGmxTracker() external view returns (address) {
         return gmxTracker;
     }
-    
+
     function glpManager() external view returns (address) {
         return glpMan;
     }
@@ -71,7 +71,7 @@ contract GMXRouter is IGMXRouter {
         gmxBalances[msg.sender] += extraAmount;
         emit Compound(msg.sender, extraAmount);
     }
-    
+
     function unstakeAndRedeemGlp(
         address _tokenOut,
         uint256 _glpAmount,
@@ -80,7 +80,7 @@ contract GMXRouter is IGMXRouter {
     ) external override returns (uint256) {
         return 0;
     }
-    
+
     function claimFees() external override {
         ERC20(rewardToken).safeTransfer(msg.sender, 1 ether);
     }

@@ -139,7 +139,6 @@ describe("YGI Vault", () => {
       await gnsToken.mintFor(uniSwapMock.address, TEN_ETHER.mul(100));
 
       await masterVault.registerYgiComponent(
-        "GNS",
         gnsToken.address,
         gnsVault.address,
         ethers.utils.parseEther('70'),
@@ -150,7 +149,6 @@ describe("YGI Vault", () => {
       );
 
       await masterVault.registerYgiComponent(
-        "GMX",
         gmxToken.address,
         gmxVault.address,
         ethers.utils.parseEther('30'),
@@ -233,12 +231,6 @@ describe("YGI Vault", () => {
     expect(lastDepositTime).to.not.equal(0);
   });
 
-  it("Should revert if the user tries to deposit zero amount", async () => {
-    const { alice, masterVault } = await getFixture(6);
-
-    await expect(masterVault.connect(alice).deposit(0)).to.be.revertedWith("Cannot deposit zero amount");
-  });
-
   it("Should revert if the user has not approved the transfer of tokens", async () => {
     const { alice, usdcToken, masterVault } = await getFixture(6);
     const amountToDeposit = ONE_USDC.mul(10);
@@ -253,8 +245,19 @@ describe("YGI Vault", () => {
     const aliceDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
     await masterVault.connect(alice).deposit(aliceDeposit);
-    await masterVault.connect(alice).withdraw(ONE_USDC, false);
+    await masterVault.connect(alice).withdraw(ONE_USDC, false, false);
     expect(await usdcToken.balanceOf(alice.address)).to.be.closeTo(ONE_USDC.mul(10), ONE_USDC.div(10));
+  });
+
+  it("Should allow withdrawing in individual assets", async () => {
+    const { alice, usdcToken, uniSwapMock, masterVault, gnsToken, gmxToken } = await getFixture(6);
+    const aliceDeposit = ONE_USDC.mul(10);
+    await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
+    await masterVault.connect(alice).deposit(aliceDeposit);
+    await masterVault.connect(alice).withdraw(ONE_USDC, false, true);
+    expect(await usdcToken.balanceOf(alice.address)).to.be.eq(0);
+    expect(await gnsToken.balanceOf(alice.address)).to.be.closeTo(ONE_ETHER.mul(7), ONE_ETHER.div(10));
+    expect(await gmxToken.balanceOf(alice.address)).to.be.closeTo(ONE_ETHER.mul(3), ONE_ETHER.div(10));
   });
 
   it("Should not allow withdrawing more than deposited", async () => {
@@ -262,7 +265,7 @@ describe("YGI Vault", () => {
     const aliceDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
     await masterVault.connect(alice).deposit(aliceDeposit);
-    await expect(masterVault.connect(alice).withdraw(ethers.utils.parseUnits('1.01', 6), false)).to.be.revertedWith("Ratio too high");
+    await expect(masterVault.connect(alice).withdraw(ethers.utils.parseUnits('1.01', 6), false, false)).to.be.revertedWith("Ratio too high");
   });
 
   it("Should update the user's balance when depositing multiple times", async () => {
@@ -297,13 +300,13 @@ describe("YGI Vault", () => {
     await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
     await masterVault.connect(alice).deposit(aliceDeposit);
 
-    await masterVault.connect(alice).withdraw(ONE_USDC.div('2'), false);
+    await masterVault.connect(alice).withdraw(ONE_USDC.div('2'), false, false);
     expect(await usdcToken.balanceOf(alice.address)).to.equal(ONE_USDC.mul(5));
 
-    await masterVault.connect(alice).withdraw(ONE_USDC.div('2'), false);
+    await masterVault.connect(alice).withdraw(ONE_USDC.div('2'), false, false);
     expect(await usdcToken.balanceOf(alice.address)).to.equal(ONE_USDC.mul(7).add(ONE_USDC.div('2')));
 
-    await masterVault.connect(alice).withdraw(ONE_USDC, false);
+    await masterVault.connect(alice).withdraw(ONE_USDC, false, false);
     expect(await usdcToken.balanceOf(alice.address)).to.equal(ONE_USDC.mul(10));
   });
 

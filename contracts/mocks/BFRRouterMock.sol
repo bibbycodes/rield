@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin-4/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/bfr/IBFRRouter.sol";
 import "../interfaces/bfr/IBFRTracker.sol";
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract BFRRouterMock is IBFRRouter {
     address public feeBlpTrackerAddress;
@@ -14,7 +14,7 @@ contract BFRRouterMock is IBFRRouter {
     address public stakedBfrTrackerAddress;
     address public blpManagerAddress;
     address public bfrTokenAddress;
-    
+
     mapping (address => uint256) public stakedBfrAmounts;
 
     constructor(
@@ -71,7 +71,7 @@ contract BFRRouterMock is IBFRRouter {
     function blpManager() external view returns (address) {
         return blpManagerAddress;
     }
-    
+
     function deposits(address user) external view returns (uint256) {
         return stakedBfrAmounts[user];
     }

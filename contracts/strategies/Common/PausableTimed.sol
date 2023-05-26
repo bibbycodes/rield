@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin-4/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 abstract contract PausableTimed is Pausable {
 
