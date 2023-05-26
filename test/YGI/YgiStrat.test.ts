@@ -9,6 +9,7 @@ import {
   RldTokenVault,
   TokenMock,
   UniswapV3RouterMock,
+  WETHMock,
   YgiPoolStrategy
 } from "../../typechain-types";
 import { parseEther, parseUnits } from "ethers/lib/utils";
@@ -108,12 +109,17 @@ describe("YGI Vault", () => {
       // Master Vault
       const inputToken = await Token.deploy("USDC", "USDC", inputTokenDecimals) as TokenMock;
 
+      const WETH = await ethers.getContractFactory("WETHMock");
+      const wethToken = await WETH.deploy() as WETHMock;
+      await wethToken.deployed();
+
       //  Mints
       await inputToken.deployed();
       const MasterVault = await ethers.getContractFactory("YgiPoolStrategy");
       const masterVault: YgiPoolStrategy = (await MasterVault.deploy(
         inputToken.address,
-        uniSwapMock.address
+        uniSwapMock.address,
+        wethToken.address
       )) as YgiPoolStrategy;
       await masterVault.deployed();
 
@@ -204,14 +210,16 @@ describe("YGI Vault", () => {
   });
 
   it("Should update the user's balance in the mapping", async () => {
-    const { alice, usdcToken, masterVault } = await getFixture(6);
+    const { alice, usdcToken, masterVault , gmxVault, gnsVault} = await getFixture(6);
     const amountToDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, amountToDeposit);
 
     await masterVault.connect(alice).deposit(amountToDeposit);
 
-    const userBalance = await masterVault.userToVaultToAmount(alice.address, masterVault.address);
-    expect(userBalance).to.equal(amountToDeposit);
+    const userBalanceGmx = await masterVault.userToVaultToAmount(alice.address, gmxVault.address);
+    const userBalanceGns = await masterVault.userToVaultToAmount(alice.address, gnsVault.address);
+    expect(userBalanceGmx).to.equal(ethers.utils.parseEther('3'));
+    expect(userBalanceGns).to.equal(ethers.utils.parseEther('7'));
   });
 
   it("Should update the lastPoolDepositTime", async () => {
@@ -236,7 +244,7 @@ describe("YGI Vault", () => {
     const amountToDeposit = ONE_USDC.mul(10);
 
     await expect(masterVault.connect(alice).deposit(amountToDeposit)).to.be.revertedWith(
-      "ERC20: transfer amount exceeds allowance"
+      "ERC20: insufficient allowance"
     );
   });
 
@@ -257,5 +265,46 @@ describe("YGI Vault", () => {
     await expect(masterVault.connect(alice).withdraw(ethers.utils.parseUnits('1.01', 6), false)).to.be.revertedWith("Ratio too high");
   });
 
+  it("Should update the user's balance when depositing multiple times", async () => {
+    const { alice, usdcToken, masterVault, gnsVault, gmxVault } = await getFixture(6);
+    const aliceFirstDeposit = ONE_USDC.mul(5);
+    const aliceSecondDeposit = ONE_USDC.mul(3);
+
+    await usdcToken.connect(alice).approve(masterVault.address, aliceFirstDeposit);
+
+    await masterVault.connect(alice).deposit(aliceFirstDeposit);
+
+    const aliceFirstBalanceGmx = await masterVault.userToVaultToAmount(alice.address, gmxVault.address);
+    const aliceFirstBalanceGns = await masterVault.userToVaultToAmount(alice.address, gnsVault.address);
+
+    expect(aliceFirstBalanceGmx).to.equal(ethers.utils.parseEther("1.5"));
+    expect(aliceFirstBalanceGns).to.equal(ethers.utils.parseEther("3.5"));
+
+    await usdcToken.connect(alice).approve(masterVault.address, aliceSecondDeposit);
+
+    await masterVault.connect(alice).deposit(aliceSecondDeposit);
+
+    const aliceSecondBalanceGmx = await masterVault.userToVaultToAmount(alice.address, gmxVault.address);
+    const aliceSecondBalanceGns = await masterVault.userToVaultToAmount(alice.address, gnsVault.address);
+
+    expect(aliceSecondBalanceGmx).to.equal(ethers.utils.parseEther("2.4"));
+    expect(aliceSecondBalanceGns).to.equal(ethers.utils.parseEther("5.6"));
+  });
+
+  it("Should allow withdrawing multiple times with ratios", async () => {
+    const { alice, usdcToken, masterVault, gnsVault, gmxVault } = await getFixture(6);
+    const aliceDeposit = ONE_USDC.mul(10);
+    await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
+    await masterVault.connect(alice).deposit(aliceDeposit);
+
+    await masterVault.connect(alice).withdraw(ONE_USDC.div('2'), false);
+    expect(await usdcToken.balanceOf(alice.address)).to.equal(ONE_USDC.mul(5));
+
+    await masterVault.connect(alice).withdraw(ONE_USDC.div('2'), false);
+    expect(await usdcToken.balanceOf(alice.address)).to.equal(ONE_USDC.mul(7).add(ONE_USDC.div('2')));
+
+    await masterVault.connect(alice).withdraw(ONE_USDC, false);
+    expect(await usdcToken.balanceOf(alice.address)).to.equal(ONE_USDC.mul(10));
+  });
 
 });

@@ -9,7 +9,6 @@ import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/common/IUniswapRouterV3.sol";
 import "../../interfaces/gns/IGNSStakingProxy.sol";
 import "../../utils/UniswapV3Utils.sol";
-import "hardhat/console.sol";
 
 contract StrategyGNS is StrategyManager, GasFeeThrottler {
     using SafeERC20 for IERC20;
@@ -66,8 +65,12 @@ contract StrategyGNS is StrategyManager, GasFeeThrottler {
         }
     }
 
-    function withdraw(uint256 _amount) external {
+    function beforeWithdraw() internal virtual {
         require(msg.sender == vault, "!vault");
+    }
+
+    function withdraw(uint256 _amount) external {
+        beforeWithdraw();
         uint256 wantTokenBal = IERC20(wantToken).balanceOf(address(this));
         if (wantTokenBal < _amount) {
             IGNSStakingProxy(chef).unstakeTokens(_amount - wantTokenBal);
@@ -97,7 +100,6 @@ contract StrategyGNS is StrategyManager, GasFeeThrottler {
     function _harvest() internal whenNotStopped {
         IGNSStakingProxy(chef).harvest();
         uint256 rewardBalance = IERC20(rewardToken).balanceOf(address(this));
-        console.log("rewardBalance", rewardBalance);
         if (rewardBalance > 0) {
             chargeFees();
             swapRewards();
@@ -111,7 +113,6 @@ contract StrategyGNS is StrategyManager, GasFeeThrottler {
     // performance fees
     function chargeFees() internal {
         uint256 devFeeAmount = IERC20(rewardToken).balanceOf(address(this)) * DEV_FEE / DIVISOR;
-        console.log("devFeeGNS: ",devFeeAmount);
         uint256 stakingFeeAmount = IERC20(rewardToken).balanceOf(address(this)) * STAKING_FEE / DIVISOR;
         IERC20(rewardToken).safeTransfer(devFeeAddress, devFeeAmount);
 

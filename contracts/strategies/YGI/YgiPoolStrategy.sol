@@ -10,14 +10,18 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "../../utils/UniswapV3Utils.sol";
 import "../../interfaces/strategy/ITokenStrategy.sol";
 import "../../interfaces/vaults/IRldVault.sol";
+import "../../interfaces/vaults/IRldEthVault.sol";
+import "../../interfaces/vaults/IRldBaseVault.sol";
+import "../../interfaces/common/IWETH.sol";
 import "../Common/Stoppable.sol";
 
 contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    uint8 constant MULTIPLIER = 18;
+    uint8 constant MULTIPLIER = 10 ** 18;
 
-    address public inputToken;
+    address public ygiInputToken;
     address public uniRouter;
+    address public weth;
 
     struct Route {
         address[] aToBRoute;
@@ -26,9 +30,8 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
     }
 
     struct YgiComponent {
-        string name;
         address inputToken;
-        IRldVault vault;
+        address vault;
         uint256 allocation;
         Route route;
         Route backRoute;
@@ -38,6 +41,8 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
 
     YgiComponent[] public ygiComponents;
     uint256 DIVISOR;
+
+    //todo: actually use this
     uint256 public lastPoolDepositTime;
     mapping(address => mapping(address => uint256)) public userToVaultToAmount;
 
@@ -47,19 +52,46 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
 
     constructor(
         address _inputToken,
-        address _uniRouter
+        address _uniRouter,
+        address _weth
     ) {
         uniRouter = _uniRouter;
-        inputToken = _inputToken;
+        ygiInputToken = _inputToken;
         DIVISOR = 10 ** ERC20(_inputToken).decimals();
+        weth = _weth;
+        _giveAllowance(uniRouter, ygiInputToken);
     }
 
-    // todo: rebalance
+    function rebalance(address _vault, uint256 amount) public onlyOwner {
+        YgiComponent storage component = ygiComponents[getIndex(_vault)];
+        IRldBaseVault(component.vault).strategy().withdraw(amount);
 
-    // TODO: Handle vaults with ETH as input (inputToken = address(0))
+        uint256 withdrawnBalance = IERC20(component.inputToken).balanceOf(address(this));
+        if (withdrawnBalance > 0) {
+            swapTokens(withdrawnBalance, component.backRoute);
+        }
+        uint256 amountInputToken = IERC20(component.inputToken).balanceOf(address(this));
+        // todo: deposit without mint (direct strategy deposit)
+        // todo: handle vaults that have different input/output than their strategies
+        if (IRldBaseVault(component.vault).strategy().inputToken() == address(0)) {
+            IWETH(weth).withdraw(amountInputToken);
+            IRldBaseVault(component.vault).strategy().deposit{value: amountInputToken}();
+        } else {
+            IRldBaseVault(component.vault).strategy().deposit(amountInputToken);
+        }
+    }
+
+    function getIndex(address _vault) public view returns (uint256) {
+        for (uint i = 0; i < ygiComponents.length; i++) {
+            if (ygiComponents[i].vault == _vault) {
+                return i;
+            }
+        }
+        revert("Vault not found");
+    }
+
     function registerYgiComponent(
-        string calldata name,
-        address _inputToken,
+        address inputToken,
         address vaultAddress,
         uint256 allocation,
         address[] memory _route,
@@ -70,42 +102,46 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
         Route memory route = Route(_route, _fee, UniswapV3Utils.routeToPath(_route, _fee));
         Route memory backRoute = Route(_backRoute, _backFee, UniswapV3Utils.routeToPath(_backRoute, _backFee));
         YgiComponent memory ygiComponent = YgiComponent(
-            name,
-            _inputToken,
-            IRldVault(vaultAddress),
+            inputToken,
+            vaultAddress,
             allocation,
             route,
             backRoute
         );
         totalAllocation += allocation;
         ygiComponents.push(ygiComponent);
-        _giveAllowance(uniRouter, _route[0]);
-        _giveAllowance(uniRouter, _backRoute[0]);
-        _giveAllowance(uniRouter, _inputToken);
-        _giveAllowance(vaultAddress, _inputToken);
+        _giveAllowance(uniRouter, inputToken);
+        _giveAllowance(vaultAddress, inputToken);
     }
 
     function deregisterYgiComponent(
-        string calldata name,
+        address _vault,
         bool skipOnFail
     ) public onlyOwner {
-        for (uint i = 0; i < ygiComponents.length; i++) {
-            if (keccak256(abi.encodePacked(ygiComponents[i].name)) == keccak256(abi.encodePacked(name))) {
-                totalAllocation -= ygiComponents[i].allocation;
-                sunsetStrategy(ygiComponents[i], skipOnFail);
-                ygiComponents[i] = ygiComponents[ygiComponents.length - 1];
-                ygiComponents.pop();
-                break;
-            }
+        // todo: change idx to mapping
+        uint256 i = getIndex(_vault);
+        YgiComponent storage component = ygiComponents[i];
+        totalAllocation -= component.allocation;
+        sunsetStrategy(component, skipOnFail);
+        ygiComponents[i] = ygiComponents[ygiComponents.length - 1];
+        ygiComponents.pop();
+
+        uint256 amountInputToken = IERC20(ygiInputToken).balanceOf(address(this));
+        if (amountInputToken > 0) {
+            deposit(amountInputToken);
         }
     }
 
-    function sunsetStrategy(YgiComponent memory component, bool skipOnFail) internal {
-        IRldVault vault = component.vault;
+    function sunsetStrategy(YgiComponent calldata component, bool skipOnFail) internal {
+        IRldBaseVault vault = IRldBaseVault(component.vault);
         uint256 balance = vault.balanceOf(address(this));
 
         try vault.withdraw(balance) {
-            swapTokens(ERC20(component.inputToken).balanceOf(address(this)), component.backRoute);
+            // check if ygiInputToken is inputToken
+            uint256 withdrawnBalance = IERC20(component.inputToken).balanceOf(address(this));
+            if (withdrawnBalance > 0) {
+                swapTokens(withdrawnBalance, component.backRoute);
+            }
         } catch {
             if (!skipOnFail) {
                 revert("WithdrawAll failed");
@@ -118,18 +154,24 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
      * into the vault. The vault is then in charge of sending funds into the strategy.
      */
     function deposit(uint _totalAmount) public nonReentrant whenNotStopped {
-        IERC20(inputToken).safeTransferFrom(msg.sender, address(this), _totalAmount);
+        IERC20(ygiInputToken).safeTransferFrom(msg.sender, address(this), _totalAmount);
         for (uint i = 0; i < ygiComponents.length; i++) {
             uint256 allocation = ygiComponents[i].allocation;
-            uint256 amount = (_totalAmount * (allocation * 10 ** MULTIPLIER / totalAllocation)) / 10 ** MULTIPLIER;
+            uint256 amount = (_totalAmount * (allocation * MULTIPLIER / totalAllocation)) / MULTIPLIER;
             uint amountReceived = swapTokens(amount, ygiComponents[i].route);
             if (amountReceived > 0) {
-                uint256 vaultBalanceBefore = ygiComponents[i].vault.balanceOf(address(this));
-                ygiComponents[i].vault.deposit(amountReceived);
-                uint256 vaultBalanceAfter = ygiComponents[i].vault.balanceOf(address(this));
+                uint256 vaultBalanceBefore = IRldBaseVault(ygiComponents[i].vault).balanceOf(address(this));
+                if (ygiComponents[i].inputToken == address(0)) {
+                    IWETH(weth).withdraw(amountReceived);
+                    IRldEthVault(ygiComponents[i].vault).deposit{value: amountReceived}();
+                } else {
+                    IRldVault(ygiComponents[i].vault).deposit(amountReceived);
+                }
+                uint256 vaultBalanceAfter = IRldBaseVault(ygiComponents[i].vault).balanceOf(address(this));
                 userToVaultToAmount[msg.sender][address(ygiComponents[i].vault)] += vaultBalanceAfter - vaultBalanceBefore;
             }
         }
+        lastPoolDepositTime = block.timestamp;
         emit Deposit(_totalAmount);
     }
 
@@ -158,15 +200,14 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
         require(_ratio <= DIVISOR, "Ratio too high");
         uint256 withdrawnTotalAmount = 0;
         for (uint i = 0; i < ygiComponents.length; i++) {
-            IRldVault vault = ygiComponents[i].vault;
+            IRldBaseVault vault = IRldBaseVault(ygiComponents[i].vault);
             uint256 balance = userToVaultToAmount[msg.sender][address(vault)];
-//            uint256 amountToWithdraw = normalizeAmount(balance * _ratio / DIVISOR, vault.decimals());
             uint256 amountToWithdraw = balance * _ratio / DIVISOR;
 
-            uint256 vaultBalanceBefore = ygiComponents[i].vault.balanceOf(address(this));
+            uint256 vaultBalanceBefore = vault.balanceOf(address(this));
             //todo check this again: seeems insecure??
-            try vault.withdraw(amountToWithdraw){
-                uint256 vaultBalanceAfter = ygiComponents[i].vault.balanceOf(address(this));
+            try vault.withdraw(amountToWithdraw) {
+                uint256 vaultBalanceAfter = vault.balanceOf(address(this));
                 userToVaultToAmount[msg.sender][address(ygiComponents[i].vault)] -= vaultBalanceBefore - vaultBalanceAfter;
             } catch {
                 if (!skipOnWithdrawFail) {
@@ -181,27 +222,17 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
             }
         }
 
-        IERC20(inputToken).safeTransfer(msg.sender, withdrawnTotalAmount);
+        IERC20(ygiInputToken).safeTransfer(msg.sender, withdrawnTotalAmount);
         emit Withdraw(_ratio, withdrawnTotalAmount);
     }
 
-    function normalizeAmount(uint256 amount, uint256 decimals) internal view returns (uint256) {
-        uint256 inputDecimals = ERC20(inputToken).decimals();
-        if (decimals > inputDecimals) {
-            return amount * (10 ** (decimals - inputDecimals));
-        }
-        return amount / (10 ** (inputDecimals - decimals));
-    }
-
-    function setUniRouter(address _uniRouter) public onlyOwner {
+    function setUniRouter(address _uniRouter) external onlyOwner {
         uniRouter = _uniRouter;
     }
 
     function panic() public onlyOwner {
         stop();
     }
-
-    // todo: function for wayward tokens
 
     function stop() public onlyOwner {
         _stop();

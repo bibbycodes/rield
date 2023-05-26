@@ -8,6 +8,7 @@ interface ITokenStrategy {
     function vault() external view returns (address);
     function want() external view returns (IERC20);
     function beforeDeposit() external;
+    function inputToken() external view returns (address);
     function deposit() external;
     function withdraw(uint256) external;
     function balanceOf() external view returns (uint256);

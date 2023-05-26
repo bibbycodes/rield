@@ -3,6 +3,6 @@ pragma solidity ^0.8.0;
 
 import "./IRldBaseVault.sol";
 
-interface IRldVault is IRldBaseVault {
-    function deposit(uint _amount) external;
+interface IRldEthVault is IRldBaseVault {
+    function deposit() external payable;
 }
