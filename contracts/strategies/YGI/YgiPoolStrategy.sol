@@ -64,23 +64,34 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
     }
 
     function rebalance(address _vault, uint256 amount) public onlyOwner {
-        YgiComponent storage component = ygiComponents[getIndex(_vault)];
-        IBaseStrategy(IRldBaseVault(component.vault).strategy()).withdraw(amount);
-
-        uint256 withdrawnBalance = IERC20(component.inputToken).balanceOf(address(this));
+        YgiComponent storage componentToRebalance = ygiComponents[getIndex(_vault)];
+        IBaseStrategy(IRldBaseVault(componentToRebalance.vault).strategy()).withdraw(amount);
+        uint256 withdrawnBalance = IERC20(componentToRebalance.inputToken).balanceOf(address(this));
         if (withdrawnBalance > 0) {
-            swapTokens(withdrawnBalance, component.backRoute);
+            swapTokens(withdrawnBalance, componentToRebalance.backRoute);
         }
-        uint256 amountInputToken = IERC20(component.inputToken).balanceOf(address(this));
-        // todo: deposit without mint (direct strategy deposit)
-        // todo: handle vaults that have different input/output than their strategies
-        address strategy = IRldBaseVault(component.vault).strategy();
-        if (IBaseStrategy(strategy).inputToken() == address(0)) {
-            IWETH(weth).withdraw(amountInputToken);
-            IEthStrategy(strategy).deposit{value: amountInputToken}();
-        } else {
-            IERC20(component.inputToken).safeTransfer(strategy, amountInputToken);
-            ITokenStrategy(strategy).deposit();
+        depositLeftOverInputTokens();
+    }
+
+    function depositLeftOverInputTokens() internal {
+        uint256 inputTokenAmount = IERC20(ygiInputToken).balanceOf(address(this));
+        if (inputTokenAmount > 0) {
+            // todo: handle vaults that have different input/output than their strategies
+            for (uint i = 0; i < ygiComponents.length; i++) {
+                uint256 allocation = ygiComponents[i].allocation;
+                uint256 amount = (inputTokenAmount * (allocation * MULTIPLIER / totalAllocation)) / MULTIPLIER;
+                uint amountReceived = swapTokens(amount, ygiComponents[i].route);
+                if (amountReceived > 0) {
+                    address strategy = IRldBaseVault(ygiComponents[i].vault).strategy();
+                    if (IBaseStrategy(strategy).inputToken() == address(0)) {
+                        IWETH(weth).withdraw(amountReceived);
+                        IEthStrategy(strategy).deposit{value: amountReceived}();
+                    } else {
+                        IERC20(ygiComponents[i].inputToken).safeTransfer(strategy, amountReceived);
+                        ITokenStrategy(strategy).deposit();
+                    }
+                }
+            }
         }
     }
 
@@ -121,18 +132,13 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
         address _vault,
         bool skipOnFail
     ) public onlyOwner {
-        // todo: change idx to mapping
         uint256 i = getIndex(_vault);
         YgiComponent storage component = ygiComponents[i];
         totalAllocation -= component.allocation;
         sunsetStrategy(component, skipOnFail);
         ygiComponents[i] = ygiComponents[ygiComponents.length - 1];
         ygiComponents.pop();
-
-        uint256 amountInputToken = IERC20(ygiInputToken).balanceOf(address(this));
-        if (amountInputToken > 0) {
-            deposit(amountInputToken);
-        }
+        depositLeftOverInputTokens();
     }
 
     function sunsetStrategy(YgiComponent storage component, bool skipOnFail) internal {

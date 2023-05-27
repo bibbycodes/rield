@@ -9,6 +9,7 @@ import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/common/IUniswapRouterV3.sol";
 import "../../interfaces/gns/IGNSStakingProxy.sol";
 import "../../utils/UniswapV3Utils.sol";
+import "../../interfaces/strategy/ITokenStrategy.sol";
 
 contract StrategyGNS is StrategyManager, GasFeeThrottler {
     using SafeERC20 for IERC20;
@@ -50,6 +51,10 @@ contract StrategyGNS is StrategyManager, GasFeeThrottler {
         _giveAllowances();
     }
 
+    function inputToken() external view returns (address) {
+        return wantToken;
+    }
+
     function want() external view returns (address) {
         return wantToken;
     }
@@ -81,13 +86,12 @@ contract StrategyGNS is StrategyManager, GasFeeThrottler {
             wantTokenBal = _amount;
         }
 
-        IERC20(wantToken).safeTransfer(vault, wantTokenBal);
+        IERC20(wantToken).safeTransfer(msg.sender, wantTokenBal);
         emit Withdraw(wantTokenBal);
     }
 
     function beforeDeposit() external virtual override {
         if (harvestOnDeposit) {
-            require(msg.sender == vault, "!vault");
             _harvest();
         }
     }

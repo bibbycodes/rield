@@ -14,10 +14,6 @@ interface IBaseStrategy {
     function balanceOfWant() external view returns (uint256);
     function balanceOfPool() external view returns (uint256);
     function harvest() external;
-    function retireStrat() external;
     function panic() external;
-    function pause() external;
-    function unpause() external;
-    function paused() external view returns (bool);
 }
 

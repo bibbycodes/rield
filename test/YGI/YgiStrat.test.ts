@@ -30,7 +30,7 @@ const TEN_ETHER: BigNumber = parseEther("10");
 const ONE_THOUSAND_USDC: BigNumber = parseUnits("1000", 6);
 const CAP_MULTIPLIER: BigNumber = parseUnits("1", 12);
 
-describe("YGI Vault", () => {
+describe.only("YGI Vault", () => {
 
   async function getFixture(inputTokenDecimals: number) {
     async function setupFixture() {
@@ -42,6 +42,21 @@ describe("YGI Vault", () => {
       const UniSwapMock = await ethers.getContractFactory("UniswapV3RouterMock");
       const uniSwapMock: UniswapV3RouterMock = (await UniSwapMock.deploy()) as UniswapV3RouterMock;
       await uniSwapMock.deployed();
+
+      // Master Vault
+      const WETH = await ethers.getContractFactory("WETHMock");
+      const wethToken = await WETH.deploy() as WETHMock;
+      await wethToken.deployed();
+
+      const inputToken = await Token.deploy("USDC", "USDC", inputTokenDecimals) as TokenMock;
+      await inputToken.deployed();
+      const MasterVault = await ethers.getContractFactory("YgiPoolStrategy");
+      const masterVault: YgiPoolStrategy = (await MasterVault.deploy(
+        inputToken.address,
+        uniSwapMock.address,
+        wethToken.address
+      )) as YgiPoolStrategy;
+      await masterVault.deployed();
 
       // GNS
       const gnsToken: TokenMock = (await Token.deploy("GNS", "GNS", 18)) as TokenMock;
@@ -64,12 +79,13 @@ describe("YGI Vault", () => {
         owner: deployer.address,
       }
 
-      const GnsStrategy = await ethers.getContractFactory("StrategyGNS");
+      const GnsStrategy = await ethers.getContractFactory("YgiStrategyGNS");
       const gnsStrategy = await GnsStrategy.deploy(
         gnsRouterMock.address,
         [daiToken.address, gnsToken.address],
         [3000],
-        gnsCommonAddresses
+        gnsCommonAddresses,
+        masterVault.address
       ) as StrategyGNS;
       await gnsStrategy.deployed();
 
@@ -96,33 +112,18 @@ describe("YGI Vault", () => {
         owner: deployer.address,
       }
 
-      const GmxStrategy = await ethers.getContractFactory("StrategyGMXUniV3");
+      const GmxStrategy = await ethers.getContractFactory("YgiStrategyGMXUniV3");
       const gmxStrategy = await GmxStrategy.deploy(
         gmxRouterMock.address,
         [ethToken.address, gmxToken.address],
         [3000],
-        gmxCommonAddresses
+        gmxCommonAddresses,
+        masterVault.address
       );
       await gmxStrategy.deployed();
       await gmxVault.initStrategy(gmxStrategy.address)
 
-      // Master Vault
-      const inputToken = await Token.deploy("USDC", "USDC", inputTokenDecimals) as TokenMock;
-
-      const WETH = await ethers.getContractFactory("WETHMock");
-      const wethToken = await WETH.deploy() as WETHMock;
-      await wethToken.deployed();
-
       //  Mints
-      await inputToken.deployed();
-      const MasterVault = await ethers.getContractFactory("YgiPoolStrategy");
-      const masterVault: YgiPoolStrategy = (await MasterVault.deploy(
-        inputToken.address,
-        uniSwapMock.address,
-        wethToken.address
-      )) as YgiPoolStrategy;
-      await masterVault.deployed();
-
       await inputToken.mintFor(alice.address, inputTokenDecimals === 6 ? TEN_USDC : TEN_ETHER);
       await inputToken.mintFor(bob.address, inputTokenDecimals === 6 ? TEN_USDC : TEN_ETHER);
       await inputToken.mintFor(uniSwapMock.address, inputTokenDecimals === 6 ? TEN_USDC : TEN_ETHER);
@@ -308,6 +309,43 @@ describe("YGI Vault", () => {
 
     await masterVault.connect(alice).withdraw(ONE_USDC, false, false);
     expect(await usdcToken.balanceOf(alice.address)).to.equal(ONE_USDC.mul(10));
+  });
+
+  it("Should allow rebalance with custom values and withdrawing gives rebalance values", async () => {
+    const { deployer, alice, usdcToken, masterVault, gnsVault, gmxVault, gnsToken, gmxToken } = await getFixture(6);
+    const aliceDeposit = ONE_USDC.mul(10);
+    await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
+    await masterVault.connect(alice).deposit(aliceDeposit);
+
+    await masterVault.connect(deployer).rebalance(gnsVault.address, ONE_ETHER.mul(6));
+    await masterVault.connect(alice).withdraw(ONE_USDC, false, true);
+    expect(await usdcToken.balanceOf(alice.address)).to.be.eq(0);
+    expect(await gnsToken.balanceOf(alice.address)).to.be.closeTo(ONE_ETHER.mul(52).div(10), ONE_ETHER.div(10));
+    expect(await gmxToken.balanceOf(alice.address)).to.be.closeTo(ONE_ETHER.mul(48).div(10), ONE_ETHER.div(10));
+
+  });
+
+  it("Should sunset strategy when deregister ygi", async () => {
+    const { deployer, alice, usdcToken, masterVault, gnsVault, gmxVault, gnsToken, gmxToken } = await getFixture(6);
+    const aliceDeposit = ONE_USDC.mul(10);
+    await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
+    await masterVault.connect(alice).deposit(aliceDeposit);
+
+    await masterVault.connect(deployer).deregisterYgiComponent(gnsVault.address, false);
+    await masterVault.connect(alice).withdraw(ONE_USDC, false, true);
+    expect(await usdcToken.balanceOf(alice.address)).to.be.eq(0);
+    expect(await gnsToken.balanceOf(alice.address)).to.be.eq(0);
+    expect(await gmxToken.balanceOf(alice.address)).to.be.closeTo(ONE_ETHER.mul(10), ONE_ETHER.div(10));
+  });
+
+  it("Should revert if referencing unregistered vault", async () => {
+    const { deployer, alice, usdcToken, masterVault, gnsVault, gmxVault, gnsToken, gmxToken } = await getFixture(6);
+    const aliceDeposit = ONE_USDC.mul(10);
+    await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
+    await masterVault.connect(alice).deposit(aliceDeposit);
+
+    const tx = masterVault.connect(deployer).deregisterYgiComponent(gnsToken.address, false);
+    await expect(tx).to.revertedWith("Vault not found");
   });
 
 });
