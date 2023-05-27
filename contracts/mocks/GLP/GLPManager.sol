@@ -1,5 +1,5 @@
 import "../../interfaces/gmx/IGLPManager.sol";
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "hardhat/console.sol";
 
 contract GLPManager is IGLPManager, ERC20 {
@@ -10,9 +10,9 @@ contract GLPManager is IGLPManager, ERC20 {
         _mint(_fundingAccount, _amount);
         return _amount;
     }
-    
+
     function mintFor(address to, uint256 amount) external {
         _mint(to, amount);
     }
-    
+
 }

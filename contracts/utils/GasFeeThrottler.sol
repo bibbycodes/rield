@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin-4/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "./IGasPrice.sol";
 
 contract GasFeeThrottler {

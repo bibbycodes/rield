@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 
 import "../interfaces/gmx/IGMXRouter.sol";
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/gmx/IGMXTracker.sol";
 import "hardhat/console.sol";
 
@@ -39,8 +39,9 @@ contract GMXRouterMock is IGMXRouter, IGMXTracker {
 
     function compound() external override {
         uint256 amount = gmxBalances[msg.sender];
+        console.log("compound GMX", amount);
         uint256 extraAmount = amount / 10;
-        gmxBalances[msg.sender] += extraAmount;
+        IERC20(rewardToken).transfer(msg.sender, extraAmount);
         emit Compound(msg.sender, extraAmount);
     }
 
@@ -89,7 +90,6 @@ contract GMXRouterMock is IGMXRouter, IGMXTracker {
     }
 
     function claim(address receiver) external {
-        IERC20(rewardToken).transfer(msg.sender, 1 ether);
         emit Claimed(msg.sender, 1 ether);
     }
 
