@@ -47,6 +47,10 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
         devFeeAddress = _msgSender();
     }
 
+    function inputToken() external view returns (address) {
+        return wantToken;
+    }
+
     function want() external view returns (address) {
         return wantToken;
     }
@@ -62,8 +66,12 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
         }
     }
 
-    function withdraw(uint256 _amount) external {
+    function beforeWithdraw() internal virtual {
         require(msg.sender == vault, "!vault");
+    }
+
+    function withdraw(uint256 _amount) external {
+        beforeWithdraw();
         uint256 wantTokenBal = IERC20(wantToken).balanceOf(address(this));
         if (wantTokenBal < _amount) {
             IGMXRouter(chef).unstakeGmx(_amount - wantTokenBal);
@@ -74,13 +82,12 @@ contract StrategyGMX is StrategyManager, GasFeeThrottler {
             wantTokenBal = _amount;
         }
 
-        IERC20(wantToken).safeTransfer(vault, wantTokenBal);
+        IERC20(wantToken).safeTransfer(msg.sender, wantTokenBal);
         emit Withdraw(wantTokenBal);
     }
 
     function beforeDeposit() external virtual override {
         if (harvestOnDeposit) {
-            require(msg.sender == vault, "!vault");
             _harvest();
         }
     }
