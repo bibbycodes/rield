@@ -1,17 +1,19 @@
-import {SelectedStrategyContextProvider} from "../contexts/SelectedStrategyContext";
-import {TokenPricesContextProvider} from "../contexts/TokenPricesContext";
-import {ReactNode, useEffect} from "react";
-import {APYsContextProvider} from "../contexts/ApyContext";
-import {ThemeProvider} from "@mui/material";
-import {muiTheme} from "../styles/theme";
-import {ToastContextProvider} from "../contexts/ToastContext";
-import {VaultDataContextProvider} from "../contexts/vault-data-context/VaultDataContext";
-import {ConnectKitProvider, getDefaultClient} from 'connectkit';
-import {createClient, WagmiConfig} from 'wagmi';
-import {arbitrum, hardhat} from "wagmi/chains";
-import {useRouter} from "next/router";
+import { SelectedStrategyContextProvider } from "../contexts/SelectedStrategyContext";
+import { TokenPricesContextProvider } from "../contexts/TokenPricesContext";
+import React, { ReactNode, useEffect } from "react";
+import { APYsContextProvider } from "../contexts/ApyContext";
+import { ThemeProvider } from "@mui/material";
+import { muiTheme } from "../styles/theme";
+import { ToastContextProvider } from "../contexts/ToastContext";
+import { VaultDataContextProvider } from "../contexts/vault-data-context/VaultDataContext";
+import { ConnectKitProvider, getDefaultClient } from 'connectkit';
+import { createClient, WagmiConfig } from 'wagmi';
+import { arbitrum, hardhat } from "wagmi/chains";
+import { useRouter } from "next/router";
 import posthog from "posthog-js";
-import {PostHogProvider} from "posthog-js/react";
+import { PostHogProvider } from "posthog-js/react";
+import { SelectedYgiContextProvider } from '../contexts/SelectedYgiContext';
+import { YgiDataContextProvider } from "../contexts/vault-data-context/YgiDataContext";
 
 let chains = process.env.ENV === 'dev' ? [arbitrum, hardhat] : [arbitrum];
 
@@ -34,7 +36,7 @@ export const Providers = ({children}: { children: ReactNode }) => {
       router.events.off('routeChangeComplete', handleRouteChange)
     }
   }, [])
-  
+
   if (typeof window !== 'undefined') {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
       api_host: 'https://app.posthog.com',
@@ -48,15 +50,19 @@ export const Providers = ({children}: { children: ReactNode }) => {
         <ConnectKitProvider>
           <ThemeProvider theme={muiTheme}>
             <VaultDataContextProvider>
-              <ToastContextProvider>
-                <TokenPricesContextProvider>
-                  <APYsContextProvider>
-                    <SelectedStrategyContextProvider>
-                      {children}
-                    </SelectedStrategyContextProvider>
-                  </APYsContextProvider>
-                </TokenPricesContextProvider>
-              </ToastContextProvider>
+              <YgiDataContextProvider>
+                <ToastContextProvider>
+                  <TokenPricesContextProvider>
+                    <APYsContextProvider>
+                      <SelectedStrategyContextProvider>
+                        <SelectedYgiContextProvider>
+                          {children}
+                        </SelectedYgiContextProvider>
+                      </SelectedStrategyContextProvider>
+                    </APYsContextProvider>
+                  </TokenPricesContextProvider>
+                </ToastContextProvider>
+              </YgiDataContextProvider>
             </VaultDataContextProvider>
           </ThemeProvider>
         </ConnectKitProvider>

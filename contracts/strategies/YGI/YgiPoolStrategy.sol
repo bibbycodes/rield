@@ -14,36 +14,21 @@ import "../../interfaces/vaults/IRldVault.sol";
 import "../../interfaces/vaults/IRldEthVault.sol";
 import "../../interfaces/vaults/IRldBaseVault.sol";
 import "../../interfaces/common/IWETH.sol";
+import "../../interfaces/strategy/IYgiPoolStrategy.sol";
 import "../Common/Stoppable.sol";
 
-contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
+contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrategy {
     using SafeERC20 for IERC20;
     uint256 constant MULTIPLIER = 10 ** 18;
+    uint256 immutable DIVISOR;
 
     address public ygiInputToken;
     address public uniRouter;
     address public weth;
-
-    struct Route {
-        address[] aToBRoute;
-        uint24[] aToBFees;
-        bytes path;
-    }
-
-    struct YgiComponent {
-        address inputToken;
-        address vault;
-        uint256 allocation;
-        Route route;
-        Route backRoute;
-    }
-
-    uint256 totalAllocation;
+    uint256 public totalAllocation;
 
     YgiComponent[] public ygiComponents;
-    uint256 DIVISOR;
 
-    //todo: actually use this
     uint256 public lastPoolDepositTime;
     mapping(address => mapping(address => uint256)) public userToVaultToAmount;
 
@@ -162,7 +147,7 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard {
      * @dev The entrypoint of funds into the system. People deposit with this function
      * into the vault. The vault is then in charge of sending funds into the strategy.
      */
-    function deposit(uint _totalAmount) public nonReentrant whenNotStopped {
+    function deposit(uint _totalAmount) external nonReentrant whenNotStopped {
         IERC20(ygiInputToken).safeTransferFrom(msg.sender, address(this), _totalAmount);
         for (uint i = 0; i < ygiComponents.length; i++) {
             uint256 allocation = ygiComponents[i].allocation;

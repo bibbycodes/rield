@@ -12,6 +12,7 @@ import * as hopDai from "../../resources/vault-details/deploy_hop_dai-output.jso
 import { BigNumber } from "ethers";
 import { extractHopAdditionalData, getHopVaultContextData } from './hop-vault-context';
 import { StructuredMulticallResult } from './multicall-structured-result';
+import { Ygi } from '../../model/ygi';
 
 const erc20Abi = Array.from(erc20)
 
@@ -27,6 +28,10 @@ export interface VaultData {
   lastPoolDepositTime: BigNumber
   lastPauseTime: BigNumber
   additionalData?: any
+}
+
+export interface YgiData {
+  ygiBalance: BigNumber
 }
 
 export type MultiCallInput = {
@@ -228,6 +233,14 @@ export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Addre
   }
 }
 
+export const getYgiMultiCallData = (ygis: Ygi[]) => {
+  return ygis
+    .map((ygi) => {
+      return getMultiCallDataForYgi(ygi)
+    })
+}
+
+
 export const getStrategySpecificCalls = (strategy: Strategy) => {
   switch (strategy.strategyAddress) {
     case hopUsdc.strategyAddress:
@@ -256,4 +269,39 @@ export const extractStrategySpecificData = (strategy: Strategy, data: Structured
     default:
       return null
   }
+}
+
+export const getMultiCallDataForYgi = (ygi: Ygi) => {
+  const vault = {
+    abi: RldEthVault.abi,
+    address: ygi.vaultAddress,
+  }
+
+  const ygiInputToken = {
+    ...vault,
+    functionName: 'ygiInputToken',
+  }
+
+  const ygiComponents = {
+    ...vault,
+    functionName: 'ygiComponents',
+  }
+
+  return [
+    ygiInputToken,
+    ygiComponents
+  ]
+}
+
+export const getUserToVaultToAmount = (ygi: Ygi, vaults: Address[], userAddress: Address) => {
+  const vaultAbi = {
+    abi: RldEthVault.abi,
+    address: ygi.vaultAddress,
+  }
+
+  return vaults.map(vault => ({
+    ...vaultAbi,
+    functionName: 'userToVaultToAmount',
+    args: [userAddress, vault]
+  }))
 }
