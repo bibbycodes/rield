@@ -3,9 +3,8 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../interfaces/bfr/IBFRTracker.sol";
+import "../../interfaces/bfr/IBFRTracker.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "hardhat/console.sol";
 
 contract BFRTrackerMock is IBFRTracker {
     using SafeERC20 for ERC20;
@@ -29,7 +28,6 @@ contract BFRTrackerMock is IBFRTracker {
     }
 
     function claim(address receiver) external override {
-        console.log(rewardTokenAddress);
         _claimable[receiver] += 1000000;
         uint256 amount = _claimable[receiver];
         _claimable[receiver] = 0;

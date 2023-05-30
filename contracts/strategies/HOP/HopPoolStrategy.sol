@@ -71,11 +71,11 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
         DIVISOR = 10 ** ERC20(inputToken).decimals();
         devFeeAddress = _msgSender();
         _giveAllowances();
-        setRewardRouteParams(unirouter);
+        setRewardRouteParams(router);
     }
 
     function setRewardRouteParams(address unirouter) internal {
-        setUniRouter(unirouter);
+        setUniRouter(router);
         address[] memory path = new address[](2);
         path[0] = rewardToken;
         path[1] = inputToken;
@@ -195,7 +195,7 @@ contract HopPoolStrategy is Manager, UniSwapRoutes, GasFeeThrottler, Stoppable {
 
         if (stakingFeeAmount > 0) {
             IERC20(inputToken).safeTransfer(stakingAddress, stakingFeeAmount);
-        }
+            }
 
         emit ChargedFees(DEV_FEE, devFeeAmount + stakingFeeAmount);
     }

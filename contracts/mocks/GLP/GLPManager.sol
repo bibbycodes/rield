@@ -1,6 +1,5 @@
 import "../../interfaces/gmx/IGLPManager.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "hardhat/console.sol";
 
 contract GLPManager is IGLPManager, ERC20 {
     constructor() ERC20("GLP", "GLP") {}

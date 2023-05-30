@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 abstract contract Manager is Ownable {
     address private _manager;
-
+    
     event ManagerTransferred(address indexed previousManager, address indexed newManager);
 
     /**
