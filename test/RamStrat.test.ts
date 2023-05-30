@@ -314,118 +314,228 @@ describe("RAM ERC20 Strategy", () => {
   })
   //
   describe("Withdraw", () => {
-    it("Withdrawing after harvest returns tokens to depositor with additional harvest", async () => {
-      const {alice, vault, strategy, usdcToken, deployer} = await loadFixture(setupFixture);
-      expect(await vault.totalSupply()).to.equal(0);
-      await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-      await vault.connect(alice)
-        .deposit(ONE_USDC);
+    describe("Withdraw as inputToken", () => {
+      it("Withdrawing after harvest returns tokens to depositor with additional harvest", async () => {
+        const {alice, vault, strategy, usdcToken, deployer} = await loadFixture(setupFixture);
+        expect(await vault.totalSupply()).to.equal(0);
+        await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+        await vault.connect(alice)
+          .deposit(ONE_USDC);
 
-      await strategy.harvest();
+        await strategy.harvest();
 
-      const aliceShares = await vault.balanceOf(alice.address);
-      await vault.connect(alice).withdraw(aliceShares);
+        const aliceShares = await vault.balanceOf(alice.address);
+        await vault.connect(alice).withdraw(aliceShares);
 
-      const claimAmount = parseUnits("1", 6);
-      const claimAmountUserPart = claimAmount.sub(parseUnits("0.02", 6));
-      const ownerFee = claimAmount.sub(parseUnits("0.98", 6));
+        const claimAmount = parseUnits("1", 6);
+        const claimAmountUserPart = claimAmount.sub(parseUnits("0.02", 6));
+        const ownerFee = claimAmount.sub(parseUnits("0.98", 6));
 
-      const expectedAliceGmx = TEN_USDC.add(claimAmountUserPart);
+        const expectedAliceGmx = TEN_USDC.add(claimAmountUserPart);
 
-      expect(await vault.totalSupply()).to.equal(0);
-      expect(await vault.balanceOf(alice.address)).to.equal(0);
-      expect(await usdcToken.balanceOf(alice.address)).to.equal(expectedAliceGmx);
-      expect(await usdcToken.balanceOf(deployer.address)).to.equal(ownerFee);
+        expect(await vault.totalSupply()).to.equal(0);
+        expect(await vault.balanceOf(alice.address)).to.equal(0);
+        expect(await usdcToken.balanceOf(alice.address)).to.equal(expectedAliceGmx);
+        expect(await usdcToken.balanceOf(deployer.address)).to.equal(ownerFee);
+      })
+
+      it("Withdraw in proportion to the shares sent as an argument", async () => {
+        const {alice, vault, strategy, usdcToken, deployer} = await loadFixture(setupFixture);
+        expect(await vault.totalSupply()).to.equal(0);
+        await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+        await vault.connect(alice)
+          .deposit(ONE_USDC);
+
+        await strategy.harvest();
+
+        const aliceShares = await vault.balanceOf(alice.address);
+        await vault.connect(alice).withdraw(aliceShares.div(2));
+
+        const claimAmount = parseUnits("1", 6);
+        const devFee = parseUnits("0.02", 6)
+        const claimAmountUserPart = claimAmount.sub(devFee);
+        const withdrawAmount = ONE_USDC.div(2);
+        const expectedAliceWithdrawAmount = (withdrawAmount).add(claimAmountUserPart.div(2));
+
+        expect(await vault.totalSupply()).to.equal(parseUnits("0.5", 18));
+        expect(await usdcToken.balanceOf(alice.address)).to.equal(TEN_USDC.sub(ONE_USDC).add(expectedAliceWithdrawAmount));
+        expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 18));
+        expect(await usdcToken.balanceOf(deployer.address)).to.equal(devFee);
+      })
+
+      it("Returns want amounts requested for withdrawal by multiple parties", async () => {
+        const {alice, vault, strategy, gauge, bob, usdcToken} = await loadFixture(setupFixture);
+        await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+        await usdcToken.connect(bob).approve(vault.address, TEN_USDC);
+
+        expect(await vault.totalSupply()).to.equal(0);
+
+        await vault.connect(alice)
+          .deposit(ONE_USDC);
+
+        await vault.connect(bob)
+          .deposit(ONE_USDC);
+
+        expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
+        expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETH);
+
+        await vault.connect(alice).withdraw(parseUnits("0.5", 18))
+        expect(await usdcToken.balanceOf(alice.address)).to.equal(TEN_USDC.sub(ONE_USDC.div(2)));
+        expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 18));
+        expect(await gauge.balanceOf(strategy.address)).to.equal(parseUnits("1.5", 18));
+
+        await vault.connect(bob).withdraw(parseUnits("0.5", 18))
+        expect(await usdcToken.balanceOf(bob.address)).to.equal(TEN_USDC.sub(ONE_USDC.div(2)));
+        expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 18));
+        expect(await gauge.balanceOf(strategy.address)).to.equal(parseUnits("1", 18));
+
+        expect(await vault.totalSupply()).to.equal(parseUnits("1", 18));
+        expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 18));
+        expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 18));
+      })
+      //
+      it("Returns want amounts requested for withdrawal by multiple parties with additional harvest", async () => {
+        const {alice, vault, strategy, gauge, bob, usdcToken} = await loadFixture(setupFixture);
+        await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
+        await usdcToken.connect(bob).approve(vault.address, TEN_USDC);
+
+        expect(await vault.totalSupply()).to.equal(0);
+
+        await vault.connect(alice)
+          .deposit(ONE_USDC);
+
+        await vault.connect(bob)
+          .deposit(ONE_USDC);
+
+        await strategy.harvest()
+
+        const ownerFeeInUSDC = parseUnits("0.02", 6);
+        const withdrawAmountInUSDC = ONE_USDC.div(2);
+        const harvestAmountMinusOwnerFee = ONE_USDC.sub(ownerFeeInUSDC);
+        // 0.5 USDC (principal) + ((1 USDC - fee) / 2 (harvest amount for each user)) / 2 (half of the user's share)
+        const expectedUserWithdrawAmount = withdrawAmountInUSDC.add(harvestAmountMinusOwnerFee.div(2).div(2))
+        const expectedUserBalanceInUSDCAfterWithdraw = TEN_USDC.sub(ONE_USDC).add(expectedUserWithdrawAmount)
+
+        await vault.connect(alice).withdraw(parseUnits("0.5", 18))
+        expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 18));
+        expect(await usdcToken.balanceOf(alice.address)).to.equal(expectedUserBalanceInUSDCAfterWithdraw);
+
+        await vault.connect(bob).withdraw(parseUnits("0.5", 18))
+        expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 18));
+        expect(await usdcToken.balanceOf(bob.address)).to.equal(expectedUserBalanceInUSDCAfterWithdraw);
+
+        expect(await vault.totalSupply()).to.equal(parseUnits("1", 18));
+        expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 18));
+        expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 18));
+      })
     })
+    
+    describe("Withdraw as LP Tokens", () => {
+      it("Withdrawing after harvest returns tokens to depositor with additional harvest", async () => {
+        const {alice, vault, strategy, usdcToken, deployer, arbToken, usdtToken, bob} = await loadFixture(setupFixture);
+        await arbToken.connect(alice).approve(vault.address, TEN_ETH);
+        await usdtToken.connect(alice).approve(vault.address, TEN_ETH);
 
-    it("Withdraw in proportion to the shares sent as an argument", async () => {
-      const {alice, vault, strategy, usdcToken, deployer} = await loadFixture(setupFixture);
-      expect(await vault.totalSupply()).to.equal(0);
-      await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-      await vault.connect(alice)
-        .deposit(ONE_USDC);
+        expect(await vault.totalSupply()).to.equal(0);
 
-      await strategy.harvest();
+        await vault.connect(alice)
+          .depositLpTokens(ONE_ETH.div(2), ONE_ETH.div(2));
 
-      const aliceShares = await vault.balanceOf(alice.address);
-      await vault.connect(alice).withdraw(aliceShares.div(2));
+        await strategy.harvest();
 
-      const claimAmount = parseUnits("1", 6);
-      const devFee = parseUnits("0.02", 6)
-      const claimAmountUserPart = claimAmount.sub(devFee);
-      const withdrawAmount = ONE_USDC.div(2);
-      const expectedAliceWithdrawAmount = (withdrawAmount).add(claimAmountUserPart.div(2));
+        const aliceShares = await vault.balanceOf(alice.address);
+        await vault.connect(alice).withdrawAsLpTokens(aliceShares);
 
-      expect(await vault.totalSupply()).to.equal(parseUnits("0.5", 18));
-      expect(await usdcToken.balanceOf(alice.address)).to.equal(TEN_USDC.sub(ONE_USDC).add(expectedAliceWithdrawAmount));
-      expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 18));
-      expect(await usdcToken.balanceOf(deployer.address)).to.equal(devFee);
-    })
+        const claimAmount = ONE_ETH
+        const ownerFee = parseUnits("0.02", 18);
+        const claimAmountUserPart = claimAmount.sub(ownerFee)
+        const ownerFeeInUSDC = parseUnits("0.02", 6);
+        const expectedAlicePerTokenDeposited = TEN_ETH.add(claimAmountUserPart.div(2))
 
-    it("Returns want amounts requested for withdrawal by multiple parties", async () => {
-      const {alice, vault, strategy, gauge, bob, usdcToken} = await loadFixture(setupFixture);
-      await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-      await usdcToken.connect(bob).approve(vault.address, TEN_USDC);
+        expect(await vault.totalSupply()).to.equal(0);
+        expect(await vault.balanceOf(alice.address)).to.equal(0);
+        expect(await vault.balance()).to.equal(0);
+        expect(await usdcToken.balanceOf(deployer.address)).to.equal(ownerFeeInUSDC);
+        expect(await arbToken.balanceOf(alice.address)).to.equal(expectedAlicePerTokenDeposited);
+        expect(await usdtToken.balanceOf(alice.address)).to.equal(expectedAlicePerTokenDeposited);
+      })
 
-      expect(await vault.totalSupply()).to.equal(0);
+      it("Withdraws LP Tokens in proportion to the shares sent as an argument", async () => {
+        const {alice, vault, strategy, usdcToken, deployer, arbToken, usdtToken} = await loadFixture(setupFixture);
 
-      await vault.connect(alice)
-        .deposit(ONE_USDC);
+        await arbToken.connect(alice).approve(vault.address, TEN_ETH);
+        await usdtToken.connect(alice).approve(vault.address, TEN_ETH);
+        const depositAmountPerToken = ONE_ETH.div(2)
 
-      await vault.connect(bob)
-        .deposit(ONE_USDC);
+        expect(await vault.totalSupply()).to.equal(0);
 
-      expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
-      expect(await vault.balanceOf(bob.address)).to.equal(ONE_ETH);
+        await vault.connect(alice)
+          .depositLpTokens(depositAmountPerToken, depositAmountPerToken);
 
-      await vault.connect(alice).withdraw(parseUnits("0.5", 18))
-      expect(await usdcToken.balanceOf(alice.address)).to.equal(TEN_USDC.sub(ONE_USDC.div(2)));
-      expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 18));
-      expect(await gauge.balanceOf(strategy.address)).to.equal(parseUnits("1.5", 18));
+        await strategy.harvest();
+        const aliceShares = await vault.balanceOf(alice.address);
+        await vault.connect(alice).withdrawAsLpTokens(aliceShares.div(2));
 
-      await vault.connect(bob).withdraw(parseUnits("0.5", 18))
-      expect(await usdcToken.balanceOf(bob.address)).to.equal(TEN_USDC.sub(ONE_USDC.div(2)));
-      expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 18));
-      expect(await gauge.balanceOf(strategy.address)).to.equal(parseUnits("1", 18));
+        const withdrawAmountForEachToken = ONE_ETH.div(4) // Amount for each token removed
+        const claimAmount = ONE_ETH
+        const ownerFee = parseUnits("0.02", 18);
+        const claimAmountUserPart = claimAmount.sub(ownerFee)
+        const claimAmountForWithdrawalPerToken = claimAmountUserPart.div(4)
+        const ownerFeeInUSDC = parseUnits("0.02", 6);
+        const expectedAlicePerTokenDeposited = TEN_ETH //amount before deposit
+          .sub(depositAmountPerToken) // deposit 0.5 eth (combined for both tokens)
+          .add(withdrawAmountForEachToken) // withdraw 50% of the deposit, so 0.25 ETH for each token
+          .add(claimAmountForWithdrawalPerToken) // add 50% of the claim amount
 
-      expect(await vault.totalSupply()).to.equal(parseUnits("1", 18));
-      expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 18));
-      expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 18));
-    })
-    //
-    it("Returns want amounts requested for withdrawal by multiple parties with additional harvest", async () => {
-      const {alice, vault, strategy, gauge, bob, usdcToken} = await loadFixture(setupFixture);
-      await usdcToken.connect(alice).approve(vault.address, TEN_USDC);
-      await usdcToken.connect(bob).approve(vault.address, TEN_USDC);
+        expect(await vault.totalSupply()).to.equal(parseUnits("0.5", 18));
+        expect(await usdcToken.balanceOf(deployer.address)).to.equal(ownerFeeInUSDC);
+        expect(await arbToken.balanceOf(alice.address)).to.equal(expectedAlicePerTokenDeposited);
+        expect(await usdtToken.balanceOf(alice.address)).to.equal(expectedAlicePerTokenDeposited);
+      })
 
-      expect(await vault.totalSupply()).to.equal(0);
+      it("Returns want amounts requested for withdrawal by multiple parties with additional harvest", async () => {
+        const {alice, bob, vault, strategy, usdcToken, deployer, arbToken, usdtToken} = await loadFixture(setupFixture);
+        expect(await vault.totalSupply()).to.equal(0);
 
-      await vault.connect(alice)
-        .deposit(ONE_USDC);
+        const depositAmountPerToken = ONE_ETH.div(2)
 
-      await vault.connect(bob)
-        .deposit(ONE_USDC);
+        await arbToken.connect(alice).approve(vault.address, TEN_ETH);
+        await usdtToken.connect(alice).approve(vault.address, TEN_ETH);
+        await vault.connect(alice)
+          .depositLpTokens(depositAmountPerToken, depositAmountPerToken);
 
-      await strategy.harvest()
+        await arbToken.connect(bob).approve(vault.address, TEN_ETH);
+        await usdtToken.connect(bob).approve(vault.address, TEN_ETH);
+        await vault.connect(bob)
+          .depositLpTokens(depositAmountPerToken, depositAmountPerToken);
+        
+        await strategy.harvest();
+        const aliceShares = await vault.balanceOf(alice.address);
 
-      const ownerFeeInUSDC = parseUnits("0.02", 6);
-      const withdrawAmountInUSDC = ONE_USDC.div(2);
-      const harvestAmountMinusOwnerFee = ONE_USDC.sub(ownerFeeInUSDC);
-      // 0.5 USDC (principal) + ((1 USDC - fee) / 2 (harvest amount for each user)) / 2 (half of the user's share)
-      const expectedUserWithdrawAmount = withdrawAmountInUSDC.add(harvestAmountMinusOwnerFee.div(2).div(2))
-      const expectedUserBalanceInUSDCAfterWithdraw = TEN_USDC.sub(ONE_USDC).add(expectedUserWithdrawAmount)
+        const withdrawAmountForEachToken = ONE_ETH.div(4) // Amount for each token removed
+        const claimAmount = ONE_ETH
+        const ownerFee = parseUnits("0.02", 18);
+        const claimAmountUserPart = claimAmount.sub(ownerFee)
+        const claimAmountPerPerson = claimAmountUserPart.div(2)
+        const claimAmountPerTokenDepositedPerPerson = claimAmountPerPerson.div(4)
+        const ownerFeeInUSDC = parseUnits("0.02", 6);
+        const expectedUserPerTokenDeposited = TEN_ETH //amount before deposit
+          .sub(depositAmountPerToken) // deposit 0.5 eth (combined for both tokens)
+          .add(withdrawAmountForEachToken) // withdraw 50% of the deposit, so 0.25 ETH for each token
+          .add(claimAmountPerTokenDepositedPerPerson) // add 50% of the claim amount
 
-      await vault.connect(alice).withdraw(parseUnits("0.5", 18))
-      expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 18));
-      expect(await usdcToken.balanceOf(alice.address)).to.equal(expectedUserBalanceInUSDCAfterWithdraw);
+        await vault.connect(alice).withdrawAsLpTokens(aliceShares.div(2));
+        expect(await vault.totalSupply()).to.equal(parseUnits("1.5", 18));
+        
+        expect(await usdcToken.balanceOf(deployer.address)).to.equal(ownerFeeInUSDC);
+        expect(await arbToken.balanceOf(alice.address)).to.equal(expectedUserPerTokenDeposited);
+        expect(await usdtToken.balanceOf(alice.address)).to.equal(expectedUserPerTokenDeposited);
 
-      await vault.connect(bob).withdraw(parseUnits("0.5", 18))
-      expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 18));
-      expect(await usdcToken.balanceOf(bob.address)).to.equal(expectedUserBalanceInUSDCAfterWithdraw);
-
-      expect(await vault.totalSupply()).to.equal(parseUnits("1", 18));
-      expect(await vault.balanceOf(alice.address)).to.equal(parseUnits("0.5", 18));
-      expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 18));
+        await vault.connect(bob).withdrawAsLpTokens(aliceShares.div(2));
+        expect(await vault.totalSupply()).to.equal(parseUnits("1", 18));
+        expect(await arbToken.balanceOf(bob.address)).to.equal(expectedUserPerTokenDeposited);
+        expect(await usdtToken.balanceOf(bob.address)).to.equal(expectedUserPerTokenDeposited);
+      })
     })
   })
   //

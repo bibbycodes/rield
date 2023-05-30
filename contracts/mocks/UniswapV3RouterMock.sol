@@ -6,7 +6,6 @@ import "../interfaces/common/IUniswapRouterV3.sol";
 import "../interfaces/common/IUniswapRouterV3WithDeadline.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../utils/UniswapV3Utils.sol";
-import "hardhat/console.sol";
 
 contract UniswapV3RouterMock is IUniswapRouterV3WithDeadline {
     constructor(){

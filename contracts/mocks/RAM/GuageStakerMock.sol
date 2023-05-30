@@ -4,7 +4,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../../interfaces/ram/IGuageStaker.sol";
 import "../../interfaces/ram/IGuage.sol";
-import "hardhat/console.sol";
 
 
 contract MockGaugeStaker is IGaugeStaker, Ownable {

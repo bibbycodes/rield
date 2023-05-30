@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../interfaces/ram/ISolidlyRouter.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "hardhat/console.sol";
 
 contract MockSolidlyRouter is ISolidlyRouter {
     address lpToken;

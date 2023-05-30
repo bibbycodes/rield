@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../interfaces/strategy/ISolidlyLpStrategy.sol";
 import "../interfaces/ram/ISolidlyRouter.sol";
-import "hardhat/console.sol";
 
 /**
  * @dev Implementation of a vault to deposit funds for yield optimizing.
@@ -182,11 +181,15 @@ contract RLDSolidlyLpVault is ERC20, Ownable, ReentrancyGuard {
         _burn(msg.sender, _shares);
         if (asInputToken) {
             strategy.withdraw(userOwedWant);
+            uint inputTokenBal = inputToken().balanceOf(address(this));
+            inputToken().safeTransfer(msg.sender, inputTokenBal);
         } else {
             strategy.withdrawAsLpTokens(userOwedWant);
+            uint256 lpToken0Bal = lpToken0().balanceOf(address(this));
+            uint256 lpToken1Bal = lpToken1().balanceOf(address(this));
+            lpToken0().safeTransfer(msg.sender, lpToken0Bal);
+            lpToken1().safeTransfer(msg.sender, lpToken1Bal);
         }
-        uint inputTokenBal = inputToken().balanceOf(address(this));
-        inputToken().safeTransfer(msg.sender, inputTokenBal);
     }
     
     function withdraw(uint256 _shares) public virtual {

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 import "./Manager.sol";
-import "hardhat/console.sol";
 
 abstract contract FeeUtils is Manager {
     uint256 public DEV_FEE = 2 * 10**16; // 2%
@@ -37,10 +36,6 @@ abstract contract FeeUtils is Manager {
     }
 
     function setStakingFee(uint fee) external onlyManagerAndOwner {
-        console.log("fee %s", fee);
-        console.log("STAKING_FEE %s", STAKING_FEE);
-        console.log("MAX_FEE %s", MAX_FEE);
-        console.log("fee + DEV_FEE %s", fee + DEV_FEE);
         require(fee + DEV_FEE <= MAX_FEE, "fee too high");
         STAKING_FEE = fee;
     }
