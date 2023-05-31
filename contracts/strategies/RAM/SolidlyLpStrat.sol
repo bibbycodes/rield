@@ -9,8 +9,7 @@ import "../Common/UniSwapRoutes.sol";
 import "../Common/Stoppable.sol";
 import "../../interfaces/ram/ISolidlyRouter.sol";
 import "../../interfaces/ram/ISolidlyPair.sol";
-import "../../interfaces/ram/IGuage.sol";
-import "../../utils/Manager.sol";
+import "../../interfaces/ram/IGauge.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "../../utils/FeeUtils.sol";
 import "../../utils/SolidlyRoutes.sol";
@@ -28,11 +27,10 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
 
     // Third party contracts
     address public gauge; //0x69a3de5f13677fd8d7aaf350a6c65de50e970262
-
     address public vault;
     address[] public rewards; // reward tokens
 
-    uint256 DIVISOR = 1 ether;
+    uint256 constant DIVISOR = 1 ether;
     // is it a stable or volatile pool
     bool public isStable;
     bool public harvestOnDeposit;
@@ -74,7 +72,6 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
         address _router, // swaps the tokens
         uint256 _tokenId,
         TokenRoutes memory _routes
-
     ) SolidlyRoutes(_router) {
         vault = _vault;
         wantToken = _want;
@@ -133,7 +130,7 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
     function depositWant() public whenNotPaused whenNotStopped {
         uint256 wantBalance = balanceOfWant();
         if (wantBalance > 0) {
-            IGauge(gauge).deposit(tokenId, wantBalance);
+            IGauge(gauge).deposit(wantBalance, tokenId);
             emit Deposit(wantBalance);
         }
     }
@@ -148,7 +145,7 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
         }
     }
 
-    // deposit lp tokens simultaneously    
+    // deposit lp tokens simultaneously
     function depositLpTokens() public whenNotPaused whenNotStopped {
         (uint256 lp0Bal, uint256 lp1Bal) = lpTokenBalances();
         require(lp0Bal > 0, '!lp0Bal');
@@ -183,7 +180,7 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
     }
 
 
-    // withdraws funds and sends them back to the vault    
+    // withdraws funds and sends them back to the vault
     function withdraw(uint256 wantAmount) external onlyVault {
         (uint256 lp0TransferAmount, uint256 lp1TransferAmount, uint256 wantBal) = startWithdraw(wantAmount);
         uint256 inputBalBefore = IERC20(inputToken).balanceOf(address(this));
@@ -283,7 +280,7 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
         // Add liquidity for lp tokens
         addLiquidity(lpToken0, lpToken1, isStable, lp0Bal, lp1Bal, 1, 1, block.timestamp);
     }
-    
+
     // calculate the total underlying 'want' held by the strat.
     function balanceOf() public view returns (uint256) {
         return balanceOfWant() + balanceOfPool();
@@ -385,24 +382,8 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
         return solidlyToUniRoute(_route);
     }
 
-    function want() external view returns (address) {
-        return wantToken;
-    }
-
-    function reward() external view returns (address) {
-        return rewardToken;
-    }
-
-    function lp0() external view returns (address) {
-        return lpToken0;
-    }
-
-    function lp1() external view returns (address) {
-        return lpToken1;
-    }
-
-    function input() external view returns (address) {
-        return inputToken;
+    function setTokenId(uint256 _tokenId) external onlyOwner {
+        tokenId = _tokenId;
     }
 
     function stop() public onlyOwner {

@@ -63,7 +63,7 @@ describe("RAM ERC20 Strategy", () => {
     const inputToken = usdcToken
     const lpToken = wantToken
 
-    const MockGauge = await ethers.getContractFactory("MockGauge");
+    const MockGauge = await ethers.getContractFactory("GaugeMock");
     const gauge = await MockGauge.deploy([rewardToken.address], wantToken.address) as MockGauge;
     await gauge.deployed();
 
@@ -213,13 +213,13 @@ describe("RAM ERC20 Strategy", () => {
         expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
       })
     })
-    
+
     describe("LpToken Deposits", () => {
       it("Depositing LP tokens into vault sends want amount to strategy and stakes into pool under the strategy's address, mints token to alice", async () => {
         const {alice, vault, strategy, gauge, arbToken, usdtToken} = await loadFixture(setupFixture);
         await arbToken.connect(alice).approve(vault.address, TEN_ETH);
         await usdtToken.connect(alice).approve(vault.address, TEN_ETH);
-        
+
         await vault.connect(alice)
           .depositLpTokens(ONE_ETH.div(2), ONE_ETH.div(2));
 
@@ -229,7 +229,7 @@ describe("RAM ERC20 Strategy", () => {
         expect(await vault.balanceOf(alice.address)).to.equal(ONE_ETH);
         expect(await vault.totalSupply()).to.equal(ONE_ETH);
       })
-      
+
       it("Mints token for bob and alice in proportion to their deposits", async () => {
         const {alice, vault, strategy, gauge, bob, arbToken, usdtToken} = await loadFixture(setupFixture);
         await arbToken.connect(alice).approve(vault.address, TEN_ETH);
@@ -270,7 +270,7 @@ describe("RAM ERC20 Strategy", () => {
         await expect(await usdtToken.allowance(strategy.address, gauge.address)).to.equal(0);
         await expect(await ramToken.allowance(strategy.address, router.address)).to.equal(0);
       })
-      
+
       it("Deposits are enabled when the strat is resumed", async () => {
         const {alice, vault, strategy, arbToken, usdtToken} = await loadFixture(setupFixture);
         await arbToken.connect(alice).approve(vault.address, TEN_ETH);
@@ -283,7 +283,7 @@ describe("RAM ERC20 Strategy", () => {
       })
     })
   })
-  
+
   //
   describe("Harvest", () => {
     it("Compounds, claims and restakes, owner takes 2% of pf, rest goes back into strategy", async () => {
@@ -429,7 +429,7 @@ describe("RAM ERC20 Strategy", () => {
         expect(await vault.balanceOf(bob.address)).to.equal(parseUnits("0.5", 18));
       })
     })
-    
+
     describe("Withdraw as LP Tokens", () => {
       it("Withdrawing after harvest returns tokens to depositor with additional harvest", async () => {
         const {alice, vault, strategy, usdcToken, deployer, arbToken, usdtToken, bob} = await loadFixture(setupFixture);
@@ -508,7 +508,7 @@ describe("RAM ERC20 Strategy", () => {
         await usdtToken.connect(bob).approve(vault.address, TEN_ETH);
         await vault.connect(bob)
           .depositLpTokens(depositAmountPerToken, depositAmountPerToken);
-        
+
         await strategy.harvest();
         const aliceShares = await vault.balanceOf(alice.address);
 
@@ -526,7 +526,7 @@ describe("RAM ERC20 Strategy", () => {
 
         await vault.connect(alice).withdrawAsLpTokens(aliceShares.div(2));
         expect(await vault.totalSupply()).to.equal(parseUnits("1.5", 18));
-        
+
         expect(await usdcToken.balanceOf(deployer.address)).to.equal(ownerFeeInUSDC);
         expect(await arbToken.balanceOf(alice.address)).to.equal(expectedUserPerTokenDeposited);
         expect(await usdtToken.balanceOf(alice.address)).to.equal(expectedUserPerTokenDeposited);

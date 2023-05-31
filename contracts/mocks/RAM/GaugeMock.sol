@@ -2,10 +2,10 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "../../interfaces/ram/IGuage.sol";
+import "../../interfaces/ram/IGauge.sol";
 
 
-contract MockGauge is IGauge, Ownable {
+contract GaugeMock is IGauge, Ownable {
     mapping(address => uint256) private balances;
     mapping(address => mapping(address => uint256)) private userRewards;
     address[] public rewardTokens;
@@ -43,13 +43,13 @@ contract MockGauge is IGauge, Ownable {
         }
         return totalEarned;
     }
-    
-    function deposit(uint256 tokenId, uint256 amount) external override {
+
+    function deposit(uint256 amount, uint256 tokenId) external override {
         balances[msg.sender] += amount;
         uint256 balance = balances[msg.sender];
         ERC20(stake).transferFrom(msg.sender, address(this), amount);
     }
-    
+
     function withdraw(uint256 amount) external override {
         uint256 balance = balances[msg.sender];
         balances[msg.sender] = balance - amount;

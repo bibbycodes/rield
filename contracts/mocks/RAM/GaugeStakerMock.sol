@@ -2,11 +2,11 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../../interfaces/ram/IGuageStaker.sol";
-import "../../interfaces/ram/IGuage.sol";
+import "../../interfaces/ram/IGaugeStaker.sol";
+import "../../interfaces/ram/IGauge.sol";
 
 
-contract MockGaugeStaker is IGaugeStaker, Ownable {
+contract GaugeStakerMock is IGaugeStaker, Ownable {
     address public stake; // LP token
     address public gauge;
 
