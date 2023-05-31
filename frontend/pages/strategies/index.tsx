@@ -1,14 +1,13 @@
-import { strategies } from '../../model/strategy';
-import StrategyCard from '../../components/StrategyCard';
-import React, { useState } from 'react';
+import {singleStakeStrategies} from '../../model/strategy';
+import React, {useState} from 'react';
 import DepositAndWithdrawModal from '../../components/DepositAndWithdrawModal';
-import { useTotalDollarAmountDeposited } from "../../hooks/useTotalDollarAmountDeposited";
-import { Toast } from "../../components/Toast";
-import { AccountBalance, WalletOutlined } from '@mui/icons-material';
-import { useGetTVL } from "../../hooks/useGetTVL";
-import { ToolBarDataItem } from "../../components/ToolBarDataItem";
+import {useTotalDollarAmountDeposited} from "../../hooks/useTotalDollarAmountDeposited";
+import {Toast} from "../../components/Toast";
+import {AccountBalance, WalletOutlined} from '@mui/icons-material';
+import {useGetTVL} from "../../hooks/useGetTVL";
+import {ToolBarDataItem} from "../../components/ToolBarDataItem";
 import NonSSRWrapper from '../../components/NonSSRWrapper';
-import { formatDollarAmount } from '../../utils/formatters';
+import {formatDollarAmount} from '../../utils/formatters';
 import StrategyListItem from '../../components/StrategyListItem';
 
 export default function Compound() {
@@ -36,7 +35,7 @@ export default function Compound() {
     </div>
     <div className="flex justify-center">
       <div className="flex flex-col [&>*]:mb-2 [&>*]:w-[75vw]">
-        {strategies
+        {singleStakeStrategies
           .map(strategy => <StrategyListItem key={strategy.vaultAddress} strategy={strategy}
                                          openModal={setIsStrategyDetailsModalOpen}/>)}
       </div>

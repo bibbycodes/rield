@@ -1,4 +1,4 @@
-import {Strategy} from '../model/strategy';
+import {SingleStakeStrategy} from '../model/strategy';
 import {StrategyLogos} from "./StrategyLogos";
 import React, {useContext} from "react";
 import {APYsContext} from "../contexts/ApyContext";

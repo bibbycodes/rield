@@ -2,7 +2,7 @@ import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 import {Address, useNetwork} from "wagmi";
 import {calculateApyWithFee} from "../utils/calculator";
 import {ApyGetter} from "../lib/apy-getter/apy-getter";
-import {strategies} from "../model/strategy";
+import {singleStakeStrategies} from "../model/strategy";
 import {TokenPricesContext} from "./TokenPricesContext";
 import {staticArbProvider} from '../utils/static-provider';
 
@@ -31,7 +31,7 @@ const APYsContextProvider = ({children}: {
           setIsLoading(false)
         }
       )
-      : setApys(strategies
+      : setApys(singleStakeStrategies
         .filter(strategy => strategy.status !== 'DISABLED')
         .reduce((acc, strategy) => {
         return {...acc, [strategy.strategyAddress]: 0}

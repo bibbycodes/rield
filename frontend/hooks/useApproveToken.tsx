@@ -1,7 +1,7 @@
 import { Address, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from "wagmi";
 import { BigNumber } from "ethers";
 import ERC20Abi from '../resources/abis/erc20.json';
-import { Strategy } from '../model/strategy';
+import { SingleStakeStrategy } from '../model/strategy';
 import { useState } from 'react';
 import {usePostHog} from "posthog-js/react";
 

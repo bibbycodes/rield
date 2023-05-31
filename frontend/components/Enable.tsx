@@ -1,7 +1,7 @@
 import {useContext} from 'react';
 import {useAccount} from 'wagmi';
 import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
-import {Strategy} from "../model/strategy";
+import {SingleStakeStrategy} from "../model/strategy";
 import {useGetUserDepositedInVault} from '../hooks/useGetUserDepositedInVault';
 import {ConnectKitButton} from 'connectkit';
 import {VaultDataContext} from '../contexts/vault-data-context/VaultDataContext';

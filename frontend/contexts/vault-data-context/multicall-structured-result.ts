@@ -1,7 +1,7 @@
 import {multicall} from '@wagmi/core';
 import {Abi} from 'abitype';
 import {Address} from 'wagmi';
-import {Strategy} from "../../model/strategy";
+import {SingleStakeStrategy} from "../../model/strategy";
 import {extractStrategySpecificData} from "./utils";
 
 export type StructuredMulticallResult = {

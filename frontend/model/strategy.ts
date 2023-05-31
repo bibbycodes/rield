@@ -1,43 +1,24 @@
-import * as capEth from "../resources/vault-details/deploy_cap_eth-output.json";
-import * as capUSDC from "../resources/vault-details/deploy_cap_usdc-output.json";
-import * as gmx from "../resources/vault-details/deploy_gmx-output.json";
-import * as glp from "../resources/vault-details/deploy_glp-output.json";
-import * as gns from "../resources/vault-details/deploy_gns-output.json";
-import * as bfr from "../resources/vault-details/deploy_bfr-output.json";
-import * as hopUsdc from "../resources/vault-details/deploy_hop_usdc-output.json";
-import * as hopUsdt from "../resources/vault-details/deploy_hop_usdt-output.json";
-import * as hopEth from "../resources/vault-details/deploy_hop_eth-output.json";
-import * as hopDai from "../resources/vault-details/deploy_hop_dai-output.json";
 import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
 import {ADDRESS_ZERO} from "../lib/apy-getter-functions/cap";
+import {LpPoolStrategy, SingleStakeStrategy, StrategyStatus, StrategyType} from "../lib/types/strategy-types";
+import {
+  bfr,
+  capEth,
+  capUSDC,
+  glp,
+  gmx,
+  gns,
+  hopDai,
+  hopEth,
+  hopUsdc,
+  hopUsdt,
+  ramArbUsdc
+} from '../lib/strategy-details';
 
-export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-export interface Strategy {
-  id: number;
-  name: string;
-  protocol: string;
-  tokenAddress: Address;
-  vaultAddress: Address;
-  strategyAddress: Address;
-  protocolLogoUrl: string;
-  tokenLogoUrl: string;
-  decimals: number;
-  description: string;
-  status: 'ACTIVE' | 'DISABLED' | 'SOON' | 'HIDDEN';
-  coolDownPeriod: number;
-  protocolUrl: string;
-  tokenUrl: string;
-  abi: any;
-  coinGeckoId: string;
-  tokenSymbol: string;
-  type: string;
-  performanceFee: number
-  hasWithdrawalSchedule?: boolean;
-}
 
-export const strategies: Strategy[] = [
+export const singleStakeStrategies: SingleStakeStrategy[] = [
   {
     id: 2,
     name: "RLD-CAP-USDC",
@@ -52,10 +33,10 @@ export const strategies: Strategy[] = [
     protocolUrl: "https://www.cap.finance",
     tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${capUSDC.tokenAddress}`,
     decimals: 6,
-    status: 'ACTIVE',
+    status: StrategyStatus.ACTIVE,
     abi: abi,
     coinGeckoId: "usd-coin",
-    type: "Auto Compound",
+    type: [StrategyType.AUTO_COMPOUND, StrategyType.SINGLE_STAKE],
     performanceFee: 5,
     hasWithdrawalSchedule: true,
     coolDownPeriod: 3600000
@@ -74,10 +55,10 @@ export const strategies: Strategy[] = [
     protocolUrl: "https://www.cap.finance",
     tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=USDC&outputCurrency=eth`,
     decimals: 18,
-    status: 'ACTIVE',
+    status: StrategyStatus.ACTIVE,
     abi: ethVaultAbi,
     coinGeckoId: "ethereum",
-    type: "Auto Compound",
+    type: [StrategyType.AUTO_COMPOUND, StrategyType.SINGLE_STAKE],
     performanceFee: 5,
     hasWithdrawalSchedule: true,
     coolDownPeriod: 3600000
@@ -96,7 +77,7 @@ export const strategies: Strategy[] = [
     protocolUrl: "https://gmx.io/#/",
     tokenUrl: `https://app.gmx.io/#/buy_gmx`,
     decimals: 18,
-    status: 'ACTIVE',
+    status: StrategyStatus.ACTIVE,
     abi: abi,
     coinGeckoId: "gmx",
     type: "Autocompound",
@@ -117,7 +98,7 @@ export const strategies: Strategy[] = [
     protocolUrl: "https://gmx.io/#/",
     tokenUrl: `https://app.gmx.io/#/buy_glp/`,
     decimals: 18,
-    status: 'ACTIVE',
+    status: StrategyStatus.ACTIVE,
     abi: abi,
     coinGeckoId: "glp",
     type: "Autocompound",
@@ -139,10 +120,10 @@ export const strategies: Strategy[] = [
     protocolUrl: "https://gains.trade/",
     tokenUrl: `https://traderjoexyz.com/arbitrum/trade?inputCurrency=ETH&outputCurrency=0x18c11fd286c5ec11c3b683caa813b77f5163a122`,
     decimals: 18,
-    status: 'ACTIVE',
+    status: StrategyStatus.ACTIVE,
     abi: abi,
     coinGeckoId: "gains-network",
-    type: "Auto Compound",
+    type: [StrategyType.AUTO_COMPOUND, StrategyType.SINGLE_STAKE],
     performanceFee: 5,
     coolDownPeriod: 0
   },
@@ -160,12 +141,12 @@ export const strategies: Strategy[] = [
     protocolUrl: "https://app.buffer.finance/ARBITRUM/earn",
     tokenUrl: `https://app.uniswap.org/#/tokens/arbitrum/0x1a5b0aaf478bf1fda7b934c76e7692d722982a6d`,
     decimals: 18,
-    status: 'ACTIVE',
+    status: StrategyStatus.ACTIVE,
     coolDownPeriod: 0,
     hasWithdrawalSchedule: false,
     abi: abi,
     coinGeckoId: "ibuffer-token",
-    type: "Auto Compound",
+    type: [StrategyType.AUTO_COMPOUND, StrategyType.SINGLE_STAKE],
     performanceFee: 5
   },
   {
@@ -182,12 +163,12 @@ export const strategies: Strategy[] = [
     protocolUrl: "https://app.hop.exchange/#/pools?token=USDC",
     tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${hopUsdc.tokenAddress}`,
     decimals: 6,
-    status: 'ACTIVE',
+    status: StrategyStatus.ACTIVE,
     coolDownPeriod: 0,
     hasWithdrawalSchedule: false,
     abi: abi,
     coinGeckoId: "usd-coin",
-    type: "Auto Compound",
+    type: [StrategyType.AUTO_COMPOUND, StrategyType.SINGLE_STAKE],
     performanceFee: 5
   },
   {
@@ -204,12 +185,12 @@ export const strategies: Strategy[] = [
     protocolUrl: "https://app.hop.exchange/#/pools?token=USDT",
     tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${hopUsdt.tokenAddress}`,
     decimals: 6,
-    status: 'ACTIVE',
+    status: StrategyStatus.ACTIVE,
     coolDownPeriod: 0,
     hasWithdrawalSchedule: false,
     abi: abi,
     coinGeckoId: "tether",
-    type: "Auto Compound",
+    type: [StrategyType.AUTO_COMPOUND, StrategyType.SINGLE_STAKE],
     performanceFee: 5
   },
   {
@@ -226,12 +207,12 @@ export const strategies: Strategy[] = [
     protocolUrl: "https://app.hop.exchange/#/pools?token=ETH",
     tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${hopEth.tokenAddress}`,
     decimals: 18,
-    status: 'ACTIVE',
+    status: StrategyStatus.ACTIVE,
     coolDownPeriod: 0,
     hasWithdrawalSchedule: false,
     abi: ethVaultAbi,
     coinGeckoId: "ethereum",
-    type: "Auto Compound",
+    type: [StrategyType.AUTO_COMPOUND, StrategyType.SINGLE_STAKE],
     performanceFee: 5
   },
   {
@@ -248,21 +229,58 @@ export const strategies: Strategy[] = [
     protocolUrl: "https://app.hop.exchange/#/pools?token=DAI",
     tokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${hopDai.tokenAddress}`,
     decimals: 18,
-    status: 'ACTIVE',
+    status: StrategyStatus.ACTIVE,
     coolDownPeriod: 0,
     hasWithdrawalSchedule: false,
     abi: abi,
     coinGeckoId: "dai",
-    type: "Auto Compound",
+    type: [StrategyType.AUTO_COMPOUND, StrategyType.SINGLE_STAKE],
     performanceFee: 5
   },
 ]
-export const erc20Strategies = strategies
+
+export const LpStrategies: LpPoolStrategy[] = [
+  {
+    id: 10,
+    name: "ARB_USDC",
+    protocol: "Ramses",
+    lp0TokenSymbol: "ARB",
+    lp0TokenAddress: ramArbUsdc.lp0Address as Address,
+    lp1TokenSymbol: "USDC",
+    lp1TokenAddress: ramArbUsdc.lp1Address as Address,
+    vaultAddress: ramArbUsdc.vaultAddress as Address,
+    strategyAddress: ramArbUsdc.strategyAddress as Address,
+    protocolLogoUrl: "/ramses-logo.png",
+    lp0TokenLogoUrl: "/arb-logo.png",
+    lp1TokenLogoUrl: "/usdc-logo.svg",
+    description: "Ramses",
+    lp0TokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${ramArbUsdc.lp0Address}`,
+    lp1TokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${ramArbUsdc.lp1Address}`,
+    decimals: 18,
+    status: StrategyStatus.ACTIVE,
+    lp0CoinGeckoId: "arbitrum",
+    lp1CoinGeckoId: "usd-coin",
+    abi: {},
+    type: [StrategyType.AUTO_COMPOUND, StrategyType.LP_POOL],
+    performanceFee: 2
+  }
+]
+export const erc20Strategies = singleStakeStrategies
   .filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)
   .filter(strategy => strategy.status !== 'DISABLED')
-export const ethStrategies = strategies
+export const ethStrategies = singleStakeStrategies
   .filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
   .filter(strategy => strategy.status !== 'DISABLED')
 
-strategies.reverse()
+export const erc20LpStrategies = LpStrategies
+  .filter(strategy => strategy.lp0TokenAddress !== ADDRESS_ZERO && strategy.lp1TokenAddress !== ADDRESS_ZERO)
+  .filter(strategy => strategy.status !== StrategyStatus.DISABLED)
+
+export const ethLpStrategies = LpStrategies
+  .filter(strategy => strategy.lp0TokenAddress === ADDRESS_ZERO || strategy.lp1TokenAddress === ADDRESS_ZERO)
+  .filter(strategy => strategy.status !== StrategyStatus.DISABLED)
+
+export const allStrategies = [...erc20Strategies, ...ethStrategies, ...ethLpStrategies, ...erc20LpStrategies]
+
+singleStakeStrategies.reverse()
 

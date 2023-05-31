@@ -1,8 +1,8 @@
 import { BigNumber } from "ethers";
 import { useContext, useEffect, useState } from "react";
-import { Strategy } from "../model/strategy";
 import { useAccount } from "wagmi";
 import { VaultDataContext } from "../contexts/vault-data-context/VaultDataContext";
+import {Strategy} from "../lib/types/strategy-types";
 
 export const useGetUserDepositedInVault = (strategy: Strategy) => {
   const [userStaked, setUserStaked] = useState<BigNumber>(BigNumber.from(0));

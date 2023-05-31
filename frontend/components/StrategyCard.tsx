@@ -1,4 +1,4 @@
-import { Strategy } from '../model/strategy';
+import { SingleStakeStrategy } from '../model/strategy';
 import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
 import Enable from './Enable';
 import { StrategyLogos } from "./StrategyLogos";

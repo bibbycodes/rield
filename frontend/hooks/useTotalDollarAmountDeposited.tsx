@@ -1,7 +1,7 @@
 import { useAccount } from "wagmi";
 import { BigNumber } from "ethers";
 import { useContext, useEffect, useState } from "react";
-import { strategies, Strategy } from "../model/strategy";
+import { singleStakeStrategies, SingleStakeStrategy } from "../model/strategy";
 import { TokenPricesContext } from "../contexts/TokenPricesContext";
 import { formatDollarAmount } from "../utils/formatters";
 import { formatUnits } from "ethers/lib/utils";
@@ -49,7 +49,7 @@ export const useTotalDollarAmountDeposited = () => {
   }
 
   async function getTotalStakedInDollars() {
-    return strategies
+    return singleStakeStrategies
       .filter(strategy => strategy.status === 'ACTIVE')
       .reduce((acc: any, strategy: any, index: number) => {
         if (vaultsData[strategy.vaultAddress] && Object.keys(prices).length && userAddress) {
@@ -61,8 +61,8 @@ export const useTotalDollarAmountDeposited = () => {
           if (balance == null || pricePerShare == null) {
             return acc;
           }
-          const decimals = strategies[index].decimals
-          const price = prices[strategies[index].coinGeckoId]
+          const decimals = singleStakeStrategies[index].decimals
+          const price = prices[singleStakeStrategies[index].coinGeckoId]
           const dollarAmount = calculateUserStakedInDollars(balance,
             price,
             pricePerShare,

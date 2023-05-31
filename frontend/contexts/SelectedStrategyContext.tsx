@@ -1,5 +1,5 @@
 import {createContext, Dispatch, ReactNode, SetStateAction, useState,} from "react";
-import {strategies, Strategy} from "../model/strategy";
+import {singleStakeStrategies, SingleStakeStrategy} from "../model/strategy";
 
 export type TransactionAction = "deposit" | "withdraw";
 export type SetFunction<T> =  Dispatch<SetStateAction<T>>
@@ -10,16 +10,16 @@ const SelectedStrategyContext = createContext<{
   action: TransactionAction;
   setAction: SetFunction<TransactionAction>;
 }>({
-  selectedStrategy: strategies[0],
+  selectedStrategy: singleStakeStrategies[0],
   action: "deposit",
-  setSelectedStrategy: () => strategies[0],
+  setSelectedStrategy: () => singleStakeStrategies[0],
   setAction: () => "deposit",
 });
 
 const SelectedStrategyContextProvider = ({children}: {
   children: ReactNode;
 }) => {
-  const [selectedStrategy, setSelectedStrategy] = useState<Strategy>(strategies[0]);
+  const [selectedStrategy, setSelectedStrategy] = useState<Strategy>(singleStakeStrategies[0]);
   const [action, setAction] = useState<TransactionAction>("deposit");
   
   return (

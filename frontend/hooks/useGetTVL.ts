@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { VaultDataContext } from "../contexts/vault-data-context/VaultDataContext";
 import { TokenPricesContext } from "../contexts/TokenPricesContext";
-import { Strategy } from "../model/strategy";
+import { SingleStakeStrategy } from "../model/strategy";
 import { VaultData } from "../contexts/vault-data-context/utils";
 import { Address } from "wagmi";
 import { BigNumber } from 'ethers';

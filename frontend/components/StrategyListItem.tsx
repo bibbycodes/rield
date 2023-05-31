@@ -1,97 +1,85 @@
-import { Strategy } from '../model/strategy';
-import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
 import Enable from './Enable';
-import { StrategyLogos } from "./StrategyLogos";
-import { TokenPricesContext } from "../contexts/TokenPricesContext";
-import React, { useContext } from "react";
-import { APYsContext } from "../contexts/ApyContext";
-import { WithLoader } from "./WithLoader";
-import { BigNumber, ethers } from 'ethers';
+import {StrategyLogos} from "./StrategyLogos";
+import React from "react";
+import {WithLoader} from "./WithLoader";
 import NonSSRWrapper from './NonSSRWrapper';
-import { formatDollarAmount, roundToNDecimals } from "../utils/formatters";
-import * as capEth from "../resources/vault-details/deploy_cap_eth-output.json";
-import * as capUSDC from "../resources/vault-details/deploy_cap_usdc-output.json";
 import {cardGradient} from "../pages";
+import Accordion from '@mui/material/Accordion';
+import {AccordionDetails, AccordionSummary} from "@mui/material";
+import {Strategy, StrategyStatus} from "../lib/types/strategy-types";
+import {useStrategyAccordianListItemHooks} from "../hooks/component-hooks/useStrategyAccordianListItemHooks";
 
-export default function StrategyListItem({
-                                       strategy,
-                                       openModal
-                                     }: { strategy: Strategy, openModal: (isOpen: boolean) => void }) {
-  const {userStaked} = useGetUserDepositedInVault(strategy)
-  const {prices} = useContext(TokenPricesContext)
-  const {apys, isLoading} = useContext(APYsContext)
-  const apy = apys[strategy.strategyAddress]
+interface StrategyListItemProps {
+  strategy: Strategy
+  openModal: (isOpen: boolean) => void
+}
+
+export default function StrategyListItem({strategy, openModal}: StrategyListItemProps) {
   const {status} = strategy
-
-  // TODO: Move this to a useGetUserStaked
-  const getUserStakedInDollars = (amount: BigNumber) => {
-    const isAmountPositive = amount.gt(BigNumber.from(0))
-    if (!prices[strategy.coinGeckoId] || !isAmountPositive) {
-      return 0
-    }
-
-    const balanceInUsd = ethers.utils.formatUnits(
-      amount.mul((prices[strategy.coinGeckoId] * 10000).toFixed(0)).div(10000),
-      strategy.decimals);
-    return formatDollarAmount(+balanceInUsd, 2)
-  }
-
-  const formatStakedAmountInToken = (amount: BigNumber) => {
-    const numberAmount = parseFloat(ethers.utils.formatUnits(amount, strategy.decimals))
-    return roundToNDecimals(numberAmount, 6)
-  }
-
-  const getApy = (apy: number) => {
-    if ([capEth.strategyAddress, capUSDC.strategyAddress].includes(strategy.strategyAddress)) {
-      return `~${apy}`
-    }
-    return apy
-  }
-
+  const {
+    getUserStakedInDollars,
+    formatTokenStakedAmount,
+    userStaked,
+    apy,
+    isLoading,
+    tokenSymbol,
+  } = useStrategyAccordianListItemHooks(strategy)
   const handleOpenModal = () => {
     openModal(true)
   }
 
   return (
-    <div className={`${cardGradient} border-[#181E2F] border-solid border-2 rounded-2xl p-2 ${status === 'HIDDEN' ? 'hidden' : ''}`}>
-      <div className="p-1 flex items-center">
-        <StrategyLogos strategy={strategy}></StrategyLogos>
-        <div className="grow"/>
-        <div className={`flex space-x-4 mr-8`}>
-          <div className="flex flex-col flex-grow">
-            <p className="text-xs text-tSecondary">Staked</p>
-            <p className={`text-2xl text-tPrimary`}>{status === 'ACTIVE' ? `$${getUserStakedInDollars(userStaked)}` : '-'}</p>
-            <p className={`text-xs text-tSecondary`}>
-              {status === 'ACTIVE' ? `${formatStakedAmountInToken(userStaked)} ${(strategy.tokenSymbol)}` : '-'}
-            </p>
-          </div>
-
+    <Accordion
+      className={`
+        ${cardGradient} 
+        border-[#181E2F] border-solid border-2 
+        rounded-2xl p-1
+        ${status === 'HIDDEN' ? 'hidden' : ''}
+        
+      `}>
+      <AccordionSummary
+        aria-controls="panel1a-content"
+        id="panel1a-header"
+        className={``}
+      >
+        <div className="flex flex-row justify-between pt-1 pb-1 w-full">
+          <StrategyLogos strategy={strategy}></StrategyLogos>
           <div className="flex flex-col w-22">
             <p className="text-xs text-tSecondary">APY</p>
             {status === 'ACTIVE' ? (
               <WithLoader className={`min-w-[5rem]`} type={`text`} isLoading={isLoading}>
-                <p className={`text-2xl text-tPrimary`}>{getApy(apy)}%</p>
+                <p className={`text-2xl text-tPrimary`}>{apy}%</p>
               </WithLoader>
             ) : (
               <p className={`text-2xl text-tPrimary`}>-</p>
             )}
           </div>
+          <div className="flex flex-col w-48 text-right">
+            <p className="text-xs text-tSecondary">Staked</p>
+            <p
+              className={`text-2xl text-tPrimary`}>{status === StrategyStatus.ACTIVE ? `$${getUserStakedInDollars(userStaked)}` : '-'}</p>
+            <p className={`text-xs text-tSecondary`}>
+              {status === 'ACTIVE' ? `${formatTokenStakedAmount(userStaked)} ${(tokenSymbol)}` : '-'}
+            </p>
+          </div>
         </div>
-
-        {status !== 'SOON' ? (
-          <NonSSRWrapper>
-            <Enable
-              openModal={handleOpenModal}
-              strategy={strategy}
-            ></Enable>
-          </NonSSRWrapper>
-        ) : (
-          <button
-            className="w-full text-tPrimary bg-accentPrimary hover:bg-accentSecondary p-3 rounded-lg uppercase"
-          >Coming Soon!</button>
-        )
-        }
-      </div>
-    </div>
+      </AccordionSummary>
+      <AccordionDetails>
+        <div
+          className={`${cardGradient} border-[#181E2F] border-solid border-2 rounded-2xl p-2 ${status === StrategyStatus.HIDDEN ? 'hidden' : ''}`}>
+          <div className="p-1 flex items-center">
+            <div className="grow"/>
+            <div className={`flex space-x-4 mr-8`}>
+            </div>
+            <NonSSRWrapper>
+              <Enable
+                openModal={handleOpenModal}
+                strategy={strategy}
+              ></Enable>
+            </NonSSRWrapper>
+          </div>
+        </div>
+      </AccordionDetails>
+    </Accordion>
   )
 }

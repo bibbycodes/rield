@@ -1,4 +1,4 @@
-import { Strategy } from '../../model/strategy';
+import { SingleStakeStrategy } from '../../model/strategy';
 import { Address } from 'wagmi';
 import * as HopPoolAbi from "../../resources/abis/HopPoolAbi.json";
 import * as HopTrackerAbi from "../../resources/abis/HopTrackerAbi.json";

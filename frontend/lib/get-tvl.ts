@@ -1,4 +1,4 @@
-import { erc20Strategies, ethStrategies, strategies, Strategy } from "../model/strategy";
+import { erc20Strategies, ethStrategies, singleStakeStrategies, SingleStakeStrategy } from "../model/strategy";
 import { Prices } from "../contexts/TokenPricesContext";
 import { getStrategySpecificCalls, VaultData } from "../contexts/vault-data-context/utils";
 import { Address } from "wagmi";
@@ -56,7 +56,7 @@ export class TvlGetter {
     const {
       erc20VaultCallData,
       ethVaultCallData
-    } = this.getVaultMultiCallData(strategies)
+    } = this.getVaultMultiCallData(singleStakeStrategies)
     const erc20DVaultDataCalls = structuredMulticallFromCallInfo(erc20VaultCallData)
     const ethVaultDataCalls = structuredMulticallFromCallInfo(ethVaultCallData)
 

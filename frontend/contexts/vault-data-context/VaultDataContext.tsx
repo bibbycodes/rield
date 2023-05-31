@@ -1,6 +1,6 @@
 import {createContext, useEffect, useState} from "react";
 import {Address, useAccount} from "wagmi";
-import {erc20Strategies, ethStrategies, strategies, Strategy} from '../../model/strategy'
+import {erc20Strategies, ethStrategies, singleStakeStrategies, SingleStakeStrategy} from '../../model/strategy'
 import {ADDRESS_ZERO} from "../../lib/apy-getter-functions/cap";
 import {
   getMultiCallDataForErc20Vault,
@@ -54,7 +54,7 @@ const VaultDataContextProvider = ({children}: {
       const {
         erc20VaultCallData,
         ethVaultCallData
-      } = getVaultMultiCallData(strategies, address)
+      } = getVaultMultiCallData(singleStakeStrategies, address)
       const erc20DVaultDataCalls = structuredMulticallFromCallInfo(erc20VaultCallData)
       const ethVaultDataCalls = structuredMulticallFromCallInfo(ethVaultCallData)
 
