@@ -1,4 +1,12 @@
 import {BigNumber, ethers} from "ethers";
+import {SingleStakeStrategy, Strategy, StrategyType} from "./types/strategy-types";
+import * as RldVault from "../resources/abis/RldTokenVault.json";
+import * as rldEthVault from '../resources/abis/BeefyETHVault.json';
+import * as SolidlyLpVault from "../resources/abis/RldSolidlyLpVault.json";
+import * as genericStrategy from "../resources/abis/CapSingleStakeStrategy.json";
+import * as SolidlyLpPoolStrategy from "../resources/abis/RldSolidlyStrategy.json";
+import {Address} from "wagmi";
+import {ADDRESS_ZERO} from "./apy-getter-functions/cap";
 
 export function convertToEther(amount: BigNumber): string {
   return ethers.utils.formatEther(amount);
@@ -31,3 +39,43 @@ export const sortArrayOfDictsByKey = (
   };
   return arrayOfDicts.sort(sortFunction);
 };
+
+export const isSingleStakeStrategy = (strategy: Strategy) => {
+  return strategy.type.includes(StrategyType.SINGLE_STAKE);
+}
+
+export const isLpPoolStrategy = (strategy: Strategy) => {
+  return strategy.type.includes(StrategyType.LP_POOL);
+}
+
+export const getStrategyInputToken = (strategy: Strategy): Address => {
+  if (strategy.type.includes(StrategyType.SINGLE_STAKE)) {
+    return (strategy as SingleStakeStrategy).tokenAddress;
+  }
+  return (strategy as SingleStakeStrategy).tokenAddress;
+
+}
+
+export const isEthVault = (inputTokenAddress: Address) => {
+  return inputTokenAddress === ADDRESS_ZERO;
+}
+
+export const getVaultAbi = (strategy: Strategy) => {
+  if (isLpPoolStrategy(strategy)) {
+    return SolidlyLpVault.abi
+  }
+  if (isEthVault(getStrategyInputToken(strategy))) {
+    return rldEthVault.abi
+  }
+  return RldVault.abi
+}
+
+export const getStrategyAbi = (strategy: Strategy) => {
+  if (isSingleStakeStrategy(strategy)) {
+    return genericStrategy.abi
+  }
+
+  if (isLpPoolStrategy(strategy)) {
+    return SolidlyLpPoolStrategy.abi
+  }
+}

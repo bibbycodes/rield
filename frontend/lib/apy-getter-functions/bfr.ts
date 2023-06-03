@@ -9,16 +9,18 @@ export const TEN_POW_6 = BigNumber.from(10).pow(6);
 
 function calculateAPR(bfrPrice: BigNumber,
                                  stakedBfrTrackerTokensPerInterval: BigNumber,
-                                 stakedBFRTrakerSupply: BigNumber,
+                                 stakedBFRTrackerSupply: BigNumber,
                                  feeBfrTrackerTokensPerInterval: BigNumber,
                                  feeBfrSupply: BigNumber) {
   const stakedBfrTrackerAnnualRewardsUsd = stakedBfrTrackerTokensPerInterval
     .mul(SECONDS_PER_YEAR)
     .mul(bfrPrice)
     .div(TEN_POW_18)
-  const bfrAprForEsBfr = stakedBFRTrakerSupply.mul(bfrPrice).gt(0)
-    ? stakedBfrTrackerAnnualRewardsUsd.mul(BASIS_POINTS_DIVISOR).div(stakedBFRTrakerSupply.mul(bfrPrice).div(TEN_POW_18))
+  
+  const bfrAprForEsBfr = stakedBFRTrackerSupply.mul(bfrPrice).gt(0)
+    ? stakedBfrTrackerAnnualRewardsUsd.mul(BASIS_POINTS_DIVISOR).div(stakedBFRTrackerSupply.mul(bfrPrice).div(TEN_POW_18))
     : BigNumber.from(0);
+  
   const feeBfrTrackerAnnualRewardsUsd = feeBfrTrackerTokensPerInterval.mul(SECONDS_PER_YEAR).div(TEN_POW_6);
   const bfrAprForRewardToken = feeBfrSupply.gt(0)
     ? feeBfrTrackerAnnualRewardsUsd.mul(BASIS_POINTS_DIVISOR).div(feeBfrSupply.mul(bfrPrice).div(TEN_POW_18).div(TEN_POW_18))

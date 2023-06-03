@@ -3,6 +3,7 @@ import { Address } from 'wagmi';
 import * as HopPoolAbi from "../../resources/abis/HopPoolAbi.json";
 import * as HopTrackerAbi from "../../resources/abis/HopTrackerAbi.json";
 import { StructuredMulticallResult } from './multicall-structured-result';
+import {Strategy} from "../../lib/types/strategy-types";
 
 export const getHopVaultContextData = (hopOutput: { hopPool: string, hopTracker: string },
                                        strategy: Strategy) => {

@@ -1,4 +1,4 @@
-import {singleStakeStrategies} from '../../model/strategy';
+import {allStrategies} from '../../model/strategy';
 import React, {useState} from 'react';
 import DepositAndWithdrawModal from '../../components/DepositAndWithdrawModal';
 import {useTotalDollarAmountDeposited} from "../../hooks/useTotalDollarAmountDeposited";
@@ -35,7 +35,7 @@ export default function Compound() {
     </div>
     <div className="flex justify-center">
       <div className="flex flex-col [&>*]:mb-2 [&>*]:w-[75vw]">
-        {singleStakeStrategies
+        {allStrategies
           .map(strategy => <StrategyListItem key={strategy.vaultAddress} strategy={strategy}
                                          openModal={setIsStrategyDetailsModalOpen}/>)}
       </div>

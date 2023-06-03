@@ -1,12 +1,12 @@
 import { useContext, useEffect, useState } from "react";
 import { VaultDataContext } from "../contexts/vault-data-context/VaultDataContext";
 import { TokenPricesContext } from "../contexts/TokenPricesContext";
-import { SingleStakeStrategy } from "../model/strategy";
 import { VaultData } from "../contexts/vault-data-context/utils";
 import { Address } from "wagmi";
 import { BigNumber } from 'ethers';
 import { formatUnits } from 'ethers/lib/utils';
 import { TvlGetter } from "../lib/get-tvl";
+import {Strategy} from "../lib/types/strategy-types";
 
 export const useGetTVL = () => {
   const {vaultsData} = useContext(VaultDataContext)
@@ -29,6 +29,7 @@ export const useGetTVL = () => {
         .reduce((acc: { [address: string]: number }, curr: string) => {
           const {
             vaultWantBalance,
+            // TODO use coingecko ids from LPs also
             coinGeckoId,
             vaultAddress,
             decimals,
@@ -54,7 +55,6 @@ export const useGetTVL = () => {
 
   const updateTvl = () => {
     getTvl().then(tvl => {
-      console.log({tvl})
       setTvl(tvl)
     })
     const tvlMap = getTvlMap()

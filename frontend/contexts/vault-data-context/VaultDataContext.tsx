@@ -1,6 +1,6 @@
 import {createContext, useEffect, useState} from "react";
 import {Address, useAccount} from "wagmi";
-import {erc20Strategies, ethStrategies, singleStakeStrategies, SingleStakeStrategy} from '../../model/strategy'
+import {erc20Strategies, ethStrategies, singleStakeStrategies} from '../../model/strategy'
 import {ADDRESS_ZERO} from "../../lib/apy-getter-functions/cap";
 import {
   getMultiCallDataForErc20Vault,
@@ -14,6 +14,8 @@ import {
   structuredMulticallFromCallInfo,
   transformMultiCallData
 } from './multicall-structured-result';
+import {Strategy} from "../../lib/types/strategy-types";
+import {getStrategyInputToken} from "../../lib/utils";
 
 export interface VaultsData { [vaultAddress: Address]: Strategy & VaultData }
 export interface VaultContextData {
@@ -38,7 +40,7 @@ const VaultDataContextProvider = ({children}: {
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
   const refetchForStrategy = async (strategy: Strategy, userAddress: Address) => {
-    const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
+    const isEthVault = getStrategyInputToken(strategy) === ADDRESS_ZERO
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy, userAddress) : getMultiCallDataForErc20Vault(strategy, userAddress)
     const data = await structuredMulticall(strategy.strategyAddress, multiCallData)
     const vaultDataForStrategy = transformMultiCallData(data, [strategy])[strategy.vaultAddress]

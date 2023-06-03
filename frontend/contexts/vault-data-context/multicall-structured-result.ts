@@ -2,7 +2,9 @@ import {multicall} from '@wagmi/core';
 import {Abi} from 'abitype';
 import {Address} from 'wagmi';
 import {SingleStakeStrategy} from "../../model/strategy";
-import {extractStrategySpecificData} from "./utils";
+import {extractLpPoolStrategySpecificData, extractStrategySpecificData} from "./utils";
+import {Strategy} from "../../lib/types/strategy-types";
+import {getStrategyInputToken} from "../../lib/utils";
 
 export type StructuredMulticallResult = {
   [address: Address]: {
@@ -60,6 +62,7 @@ export async function structuredMulticallFromCallInfo<TAbi extends Abi | readonl
 
 export const transformMultiCallData = (data: any, strategies: Strategy[]) => {
   return strategies.reduce((acc, strategy) => {
+    const inputTokenAddress = getStrategyInputToken(strategy)
     return {
       ...acc,
       [strategy.vaultAddress]: {
@@ -67,14 +70,15 @@ export const transformMultiCallData = (data: any, strategies: Strategy[]) => {
         vaultBalance: data[strategy.strategyAddress][strategy.vaultAddress]['balanceOf'],
         totalSupply: data[strategy.strategyAddress][strategy.vaultAddress]['totalSupply'],
         vaultPricePerFullShare: data[strategy.strategyAddress][strategy.vaultAddress]['getPricePerFullShare'],
-        allowance: data[strategy.strategyAddress]?.[strategy.tokenAddress]?.['allowance'],
-        tokenBalance: data[strategy.strategyAddress]?.[strategy.tokenAddress]?.['balanceOf'],
+        allowance: data[strategy.strategyAddress]?.[inputTokenAddress]?.['allowance'],
+        tokenBalance: data[strategy.strategyAddress]?.[inputTokenAddress]?.['balanceOf'],
         vaultWantBalance: data[strategy.strategyAddress][strategy.vaultAddress]['balance'],
         paused: data[strategy.strategyAddress][strategy.strategyAddress]['paused'],
         lastHarvest: data[strategy.strategyAddress][strategy.strategyAddress]['lastHarvest'],
         lastPoolDepositTime: data[strategy.strategyAddress][strategy.strategyAddress]['lastDepositTime'],
         lastPauseTime: data[strategy.strategyAddress][strategy.strategyAddress]['lastPauseTime'],
-        additionalData: extractStrategySpecificData(strategy, data)
+        ...extractLpPoolStrategySpecificData(strategy, data),
+        additionalData: extractStrategySpecificData(strategy, data),
       }
     }
   }, {} as any)

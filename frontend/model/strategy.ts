@@ -1,8 +1,9 @@
 import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
+import {abi as solidlyLpVaultAbi} from '../resources/abis/RldSolidlyLpVault.json';
 import {Address} from "wagmi";
 import {ADDRESS_ZERO} from "../lib/apy-getter-functions/cap";
-import {LpPoolStrategy, SingleStakeStrategy, StrategyStatus, StrategyType} from "../lib/types/strategy-types";
+import {LpPoolStrategy, SingleStakeStrategy, Strategy, StrategyStatus, StrategyType} from "../lib/types/strategy-types";
 import {
   bfr,
   capEth,
@@ -16,7 +17,6 @@ import {
   hopUsdt,
   ramArbUsdc
 } from '../lib/strategy-details';
-
 
 export const singleStakeStrategies: SingleStakeStrategy[] = [
   {
@@ -80,7 +80,7 @@ export const singleStakeStrategies: SingleStakeStrategy[] = [
     status: StrategyStatus.ACTIVE,
     abi: abi,
     coinGeckoId: "gmx",
-    type: "Autocompound",
+    type: [StrategyType.AUTO_COMPOUND, StrategyType.SINGLE_STAKE],
     performanceFee: 5,
     coolDownPeriod: 0
   },
@@ -101,7 +101,7 @@ export const singleStakeStrategies: SingleStakeStrategy[] = [
     status: StrategyStatus.ACTIVE,
     abi: abi,
     coinGeckoId: "glp",
-    type: "Autocompound",
+    type: [StrategyType.AUTO_COMPOUND, StrategyType.SINGLE_STAKE],
     performanceFee: 5,
     coolDownPeriod: 0,
   },
@@ -248,6 +248,7 @@ export const LpStrategies: LpPoolStrategy[] = [
     lp0TokenAddress: ramArbUsdc.lp0Address as Address,
     lp1TokenSymbol: "USDC",
     lp1TokenAddress: ramArbUsdc.lp1Address as Address,
+    inputTokenAddress: ramArbUsdc.inputTokenAddress as Address,
     vaultAddress: ramArbUsdc.vaultAddress as Address,
     strategyAddress: ramArbUsdc.strategyAddress as Address,
     protocolLogoUrl: "/ramses-logo.png",
@@ -260,9 +261,11 @@ export const LpStrategies: LpPoolStrategy[] = [
     status: StrategyStatus.ACTIVE,
     lp0CoinGeckoId: "arbitrum",
     lp1CoinGeckoId: "usd-coin",
-    abi: {},
+    rewardTokensCoinGeckoIds: ["ramses-exchange"],
+    abi: solidlyLpVaultAbi,
     type: [StrategyType.AUTO_COMPOUND, StrategyType.LP_POOL],
-    performanceFee: 2
+    performanceFee: 2,
+    protocolUrl: "https://beta.ramses.exchange/swap",
   }
 ]
 export const erc20Strategies = singleStakeStrategies
@@ -280,7 +283,7 @@ export const ethLpStrategies = LpStrategies
   .filter(strategy => strategy.lp0TokenAddress === ADDRESS_ZERO || strategy.lp1TokenAddress === ADDRESS_ZERO)
   .filter(strategy => strategy.status !== StrategyStatus.DISABLED)
 
-export const allStrategies = [...erc20Strategies, ...ethStrategies, ...ethLpStrategies, ...erc20LpStrategies]
+export const allStrategies: Strategy[] = [...erc20Strategies, ...ethStrategies, ...erc20LpStrategies]
 
 singleStakeStrategies.reverse()
 

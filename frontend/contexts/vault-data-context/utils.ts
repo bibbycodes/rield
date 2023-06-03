@@ -1,17 +1,21 @@
-import { SingleStakeStrategy } from "../../model/strategy";
-import { Address } from "wagmi";
-import * as RldVault from "../../resources/abis/RldTokenVault.json";
-import { ADDRESS_ZERO } from "../../lib/apy-getter-functions/cap";
-import * as RldEthVault from "../../resources/abis/BeefyETHVault.json";
-import * as genericStrategy from "../../resources/abis/CapSingleStakeStrategy.json";
+import {Address} from "wagmi";
+import {ADDRESS_ZERO} from "../../lib/apy-getter-functions/cap";
 import * as erc20 from "../../resources/abis/erc20.json";
 import * as hopUsdc from "../../resources/vault-details/deploy_hop_usdc-output.json";
 import * as hopUsdt from "../../resources/vault-details/deploy_hop_usdt-output.json";
 import * as hopEth from "../../resources/vault-details/deploy_hop_eth-output.json";
 import * as hopDai from "../../resources/vault-details/deploy_hop_dai-output.json";
-import { BigNumber } from "ethers";
-import { extractHopAdditionalData, getHopVaultContextData } from './hop-vault-context';
-import { StructuredMulticallResult } from './multicall-structured-result';
+import {BigNumber} from "ethers";
+import {extractHopAdditionalData, getHopVaultContextData} from './hop-vault-context';
+import {StructuredMulticallResult} from './multicall-structured-result';
+import {LpPoolStrategy, SingleStakeStrategy, Strategy} from "../../lib/types/strategy-types";
+import {
+  getStrategyAbi,
+  getStrategyInputToken,
+  getVaultAbi,
+  isLpPoolStrategy,
+  isSingleStakeStrategy
+} from "../../lib/utils";
 
 const erc20Abi = Array.from(erc20)
 
@@ -37,18 +41,18 @@ export type MultiCallInput = {
 }
 export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: Address) => {
   const vault = {
-    abi: RldVault.abi,
+    abi: getVaultAbi(strategy),
     address: strategy.vaultAddress,
   }
 
   const strategyContract = {
-    abi: genericStrategy.abi,
+    abi: getStrategyAbi(strategy),
     address: strategy.strategyAddress,
   }
 
   const erc20Contract = {
     abi: erc20Abi,
-    address: strategy.tokenAddress,
+    address: getStrategyInputToken(strategy),
   }
 
   const vaultBalance = {
@@ -123,12 +127,12 @@ export const getMultiCallDataForErc20Vault = (strategy: Strategy, userAddress: A
 
 export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Address) => {
   const vault = {
-    abi: RldEthVault.abi,
+    abi: getVaultAbi(strategy),
     address: strategy.vaultAddress,
   }
 
   const strategyContract = {
-    abi: genericStrategy.abi,
+    abi: getStrategyAbi(strategy),
     address: strategy.strategyAddress,
   }
 
@@ -187,26 +191,42 @@ export const getMultiCallDataForEthVault = (strategy: Strategy, userAddress: Add
   ]
 }
 
+const getExtraReturnData = (strategy: Strategy) => {
+  if (isSingleStakeStrategy(strategy)) {
+    return {
+      tokenAddress: (strategy as SingleStakeStrategy).tokenAddress,
+    }
+  }
+
+  if (isLpPoolStrategy(strategy)) {
+    return {
+      inputTokenAddress: (strategy as LpPoolStrategy).inputTokenAddress,
+      lp0TokenAddress: (strategy as LpPoolStrategy).lp0TokenAddress,
+      lp1TokenAddress: (strategy as LpPoolStrategy).lp1TokenAddress,
+    }
+  }
+}
+
 export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Address) => {
   const erc20VaultCallData = strategies
-    .filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)
+    .filter(strategy => getStrategyInputToken(strategy) !== ADDRESS_ZERO)
     .map((strategy: Strategy) => {
       const calls = getMultiCallDataForErc20Vault(strategy, userAddress)
       return {
         strategyAddress: strategy.strategyAddress,
         calls,
-        tokenAddress: strategy.tokenAddress,
+        ...getExtraReturnData(strategy)
       }
     })
 
   const ethVaultCallData = strategies
-    .filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
+    .filter(strategy => getStrategyInputToken(strategy) === ADDRESS_ZERO)
     .map((strategy) => {
       const calls = getMultiCallDataForEthVault(strategy, userAddress)
       return {
         strategyAddress: strategy.strategyAddress,
         calls,
-        tokenAddress: strategy.tokenAddress,
+        ...getExtraReturnData(strategy)
       }
     })
 
@@ -255,5 +275,17 @@ export const extractStrategySpecificData = (strategy: Strategy, data: Structured
       return {...extractHopAdditionalData(hopDai, strategy, data)};
     default:
       return null
+  }
+}
+
+export const extractLpPoolStrategySpecificData = (strategy: Strategy, data: StructuredMulticallResult) => {
+  if (isLpPoolStrategy(strategy)) {
+    const strategyAsLpPoolStrategy = strategy as LpPoolStrategy;
+    return {
+      lp0TokenBalance: data[strategyAsLpPoolStrategy.strategyAddress][strategyAsLpPoolStrategy.lp0TokenAddress as Address]['balanceOf'],
+      lp1TokenBalance: data[strategyAsLpPoolStrategy.strategyAddress][strategyAsLpPoolStrategy.lp1TokenAddress as Address]['balanceOf'],
+      lp0TokenAllowance: data[strategyAsLpPoolStrategy.strategyAddress][strategyAsLpPoolStrategy.lp0TokenAddress as Address]['allowance'],
+      lp1TokenAllowance: data[strategyAsLpPoolStrategy.strategyAddress][strategyAsLpPoolStrategy.lp1TokenAddress as Address]['allowance'],
+    }
   }
 }

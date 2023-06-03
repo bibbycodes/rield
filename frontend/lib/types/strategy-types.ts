@@ -28,12 +28,12 @@ export interface BaseStrategy {
   abi: any;
   type: StrategyType[];
   performanceFee: number
+  protocolUrl: string;
 }
 export interface SingleStakeStrategy extends BaseStrategy {
   tokenAddress: Address;
   tokenLogoUrl: string;
   coolDownPeriod: number;
-  protocolUrl: string;
   tokenUrl: string;
   coinGeckoId: string;
   tokenSymbol: string;
@@ -43,6 +43,7 @@ export interface SingleStakeStrategy extends BaseStrategy {
 export interface LpPoolStrategy extends BaseStrategy {
   lp0TokenAddress: Address;
   lp1TokenAddress: Address;
+  inputTokenAddress: Address;
   lp0TokenSymbol: string;
   lp1TokenSymbol: string;
   lp0TokenLogoUrl: string;
@@ -51,6 +52,7 @@ export interface LpPoolStrategy extends BaseStrategy {
   lp1TokenUrl: string;
   lp0CoinGeckoId: string;
   lp1CoinGeckoId: string;
+  rewardTokensCoinGeckoIds: string[];
 }
 
 export type Strategy = SingleStakeStrategy | LpPoolStrategy

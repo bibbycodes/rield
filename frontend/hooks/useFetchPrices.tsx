@@ -1,6 +1,6 @@
 import { Prices } from "../contexts/TokenPricesContext";
 import { useEffect, useState } from "react";
-import { singleStakeStrategies } from "../model/strategy";
+import {LpStrategies, singleStakeStrategies} from "../model/strategy";
 import axios from "axios";
 import { getGlpPrice } from '../lib/apy-getter-functions/gmx';
 import { staticArbProvider } from '../utils/static-provider';
@@ -14,13 +14,20 @@ export const useFetchPrices = () => {
     const priceData = readPricesFromLocalStorage();
     if (shouldUpdate(priceData)) {
       const glpPrice = await getGlpPrice(staticArbProvider)
-      let coinGeckoIds = singleStakeStrategies
+      let coinGeckoIdsForSingleStakes = singleStakeStrategies
         .filter(strategy => strategy.status !== 'DISABLED')
         .map(strategy => strategy.coinGeckoId)
-      coinGeckoIds = [...coinGeckoIds, 'ethereum', 'hop-protocol']
-      const coinGeckoIdsString = coinGeckoIds.join(',')
+      let coinGeckoIdsForLpPools = LpStrategies
+        .filter(strategy => strategy.status !== 'DISABLED')
+        .map(strategy => {
+          const {lp0CoinGeckoId, lp1CoinGeckoId, rewardTokensCoinGeckoIds} = strategy
+          return [lp0CoinGeckoId, lp1CoinGeckoId, ...rewardTokensCoinGeckoIds]
+        }).flat()
+      coinGeckoIdsForSingleStakes = [...coinGeckoIdsForSingleStakes, 'ethereum', 'hop-protocol']
+      const allCoinGeckoIds = Array.from(new Set([...coinGeckoIdsForSingleStakes, ...coinGeckoIdsForLpPools]))
+      const coinGeckoIdsString = allCoinGeckoIds.join(',')
       const {data} = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdsString}&vs_currencies=usd`)
-      let transformedData = new Map(coinGeckoIds.map((id) => [id, data[id]?.usd]));
+      let transformedData = new Map(allCoinGeckoIds.map((id) => [id, data[id]?.usd]));
       let allPrices = {...(Object.fromEntries(transformedData)), glp: glpPrice.asNumber};
       setPrices(allPrices)
       cachePriceInLocalStorage({data: allPrices, date: Date.now()})
