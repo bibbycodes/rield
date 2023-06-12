@@ -29,23 +29,31 @@ contract RLDSolidlyLpVault is ERC20, Ownable, ReentrancyGuard {
         require(address(strategy) == address(0), "Strategy already set");
         strategy = ISolidlyLpStrategy(_strategy);
     }
-
+    
     function want() public view returns (IERC20) {
         return IERC20(strategy.want());
+    }
+    
+    function rewardToken () public view returns (IERC20) {
+        return IERC20(strategy.reward());
     }
 
     function inputToken() public view returns (IERC20) {
         return IERC20(strategy.input());
     }
     
-    function lpToken0() public view returns (IERC20) {
+    function lp0Token() public view returns (IERC20) {
         return IERC20(strategy.lp0());
     }
     
-    function lpToken1() public view returns (IERC20) {
+    function lp1Token() public view returns (IERC20) {
         return IERC20(strategy.lp1());
     }
-
+    
+    function feeToken() public view returns (IERC20) {
+        return IERC20(strategy.fee());
+    }
+    
     function decimals() public view virtual override returns (uint8) {
         address _want = address(strategy.want());
         return ERC20(_want).decimals();
@@ -69,7 +77,7 @@ contract RLDSolidlyLpVault is ERC20, Ownable, ReentrancyGuard {
     }
     
     function availableLpTokens() public view returns(uint256, uint256) {
-        return (lpToken0().balanceOf(address(this)), lpToken1().balanceOf(address(this)));
+        return (lp0Token().balanceOf(address(this)), lp1Token().balanceOf(address(this)));
     }
 
     /**
@@ -121,8 +129,8 @@ contract RLDSolidlyLpVault is ERC20, Ownable, ReentrancyGuard {
         // The balance of want before transfer
         uint256 _before = balance();
         
-        lpToken0().safeTransferFrom(msg.sender, address(this), amount0);
-        lpToken1().safeTransferFrom(msg.sender, address(this), amount1);
+        lp0Token().safeTransferFrom(msg.sender, address(this), amount0);
+        lp1Token().safeTransferFrom(msg.sender, address(this), amount1);
         // transfer to strategy and strategy.deposit
         earnLpTokens();
 
@@ -155,8 +163,8 @@ contract RLDSolidlyLpVault is ERC20, Ownable, ReentrancyGuard {
     
     function earnLpTokens() public {
         (uint256 _bal0, uint256 _bal1) = availableLpTokens();
-        lpToken0().safeTransfer(address(strategy), _bal0);
-        lpToken1().safeTransfer(address(strategy), _bal1);
+        lp0Token().safeTransfer(address(strategy), _bal0);
+        lp1Token().safeTransfer(address(strategy), _bal1);
         strategy.depositLpTokens();
     }
 
@@ -185,10 +193,10 @@ contract RLDSolidlyLpVault is ERC20, Ownable, ReentrancyGuard {
             inputToken().safeTransfer(msg.sender, inputTokenBal);
         } else {
             strategy.withdrawAsLpTokens(userOwedWant);
-            uint256 lpToken0Bal = lpToken0().balanceOf(address(this));
-            uint256 lpToken1Bal = lpToken1().balanceOf(address(this));
-            lpToken0().safeTransfer(msg.sender, lpToken0Bal);
-            lpToken1().safeTransfer(msg.sender, lpToken1Bal);
+            uint256 lp0TokenBal = lp0Token().balanceOf(address(this));
+            uint256 lp1TokenBal = lp1Token().balanceOf(address(this));
+            lp0Token().safeTransfer(msg.sender, lp0TokenBal);
+            lp1Token().safeTransfer(msg.sender, lp1TokenBal);
         }
     }
     

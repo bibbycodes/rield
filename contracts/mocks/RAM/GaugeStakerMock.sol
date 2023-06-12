@@ -26,27 +26,27 @@ contract GaugeStakerMock is IGaugeStaker, Ownable {
         rewards = _rewards;
     }
 
-    function deposit(address gauge, uint256 amount) external override {
-        IGauge(gauge).setBalance(msg.sender, amount);
+    function deposit(address _gauge, uint256 amount) external override {
+        IGauge(_gauge).setBalance(msg.sender, amount);
         uint256 stakeBal = IERC20(stake).balanceOf(address(this));
         IERC20(stake).transferFrom(msg.sender, address(this), amount);
     }
 
-    function withdraw(address gauge, uint256 amount) external override {
-        uint256 balance = IGauge(gauge).balanceOf(msg.sender);
+    function withdraw(address _gauge, uint256 amount) external override {
+        uint256 balance = IGauge(_gauge).balanceOf(msg.sender);
         IGauge(gauge).setBalance(msg.sender, balance - amount);
         uint256 stakeBal = IERC20(stake).balanceOf(address(this));
         IERC20(stake).transfer(msg.sender, amount);
     }
 
-    function harvestRewards(address gauge, address[] calldata tokens) external override {
+    function harvestRewards(address _gauge, address[] calldata tokens) external override {
         for (uint256 i; i < tokens.length; i++) {
             uint256 rewardAmount = IERC20(tokens[i]).balanceOf(address(this));
             IERC20(tokens[i]).transfer(msg.sender, rewardAmount);
         }
     }
 
-    function claimGaugeReward(address gauge) external override {
+    function claimGaugeReward(address _gauge) external override {
         for (uint256 i; i < rewards.length; i++) {
             uint256 rewardAmount = IERC20(rewards[i]).balanceOf(address(this));
             IERC20(rewards[i]).transfer(msg.sender, rewardAmount);

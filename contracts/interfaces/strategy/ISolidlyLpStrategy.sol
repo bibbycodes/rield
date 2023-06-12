@@ -51,6 +51,8 @@ interface ISolidlyLpStrategy {
     function lp1() external view returns (address);
 
     function input() external view returns (address);
+    
+    function fee() external view returns (address);
 
     function depositLpTokens() external;
 }
