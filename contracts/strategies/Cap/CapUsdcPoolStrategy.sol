@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../Common/StratFeeManager.sol";
 import "../../utils/GasFeeThrottler.sol";
 import "../../interfaces/cap/ICapPool.sol";

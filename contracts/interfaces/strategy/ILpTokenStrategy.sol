@@ -6,6 +6,5 @@ import "./ITokenStrategy.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 interface ILpTokenStrategy is ITokenStrategy  {
-    function inputToken() external view returns (IERC20);
 }
 

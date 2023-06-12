@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
-import "@openzeppelin-4/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 
 abstract contract Stoppable is Context {
 
@@ -78,7 +78,7 @@ abstract contract Stoppable is Context {
      */
     function _stop() internal virtual whenNotStopped {
         _stopped = true;
-        emit Stopped(_msgSender());
+        emit Stopped(msg.sender);
     }
 
     /**
@@ -90,6 +90,6 @@ abstract contract Stoppable is Context {
      */
     function _resume() internal virtual whenStopped {
         _stopped = false;
-        emit Resumed(_msgSender());
+        emit Resumed(msg.sender);
     }
 }

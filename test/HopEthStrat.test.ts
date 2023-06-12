@@ -125,7 +125,7 @@ describe("HOP ERC20 Strategy", () => {
     expect(await vault.decimals()).to.equal(await lpToken.decimals());
   })
 
-  describe("Deposit", () => {
+  describe("Depositing Input token", () => {
     it("Depositing into vault sends want amount to strategy and stakes into pool under the strategy's address, mints token to alice", async () => {
       const {alice, vault, strategy, hopTracker} = await loadFixture(setupFixture);
       expect(await vault.totalSupply()).to.equal(0);

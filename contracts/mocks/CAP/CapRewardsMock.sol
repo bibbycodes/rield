@@ -2,10 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "../interfaces/cap/ICapRewards.sol";
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
-import "hardhat/console.sol";
+import "../../interfaces/cap/ICapRewards.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract CapRewardsMock is ICapRewards {
     using SafeERC20 for IERC20;

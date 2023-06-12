@@ -2,10 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin-4/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
-import "hardhat/console.sol";
-import "../interfaces/hop/IHopTokenTracker.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "../../interfaces/hop/IHopTokenTracker.sol";
 
 contract HopTrackerMock is IHopTokenTracker {
     address immutable inputToken;
@@ -47,7 +46,6 @@ contract HopTrackerMock is IHopTokenTracker {
         deposits[msg.sender] += amount;
         IERC20(inputToken).transferFrom(msg.sender, address(this), amount);
         IERC20(lpToken).approve(address(this), type(uint256).max);
-        console.log(amount);
         IERC20(lpToken).transferFrom(address(this), msg.sender, amount * 10 ** 12);
         emit Deposit(msg.sender, amount);
     }
