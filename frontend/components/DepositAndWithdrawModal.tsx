@@ -1,29 +1,30 @@
 import * as React from 'react';
-import { useContext, useState } from 'react';
+import {useContext, useState} from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import { TextField } from '@mui/material';
-import { useAccount, useBalance } from 'wagmi';
-import { useContractActions } from '../hooks/useContractActions';
-import { useGetUserDepositedInVault } from "../hooks/useGetUserDepositedInVault";
-import { SelectedStrategyContext, TransactionAction } from "../contexts/SelectedStrategyContext";
+import {TextField} from '@mui/material';
+import {useAccount, useBalance} from 'wagmi';
+import {useSingleStakeVaultActions} from '../hooks/useSingleStakeVaultActions';
+import {useGetUserDepositedInVault} from "../hooks/useGetUserDepositedInVault";
+import {SelectedVaultContext, TransactionAction} from "../contexts/SelectedVaultContext";
 import CloseIcon from '@mui/icons-material/Close';
-import { APYsContext } from "../contexts/ApyContext";
-import { ethers } from "ethers";
-import { ToastContext, ToastSeverity } from "../contexts/ToastContext";
+import {APYsContext} from "../contexts/ApyContext";
+import {ethers} from "ethers";
+import {ToastContext, ToastSeverity} from "../contexts/ToastContext";
 import Image from 'next/image'
-import { useCalculateSendAmount } from '../hooks/useCalculateSendAmount';
-import { WithLoader } from './WithLoader';
+import {useCalculateSendAmount} from '../hooks/useCalculateSendAmount';
+import {WithLoader} from './WithLoader';
 import IconButton from '@mui/material/IconButton';
-import WarningIcon from '@mui/icons-material/Warning';
-import { ADDRESS_ZERO } from '../lib/apy-getter-functions/cap';
-import { VaultDataContext } from '../contexts/vault-data-context/VaultDataContext';
-import { useApproveToken } from '../hooks/useApproveToken';
-import { bgColor } from "../pages";
+import {ADDRESS_ZERO} from '../lib/apy-getter-functions/cap';
+import {VaultDataContext} from '../contexts/vault-data-context/VaultDataContext';
+import {useApproveToken} from '../hooks/useApproveToken';
+import {bgColor} from "../pages";
 import LoadingButton from './LoadingButton';
-import { ZERO_ADDRESS } from '../model/strategy';
 import {usePostHog} from "posthog-js/react";
+import {DepositWarning} from "./DepositWarning";
+import {SingleStakeVault} from "../lib/types/strategy-types";
+import {isTokenApproved} from "../lib/utils";
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -42,8 +43,20 @@ export interface StrategyDetailsModalProps {
 }
 
 export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDetailsModalProps) {
-  const {action, selectedStrategy} = useContext(SelectedStrategyContext)
-  const {vaultAddress, tokenAddress, tokenUrl, abi, tokenLogoUrl, strategyAddress, decimals} = selectedStrategy;
+  const {action, selectedVault} = useContext(SelectedVaultContext)
+  const selectedStrategyAsSingleStakeVault = selectedVault as SingleStakeVault
+  const {
+    vaultAddress, 
+    tokenAddress, 
+    tokenUrl, 
+    abi, 
+    tokenLogoUrl, 
+    strategyAddress, 
+    decimals,
+    hasWithdrawalSchedule,
+    tokenSymbol
+  } = selectedStrategyAsSingleStakeVault;
+
   const {address: userAddress} = useAccount();
   const posthog = usePostHog()
   const {data: tokenBalanceData} = useBalance({
@@ -60,20 +73,21 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const {
     approve,
     isLoading: approveLoading
-  } = useApproveToken(tokenAddress, vaultAddress, userAddress, selectedStrategy, refetchForStrategy);
-  const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
+  } = useApproveToken(tokenAddress, vaultAddress, userAddress, selectedVault, refetchForStrategy);
+  const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedVault)
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys?.[strategyAddress]
-  const isApproved = visibleAmount < '0' || vaultsData[vaultAddress]?.allowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals))
-  const showApprove = action === 'deposit' && tokenAddress !== ZERO_ADDRESS && !isApproved
+  const isApproved = isTokenApproved('tokenAddress', visibleAmount, vaultsData[vaultAddress], decimals) 
+  const showApprove = action === 'deposit' && tokenAddress !== ADDRESS_ZERO && !isApproved
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
   const amount = useCalculateSendAmount(visibleAmount, action, decimals, userStaked, vaultTokenBalanceBn)
-  const actions = useContractActions({
+  const actions = useSingleStakeVaultActions({
     vaultAddress,
     amount,
     abi,
-    decimals: selectedStrategy.decimals,
+    decimals: selectedVault.decimals,
     tokenAddress,
+    name,
     isApproved: !showApprove
   })
 
@@ -117,7 +131,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
     } else {
       showToast(`Amount must be greater than 0`, 'error')
     }
-    posthog?.capture(`TX_MODAL:${action}`, {action, strategy: selectedStrategy.name, amount: visibleAmount})
+    posthog?.capture(`TX_MODAL:${action}`, {action, strategy: name, amount: visibleAmount})
   }
 
   function showToast(msg: string, severity: ToastSeverity) {
@@ -198,7 +212,7 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
           <Box className={`bg-backgroundSecondary rounded-lg`}>
             <div className="pt-5 p-4 flex items-center">
               <Image alt={"Token Logo"} height={45} width={45} src={tokenLogoUrl}/>
-              <span className="ml-3 text-3xl">{selectedStrategy.tokenSymbol}</span>
+              <span className="ml-3 text-3xl">{tokenSymbol}</span>
               <div className={'flex-col items-center flex ml-auto'}>
                 <span className={`text-tSecondary`}>{action === 'deposit' ? `Balance` : `Staked`}</span>
                 <span>{truncateAmount(
@@ -235,18 +249,8 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
             </div>
           </Box>
 
-          {selectedStrategy.hasWithdrawalSchedule && (
-            <Box className={`inline-flex mt-4`}>
-              <p className={`text-yellow-200`}>
-                <WarningIcon fontSize="small" className={`mr-1`}/>
-                This vault operates on a withdrawal schedule. For details, click <a
-                href={'https://rld-1.gitbook.io/rld/withdrawal-schedules'}
-                className={`text-yellow-200 underline`}
-                target="_blank" rel="noopener noreferrer">
-                here.
-              </a>
-              </p>
-            </Box>
+          {hasWithdrawalSchedule && (
+            <DepositWarning/>
           )}
 
           <Box className={`flex flex-row justify-between`}>

@@ -1,22 +1,19 @@
-import { erc20Strategies, ethStrategies, singleStakeStrategies, SingleStakeStrategy } from "../model/strategy";
-import { Prices } from "../contexts/TokenPricesContext";
-import { getStrategySpecificCalls, VaultData } from "../contexts/vault-data-context/utils";
-import { Address } from "wagmi";
-import { formatUnits } from "ethers/lib/utils";
-import { BigNumber } from "ethers";
-import { VaultsData } from "../contexts/vault-data-context/VaultDataContext";
-import { ADDRESS_ZERO } from "./apy-getter-functions/cap";
-import * as RldVault from "../resources/abis/RldTokenVault.json";
+import {erc20Strategies, ethStrategies, singleStakeStrategies} from "../model/strategy";
+import {Prices} from "../contexts/TokenPricesContext";
+import {getHopSpecificCalls, VaultData} from "../contexts/vault-data-context/utils";
+import {Address} from "wagmi";
+import {formatUnits} from "ethers/lib/utils";
+import {BigNumber} from "ethers";
+import {VaultsData} from "../contexts/vault-data-context/VaultDataContext";
+import {ADDRESS_ZERO} from "./apy-getter-functions/cap";
+import * as RldVaultContract from "../resources/abis/RldTokenVault.json";
 import * as RldEthVault from "../resources/abis/BeefyETHVault.json";
 import {
   structuredMulticallFromCallInfo,
   transformMultiCallDataForTvl
 } from "../contexts/vault-data-context/multicall-structured-result";
-
-
-export const getTvl = () => {
-}
-
+import {RldVault} from "./types/strategy-types";
+import {getStrategyInputToken} from "./utils";
 
 export class TvlGetter {
   constructor(private prices: Prices) {
@@ -33,7 +30,7 @@ export class TvlGetter {
             decimals,
             additionalData,
             name
-          }: Strategy & VaultData = vaultsData[curr as Address] as Strategy & VaultData
+          }: RldVault & VaultData = vaultsData[curr as Address] as RldVault & VaultData
           const price = this.prices[coinGeckoId]
           let vaultTvl = parseFloat(vaultWantBalance?.toString()) / (10 ** decimals)
           if (additionalData) {
@@ -52,6 +49,8 @@ export class TvlGetter {
     }
   }
 
+  // TODO don't we have a vaults data context that we can use here?
+  // TODO IS THIS IN USE??
   getVaultsData = async (): Promise<VaultsData> => {
     const {
       erc20VaultCallData,
@@ -70,9 +69,9 @@ export class TvlGetter {
     })
   }
 
-  getMultiCallDataForErc20Vault = (strategy: Strategy) => {
+  getMultiCallDataForErc20Vault = (strategy: RldVault) => {
     const vault = {
-      abi: RldVault.abi,
+      abi: RldVaultContract.abi,
       address: strategy.vaultAddress,
     }
 
@@ -81,14 +80,14 @@ export class TvlGetter {
       functionName: 'balance',
     }
 
-    const additionalCalls = getStrategySpecificCalls(strategy)
+    const additionalCalls = getHopSpecificCalls(strategy)
     return [
       vaultWantBalance,
       ...additionalCalls
     ]
   }
 
-  getMultiCallDataForEthVault = (strategy: Strategy) => {
+  getMultiCallDataForEthVault = (strategy: RldVault) => {
     const vault = {
       abi: RldEthVault.abi,
       address: strategy.vaultAddress,
@@ -99,7 +98,7 @@ export class TvlGetter {
       functionName: 'balance',
     }
 
-    const additionalCalls = getStrategySpecificCalls(strategy)
+    const additionalCalls = getHopSpecificCalls(strategy)
     return [
       vaultWantBalance,
       ...additionalCalls
@@ -107,26 +106,26 @@ export class TvlGetter {
   }
 
 
-  getVaultMultiCallData = (strategies: Strategy[]) => {
+  getVaultMultiCallData = (strategies: RldVault[]) => {
     const erc20VaultCallData = strategies
-      .filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)
-      .map((strategy: Strategy) => {
+      .filter(strategy => getStrategyInputToken(strategy) !== ADDRESS_ZERO)
+      .map((strategy: RldVault) => {
         const calls = this.getMultiCallDataForErc20Vault(strategy)
         return {
           strategyAddress: strategy.strategyAddress,
           calls,
-          tokenAddress: strategy.tokenAddress,
+          tokenAddress: getStrategyInputToken(strategy),
         }
       })
 
     const ethVaultCallData = strategies
-      .filter(strategy => strategy.tokenAddress === ADDRESS_ZERO)
+      .filter(strategy => getStrategyInputToken(strategy) === ADDRESS_ZERO)
       .map((strategy) => {
         const calls = this.getMultiCallDataForEthVault(strategy)
         return {
           strategyAddress: strategy.strategyAddress,
           calls,
-          tokenAddress: strategy.tokenAddress,
+          tokenAddress: getStrategyInputToken(strategy),
         }
       })
 

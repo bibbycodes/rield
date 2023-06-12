@@ -1,15 +1,17 @@
-import { Address, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from "wagmi";
-import { BigNumber } from "ethers";
+import {Address, useContractWrite, usePrepareContractWrite, useWaitForTransaction} from "wagmi";
+import {BigNumber} from "ethers";
 import ERC20Abi from '../resources/abis/erc20.json';
-import { SingleStakeStrategy } from '../model/strategy';
-import { useState } from 'react';
+import {useState} from 'react';
 import {usePostHog} from "posthog-js/react";
+import {RldVault} from "../lib/types/strategy-types";
 
-export function useApproveToken(tokenAddress: string,
-                                contractAddress: string,
-                                userAddress: Address | undefined,
-                                strategy: Strategy,
-                                refetchForStrategy: (strategy: Strategy, userAddress: Address) => Promise<void>) {
+export function useApproveToken(
+  tokenAddress: string,
+  contractAddress: string,
+  userAddress: Address | undefined,
+  strategy: RldVault,
+  refetchForStrategy: (strategy: RldVault, userAddress: Address) => Promise<void>
+) {
   const posthog = usePostHog()
   const abi = Array.from(ERC20Abi)
   const maxInt = BigNumber.from(2).pow(BigNumber.from(255))

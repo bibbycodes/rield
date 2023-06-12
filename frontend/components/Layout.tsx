@@ -27,7 +27,7 @@ export default function Layout({children}: PropsWithChildren) {
     posthog?.identify(address.toString())
   }
 
-  const isSameRoute = (route: string) => {
+  const isRoute = (route: string) => {
     return router.pathname === route
   }
   return (
@@ -61,9 +61,18 @@ export default function Layout({children}: PropsWithChildren) {
                 <div
                   className="px-5 hidden md:block"
                   onClick={() => onClick('DOCS')}
-                ><Link target="_blank" rel="noopener noreferrer"
-                                                            href='https://rld-1.gitbook.io/rld/'>Docs</Link></div>
-                {!isSameRoute('/strategies') && <div className="px-5 hidden md:block"><Link href='/strategies'>Strategies</Link></div>}
+                >
+                  <Link target="_blank" rel="noopener noreferrer"
+                        href='https://rld-1.gitbook.io/rld/'>Docs</Link>
+                </div>
+                <div
+                  className="px-5 hidden md:block"
+                  onClick={() => onClick('DOCS')}
+                >
+                  <Link href='/manage'>Manage</Link>
+                </div>
+                {!isRoute('/strategies') &&
+                  <div className="px-5 hidden md:block"><Link href='/strategies'>Strategies</Link></div>}
                 <div className="ml-auto">
                   <NonSSRWrapper>
                     <ConnectKitButton.Custom>

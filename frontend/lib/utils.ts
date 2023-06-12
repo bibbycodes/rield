@@ -1,12 +1,13 @@
 import {BigNumber, ethers} from "ethers";
-import {SingleStakeStrategy, Strategy, StrategyType} from "./types/strategy-types";
-import * as RldVault from "../resources/abis/RldTokenVault.json";
+import {LpPoolVault, SingleStakeVault, RldVault, StrategyType} from "./types/strategy-types";
+import * as RldVaultContract from "../resources/abis/RldTokenVault.json";
 import * as rldEthVault from '../resources/abis/BeefyETHVault.json';
 import * as SolidlyLpVault from "../resources/abis/RldSolidlyLpVault.json";
 import * as genericStrategy from "../resources/abis/CapSingleStakeStrategy.json";
 import * as SolidlyLpPoolStrategy from "../resources/abis/RldSolidlyStrategy.json";
 import {Address} from "wagmi";
 import {ADDRESS_ZERO} from "./apy-getter-functions/cap";
+import {VaultData} from "../contexts/vault-data-context/utils";
 
 export function convertToEther(amount: BigNumber): string {
   return ethers.utils.formatEther(amount);
@@ -40,42 +41,56 @@ export const sortArrayOfDictsByKey = (
   return arrayOfDicts.sort(sortFunction);
 };
 
-export const isSingleStakeStrategy = (strategy: Strategy) => {
-  return strategy.type.includes(StrategyType.SINGLE_STAKE);
+export const isSingleStakeStrategy = (type: StrategyType[]) => {
+  return type.includes(StrategyType.SINGLE_STAKE);
 }
 
-export const isLpPoolStrategy = (strategy: Strategy) => {
-  return strategy.type.includes(StrategyType.LP_POOL);
-}
-
-export const getStrategyInputToken = (strategy: Strategy): Address => {
-  if (strategy.type.includes(StrategyType.SINGLE_STAKE)) {
-    return (strategy as SingleStakeStrategy).tokenAddress;
+export const isTokenApproved = (tokenKey: string, visibleAmount: string, vaultData: RldVault & VaultData, decimals: number): boolean => {
+  switch(tokenKey) {
+    case 'inputTokenAddress':
+    case 'tokenAddress':
+      return visibleAmount < '0' || (vaultData?.allowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals)) ?? false)
+    case 'lp0TokenAddress':
+      return visibleAmount < '0' || (vaultData?.lp0TokenAllowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals)) ?? false)
+    case 'lp1TokenAddress':
+      return visibleAmount < '0' || (vaultData?.lp1TokenAllowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals)) ?? false)
+    default:
+      return false
   }
-  return (strategy as SingleStakeStrategy).tokenAddress;
+}
 
+export const isLpPoolStrategy = (type: StrategyType[]) => {
+  return type.includes(StrategyType.LP_POOL);
+}
+
+export const getStrategyInputToken = (strategy: RldVault): Address => {
+  if (strategy.type.includes(StrategyType.LP_POOL)) {
+    return (strategy as LpPoolVault).inputTokenAddress;
+  }
+  
+  return (strategy as SingleStakeVault).tokenAddress;
 }
 
 export const isEthVault = (inputTokenAddress: Address) => {
   return inputTokenAddress === ADDRESS_ZERO;
 }
 
-export const getVaultAbi = (strategy: Strategy) => {
-  if (isLpPoolStrategy(strategy)) {
+export const getVaultAbi = (strategy: RldVault) => {
+  if (isLpPoolStrategy(strategy.type)) {
     return SolidlyLpVault.abi
   }
   if (isEthVault(getStrategyInputToken(strategy))) {
     return rldEthVault.abi
   }
-  return RldVault.abi
+  return RldVaultContract.abi
 }
 
-export const getStrategyAbi = (strategy: Strategy) => {
-  if (isSingleStakeStrategy(strategy)) {
+export const getStrategyAbi = (strategy: RldVault) => {
+  if (isSingleStakeStrategy(strategy.type)) {
     return genericStrategy.abi
   }
 
-  if (isLpPoolStrategy(strategy)) {
+  if (isLpPoolStrategy(strategy.type)) {
     return SolidlyLpPoolStrategy.abi
   }
 }

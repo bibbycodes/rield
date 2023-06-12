@@ -1,12 +1,11 @@
-import { SingleStakeStrategy } from '../../model/strategy';
 import { Address } from 'wagmi';
 import * as HopPoolAbi from "../../resources/abis/HopPoolAbi.json";
 import * as HopTrackerAbi from "../../resources/abis/HopTrackerAbi.json";
 import { StructuredMulticallResult } from './multicall-structured-result';
-import {Strategy} from "../../lib/types/strategy-types";
+import {RldVault} from "../../lib/types/strategy-types";
 
 export const getHopVaultContextData = (hopOutput: { hopPool: string, hopTracker: string },
-                                       strategy: Strategy) => {
+                                       strategy: RldVault) => {
   const pool = {
     abi: HopPoolAbi.abi,
     address: hopOutput.hopPool as Address
@@ -35,7 +34,7 @@ export const getHopVaultContextData = (hopOutput: { hopPool: string, hopTracker:
 }
 
 export const extractHopAdditionalData = (hopOutput: { hopPool: string, hopTracker: string },
-                                         strategy: Strategy,
+                                         strategy: RldVault,
                                          data: StructuredMulticallResult) => {
   return {
     hopPoolBalance: data[strategy.strategyAddress][hopOutput.hopPool as Address]['balanceOf'],

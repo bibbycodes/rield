@@ -1,5 +1,5 @@
 import {createContext, ReactNode, useState} from "react";
-import {SetFunction} from "./SelectedStrategyContext";
+import {SetFunction} from "./SelectedVaultContext";
 
 export type ToastSeverity = "success" | "error" | "warning" | "info";
 

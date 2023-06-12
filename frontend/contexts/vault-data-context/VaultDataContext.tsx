@@ -1,6 +1,6 @@
 import {createContext, useEffect, useState} from "react";
 import {Address, useAccount} from "wagmi";
-import {erc20Strategies, ethStrategies, singleStakeStrategies} from '../../model/strategy'
+import {allErc20Strategies, allStrategies, ethStrategies} from '../../model/strategy'
 import {ADDRESS_ZERO} from "../../lib/apy-getter-functions/cap";
 import {
   getMultiCallDataForErc20Vault,
@@ -14,14 +14,14 @@ import {
   structuredMulticallFromCallInfo,
   transformMultiCallData
 } from './multicall-structured-result';
-import {Strategy} from "../../lib/types/strategy-types";
+import {RldVault} from "../../lib/types/strategy-types";
 import {getStrategyInputToken} from "../../lib/utils";
 
-export interface VaultsData { [vaultAddress: Address]: Strategy & VaultData }
+export interface VaultsData { [vaultAddress: Address]: RldVault & VaultData }
 export interface VaultContextData {
   vaultsData: VaultsData
   isLoading: boolean
-  refetchForStrategy: (strategy: Strategy, userAddress: Address) => Promise<void>
+  refetchForStrategy: (strategy: RldVault, userAddress: Address) => Promise<void>
   refetchAll: () => Promise<void>
 }
 
@@ -39,7 +39,7 @@ const VaultDataContextProvider = ({children}: {
   const [vaultsData, setVaultsData] = useState<{ [vaultAddress: Address]: any }>({})
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  const refetchForStrategy = async (strategy: Strategy, userAddress: Address) => {
+  const refetchForStrategy = async (strategy: RldVault, userAddress: Address) => {
     const isEthVault = getStrategyInputToken(strategy) === ADDRESS_ZERO
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy, userAddress) : getMultiCallDataForErc20Vault(strategy, userAddress)
     const data = await structuredMulticall(strategy.strategyAddress, multiCallData)
@@ -50,18 +50,17 @@ const VaultDataContextProvider = ({children}: {
     })
   }
 
-
   const getVaultData = async () => {
     if (address) {
       const {
         erc20VaultCallData,
         ethVaultCallData
-      } = getVaultMultiCallData(singleStakeStrategies, address)
+      } = getVaultMultiCallData(allStrategies, address)
       const erc20DVaultDataCalls = structuredMulticallFromCallInfo(erc20VaultCallData)
       const ethVaultDataCalls = structuredMulticallFromCallInfo(ethVaultCallData)
 
       Promise.all([erc20DVaultDataCalls, ethVaultDataCalls]).then(data => {
-        const erc20VaultData = transformMultiCallData(data[0], erc20Strategies)
+        const erc20VaultData = transformMultiCallData(data[0], allErc20Strategies)
         const ethVaultData = transformMultiCallData(data[1], ethStrategies)
         setVaultsData({
           ...erc20VaultData,

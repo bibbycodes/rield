@@ -1,7 +1,7 @@
 import {useContext} from 'react';
 import {useAccount} from 'wagmi';
-import {SelectedStrategyContext, TransactionAction} from "../contexts/SelectedStrategyContext";
-import {SingleStakeStrategy} from "../model/strategy";
+import {SelectedVaultContext, TransactionAction} from "../contexts/SelectedVaultContext";
+import {SingleStakeVault} from "../model/strategy";
 import {useGetUserDepositedInVault} from '../hooks/useGetUserDepositedInVault';
 import {ConnectKitButton} from 'connectkit';
 import {VaultDataContext} from '../contexts/vault-data-context/VaultDataContext';
@@ -18,7 +18,7 @@ export default function Enable({
                                }: StrategyDetailsModalProps) {
   const {vaultAddress, coolDownPeriod} = strategy
   const {userStaked} = useGetUserDepositedInVault(strategy)
-  const {setAction, setSelectedStrategy} = useContext(SelectedStrategyContext)
+  const {setAction, setSelectedVault} = useContext(SelectedVaultContext)
   const {vaultsData} = useContext(VaultDataContext)
   const vaultData = vaultsData[vaultAddress]
   const lastPoolDepositTime = vaultData?.lastPoolDepositTime?.toNumber() ? vaultData.lastPoolDepositTime.toNumber() * 1000 : 0
@@ -29,7 +29,7 @@ export default function Enable({
 
   const handleClick = (action: TransactionAction) => {
     setAction(action)
-    setSelectedStrategy(strategy)
+    setSelectedVault(strategy)
     posthog?.capture(`STRATEGY_CARD:${action}`, {action, strategy: strategy.name})
     openModal()
   }

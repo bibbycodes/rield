@@ -1,33 +1,44 @@
-import {Strategy} from "../../lib/types/strategy-types";
-import * as HopPoolAbi from "../../resources/abis/HopPoolAbi.json";
+import {LpPoolVault, RldVault} from "../../lib/types/strategy-types";
+import ERC20Abi from "../../resources/abis/erc20.json";
 import {Address} from "wagmi";
-import * as HopTrackerAbi from "../../resources/abis/HopTrackerAbi.json";
+import {StructuredMulticallResult} from "./multicall-structured-result";
+import {isLpPoolStrategy} from "../../lib/utils";
 
-export const getLpVaultDataContext = (hopOutput: { hopPool: string, hopTracker: string },
-                                       strategy: Strategy) => {
-  const pool = {
-    abi: HopPoolAbi.abi,
-    address: hopOutput.hopPool as Address
+export const getLpVaultDataContext = (strategy: LpPoolVault, userAddress: Address) => {
+  const lp0Token = {
+    abi: ERC20Abi,
+    address: strategy.lp0TokenAddress
   }
-
-  const tracker = {
-    abi: HopTrackerAbi.abi,
-    address: hopOutput.hopTracker as Address
+  
+  const lp1Token = {
+    abi: ERC20Abi,
+    address: strategy.lp1TokenAddress
   }
-
-  const poolBalance = {
-    ...pool,
-    functionName: 'balanceOf',
-    args: [strategy.strategyAddress]
+  
+  const lp1TokenAllowance = {
+    ...lp1Token,
+    functionName: 'allowance',
+    args: [userAddress, strategy.vaultAddress]
   }
-
-  const virtualPrice = {
-    ...tracker,
-    functionName: 'getVirtualPrice',
+  
+  const lp0TokenAllowance = {
+    ...lp0Token,
+    functionName: 'allowance',
+    args: [userAddress, strategy.vaultAddress]
   }
 
   return [
-    poolBalance,
-    virtualPrice
+    lp1TokenAllowance,
+    lp0TokenAllowance
   ]
+}
+
+export const extractLpPoolStrategySpecificData = (strategy: RldVault, data: StructuredMulticallResult) => {
+  if (isLpPoolStrategy(strategy.type)) {
+    const strategyAsLpPoolStrategy = strategy as LpPoolVault;
+    return {
+      lp0TokenAllowance: data[strategyAsLpPoolStrategy.strategyAddress][strategyAsLpPoolStrategy.lp0TokenAddress as Address]['allowance'],
+      lp1TokenAllowance: data[strategyAsLpPoolStrategy.strategyAddress][strategyAsLpPoolStrategy.lp1TokenAddress as Address]['allowance'],
+    }
+  }
 }

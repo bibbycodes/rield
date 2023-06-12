@@ -2,8 +2,9 @@ import { Address, useContractWrite, usePrepareContractWrite, useWaitForTransacti
 import { AbiItem } from "web3-utils";
 import { BigNumber } from 'ethers';
 import { ADDRESS_ZERO } from '../lib/apy-getter-functions/cap';
+import {StrategyType} from "../lib/types/strategy-types";
 
-export interface useContractActionsProps {
+export interface SingleStakeVaultActionsProps {
   vaultAddress: Address,
   amount: BigNumber,
   abi: AbiItem[],
@@ -12,8 +13,7 @@ export interface useContractActionsProps {
   isApproved: boolean
 }
 
-export function useContractActions({vaultAddress, amount, abi, tokenAddress, isApproved}: useContractActionsProps) {
-
+export function useSingleStakeVaultActions({vaultAddress, amount, abi, tokenAddress, isApproved}: SingleStakeVaultActionsProps) {
   const {config: depositConfig} = usePrepareContractWrite({
     address: vaultAddress,
     functionName: "deposit",
@@ -22,7 +22,7 @@ export function useContractActions({vaultAddress, amount, abi, tokenAddress, isA
     args: tokenAddress === ADDRESS_ZERO ? [] : [amount],
     overrides: tokenAddress === ADDRESS_ZERO ? {value: amount} : undefined
   })
-
+  
   const {data: depositData, writeAsync: depositIntoVault} = useContractWrite(depositConfig)
   const {
     isLoading: isDepositLoading,

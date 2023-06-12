@@ -1,11 +1,12 @@
-import { useAccount } from "wagmi";
-import { BigNumber } from "ethers";
-import { useContext, useEffect, useState } from "react";
-import { singleStakeStrategies, SingleStakeStrategy } from "../model/strategy";
-import { TokenPricesContext } from "../contexts/TokenPricesContext";
-import { formatDollarAmount } from "../utils/formatters";
-import { formatUnits } from "ethers/lib/utils";
-import { VaultDataContext } from "../contexts/vault-data-context/VaultDataContext";
+import {useAccount} from "wagmi";
+import {BigNumber} from "ethers";
+import {useContext, useEffect, useState} from "react";
+import {singleStakeStrategies} from "../model/strategy";
+import {TokenPricesContext} from "../contexts/TokenPricesContext";
+import {formatDollarAmount} from "../utils/formatters";
+import {formatUnits} from "ethers/lib/utils";
+import {VaultDataContext} from "../contexts/vault-data-context/VaultDataContext";
+import {RldVault} from "../lib/types/strategy-types";
 
 export const useTotalDollarAmountDeposited = () => {
   const [totalDollarAmountDeposited, setTotalDollarAmountDeposited] = useState<string | null>(null);
@@ -19,7 +20,7 @@ export const useTotalDollarAmountDeposited = () => {
                                         price: number,
                                         pricePerShare: BigNumber,
                                         decimals: number,
-                                        strategy: Strategy,
+                                        strategy: RldVault,
                                         totalSupply: BigNumber,
                                         additionalData: any) => {
     let userStaked = formatUnits(balance.mul(pricePerShare).div(BigNumber.from(10).pow(decimals)), decimals)

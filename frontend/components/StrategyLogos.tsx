@@ -1,31 +1,31 @@
 import React from "react";
-import {LpPoolStrategy, SingleStakeStrategy, Strategy} from "../lib/types/strategy-types";
+import {LpPoolVault, SingleStakeVault, RldVault} from "../lib/types/strategy-types";
 import {isLpPoolStrategy, isSingleStakeStrategy} from "../lib/utils";
 import {TokenLogos} from "./TokenLogos";
 
-const getTokenLogoUrls = (strategy: Strategy): string[] => {
-  if (isSingleStakeStrategy(strategy)) {
-    return [(strategy as SingleStakeStrategy).tokenLogoUrl]
+const getTokenLogoUrls = (strategy: RldVault): string[] => {
+  if (isSingleStakeStrategy(strategy.type)) {
+    return [(strategy as SingleStakeVault).tokenLogoUrl]
   }
-  if (isLpPoolStrategy(strategy)) {
-    const strategyAsLpPoolStrategy = strategy as LpPoolStrategy
+  if (isLpPoolStrategy(strategy.type)) {
+    const strategyAsLpPoolStrategy = strategy as LpPoolVault
     const {lp0TokenLogoUrl, lp1TokenLogoUrl} = strategyAsLpPoolStrategy
     return [lp0TokenLogoUrl, lp1TokenLogoUrl]
   }
   return []
 }
 
-const getTokenSymbol = (strategy: Strategy) => {
-  if (isSingleStakeStrategy(strategy)) {
-    return (strategy as SingleStakeStrategy).tokenSymbol
+const getTokenSymbol = (strategy: RldVault) => {
+  if (isSingleStakeStrategy(strategy.type)) {
+    return (strategy as SingleStakeVault).tokenSymbol
   }
-  if (isLpPoolStrategy(strategy)) {
-    const {lp0TokenSymbol, lp1TokenSymbol} = strategy as LpPoolStrategy
+  if (isLpPoolStrategy(strategy.type)) {
+    const {lp0TokenSymbol, lp1TokenSymbol} = strategy as LpPoolVault
     return `${lp0TokenSymbol}/${lp1TokenSymbol}`
   }
 }
 
-export const StrategyLogos = ({strategy}: { strategy: Strategy }) => {
+export const StrategyLogos = ({strategy}: { strategy: RldVault }) => {
   const backgroundPrimaryDarker = 'bg-gradient-to-r from-backgroundPrimary to-[#10141F]'
   const tokenLogoUrls = getTokenLogoUrls(strategy)
   return (

@@ -1,7 +1,5 @@
 import {Address} from "wagmi";
 
-export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-
 export enum StrategyStatus {
   ACTIVE = 'ACTIVE',
   DISABLED = 'DISABLED',
@@ -15,7 +13,7 @@ export enum StrategyType {
   LP_POOL = 'LP_POOL',
   YGI = 'YGI',
 }
-export interface BaseStrategy {
+export interface BaseVault {
   id: number;
   name: string;
   protocol: string;
@@ -23,27 +21,33 @@ export interface BaseStrategy {
   strategyAddress: Address;
   protocolLogoUrl: string;
   description: string;
-  decimals: number;
   status: StrategyStatus;
   abi: any;
   type: StrategyType[];
   performanceFee: number
   protocolUrl: string;
+  hasWithdrawalSchedule?: boolean;
 }
-export interface SingleStakeStrategy extends BaseStrategy {
+export interface SingleStakeVault extends BaseVault {
+  decimals: number;
   tokenAddress: Address;
   tokenLogoUrl: string;
   coolDownPeriod: number;
   tokenUrl: string;
   coinGeckoId: string;
   tokenSymbol: string;
-  hasWithdrawalSchedule?: boolean;
 }
 
-export interface LpPoolStrategy extends BaseStrategy {
+export interface LpPoolVault extends BaseVault {
+  inputTokenDecimals: number,
+  lp0TokenDecimals: number,
+  lp1TokenDecimals: number,
   lp0TokenAddress: Address;
   lp1TokenAddress: Address;
   inputTokenAddress: Address;
+  inputTokenSymbol: string;
+  inputTokenLogoUrl: string;
+  inputTokenUrl: string;
   lp0TokenSymbol: string;
   lp1TokenSymbol: string;
   lp0TokenLogoUrl: string;
@@ -55,4 +59,4 @@ export interface LpPoolStrategy extends BaseStrategy {
   rewardTokensCoinGeckoIds: string[];
 }
 
-export type Strategy = SingleStakeStrategy | LpPoolStrategy
+export type RldVault = SingleStakeVault | LpPoolVault

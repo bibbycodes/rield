@@ -3,7 +3,7 @@ import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {abi as solidlyLpVaultAbi} from '../resources/abis/RldSolidlyLpVault.json';
 import {Address} from "wagmi";
 import {ADDRESS_ZERO} from "../lib/apy-getter-functions/cap";
-import {LpPoolStrategy, SingleStakeStrategy, Strategy, StrategyStatus, StrategyType} from "../lib/types/strategy-types";
+import {LpPoolVault, SingleStakeVault, RldVault, StrategyStatus, StrategyType} from "../lib/types/strategy-types";
 import {
   bfr,
   capEth,
@@ -18,7 +18,7 @@ import {
   ramArbUsdc
 } from '../lib/strategy-details';
 
-export const singleStakeStrategies: SingleStakeStrategy[] = [
+export const singleStakeStrategies: SingleStakeVault[] = [
   {
     id: 2,
     name: "RLD-CAP-USDC",
@@ -239,7 +239,7 @@ export const singleStakeStrategies: SingleStakeStrategy[] = [
   },
 ]
 
-export const LpStrategies: LpPoolStrategy[] = [
+export const LpStrategies: LpPoolVault[] = [
   {
     id: 10,
     name: "ARB_USDC",
@@ -252,12 +252,17 @@ export const LpStrategies: LpPoolStrategy[] = [
     vaultAddress: ramArbUsdc.vaultAddress as Address,
     strategyAddress: ramArbUsdc.strategyAddress as Address,
     protocolLogoUrl: "/ramses-logo.png",
+    inputTokenSymbol: 'USDC',
+    inputTokenLogoUrl: "/usdc-logo.svg",
     lp0TokenLogoUrl: "/arb-logo.png",
     lp1TokenLogoUrl: "/usdc-logo.svg",
     description: "Ramses",
+    inputTokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${ramArbUsdc.inputTokenAddress}`,
     lp0TokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${ramArbUsdc.lp0Address}`,
     lp1TokenUrl: `https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=${ramArbUsdc.lp1Address}`,
-    decimals: 18,
+    inputTokenDecimals: 6,
+    lp0TokenDecimals: 18,
+    lp1TokenDecimals: 6,
     status: StrategyStatus.ACTIVE,
     lp0CoinGeckoId: "arbitrum",
     lp1CoinGeckoId: "usd-coin",
@@ -279,11 +284,14 @@ export const erc20LpStrategies = LpStrategies
   .filter(strategy => strategy.lp0TokenAddress !== ADDRESS_ZERO && strategy.lp1TokenAddress !== ADDRESS_ZERO)
   .filter(strategy => strategy.status !== StrategyStatus.DISABLED)
 
+console.log({erc20LpStrategies})
 export const ethLpStrategies = LpStrategies
   .filter(strategy => strategy.lp0TokenAddress === ADDRESS_ZERO || strategy.lp1TokenAddress === ADDRESS_ZERO)
   .filter(strategy => strategy.status !== StrategyStatus.DISABLED)
 
-export const allStrategies: Strategy[] = [...erc20Strategies, ...ethStrategies, ...erc20LpStrategies]
+export const allErc20Strategies: RldVault[] = [...erc20Strategies, ...erc20LpStrategies]
+
+export const allStrategies: RldVault[] = [...erc20Strategies, ...ethStrategies, ...erc20LpStrategies]
 
 singleStakeStrategies.reverse()
 

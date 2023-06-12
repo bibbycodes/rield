@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers';
-import { TransactionAction } from '../contexts/SelectedStrategyContext';
+import { TransactionAction } from '../contexts/SelectedVaultContext';
 import { parseUnits } from 'ethers/lib/utils';
 
 export const useCalculateSendAmount = (visibleAmount: string, action: TransactionAction, decimals: number, userStaked: BigNumber, vaultTokenBalanceBn: BigNumber | undefined) => {
@@ -9,8 +9,8 @@ export const useCalculateSendAmount = (visibleAmount: string, action: Transactio
     || (action === 'withdraw' && userStaked?.eq(BigNumber.from(0)))) {
     return BigNumber.from(0)
   }
-
-  if (action === 'withdraw') {
+  
+  if (action === 'withdraw' || action === 'withdrawLpTokens') {
     const multiplier = BigNumber.from(10).pow(decimals)
     const withdrawAmountInWant = parseUnits(visibleAmount.toString(), decimals)
     const ratioOfWithdrawAmountToStakedAmount = withdrawAmountInWant.mul(multiplier).div(userStaked)

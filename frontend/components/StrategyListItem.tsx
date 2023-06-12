@@ -6,11 +6,11 @@ import NonSSRWrapper from './NonSSRWrapper';
 import {cardGradient} from "../pages";
 import Accordion from '@mui/material/Accordion';
 import {AccordionDetails, AccordionSummary} from "@mui/material";
-import {Strategy, StrategyStatus} from "../lib/types/strategy-types";
+import {RldVault, StrategyStatus} from "../lib/types/strategy-types";
 import {useStrategyAccordianListItemHooks} from "../hooks/component-hooks/useStrategyAccordianListItemHooks";
 
 interface StrategyListItemProps {
-  strategy: Strategy
+  strategy: RldVault
   openModal: (isOpen: boolean) => void
 }
 

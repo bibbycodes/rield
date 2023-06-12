@@ -1,4 +1,4 @@
-import {SelectedStrategyContextProvider} from "../contexts/SelectedStrategyContext";
+import {SelectedVaultContextProvider} from "../contexts/SelectedVaultContext";
 import {TokenPricesContextProvider} from "../contexts/TokenPricesContext";
 import {ReactNode, useEffect} from "react";
 import {APYsContextProvider} from "../contexts/ApyContext";
@@ -51,9 +51,9 @@ export const Providers = ({children}: { children: ReactNode }) => {
               <ToastContextProvider>
                 <TokenPricesContextProvider>
                   <APYsContextProvider>
-                    <SelectedStrategyContextProvider>
+                    <SelectedVaultContextProvider>
                       {children}
-                    </SelectedStrategyContextProvider>
+                    </SelectedVaultContextProvider>
                   </APYsContextProvider>
                 </TokenPricesContextProvider>
               </ToastContextProvider>
