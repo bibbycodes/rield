@@ -141,24 +141,44 @@ describe("RAM ERC20 Strategy", () => {
       lpToken
     };
   }
+  
+  describe('Variables', () => {
+    it("Deployer owns the vault and strategy", async () => {
+      const {deployer, vault, strategy} = await loadFixture(setupFixture);
+      expect(await vault.owner()).to.equal(deployer.address);
+      expect(await strategy.owner()).to.equal(deployer.address);
+    })
+  
+    it("Want is the LP token address", async () => {
+      const {vault, strategy, lpToken} = await loadFixture(setupFixture);
+      expect(await vault.want()).to.equal(lpToken.address);
+      expect(await strategy.want()).to.equal(lpToken.address);
+    })
+  
+    it("Vault decimals is the same as the token decimals", async () => {
+      const {vault, lpToken} = await loadFixture(setupFixture);
+      expect(await vault.decimals()).to.equal(await lpToken.decimals());
+    })
+    
+    it("Lp0, Lp1, rewardToken, feeToken, inputToken are set correctly", async () => {
+      const {usdtToken, ramToken, usdcToken, strategy, arbToken, lpToken} = await loadFixture(setupFixture);
+      expect(await strategy.lp0()).to.equal(arbToken.address);
+      expect(await strategy.lp1()).to.equal(usdtToken.address);
+      expect(await strategy.reward()).to.equal(ramToken.address);
+      expect(await strategy.fee()).to.equal(usdcToken.address);
+      expect(await strategy.want()).to.equal(lpToken.address);
+    })
 
-
-  it("Deployer owns the vault and strategy", async () => {
-    const {deployer, vault, strategy} = await loadFixture(setupFixture);
-    expect(await vault.owner()).to.equal(deployer.address);
-    expect(await strategy.owner()).to.equal(deployer.address);
+    it("Lp0, Lp1, rewardToken, feeToken, inputToken are accessible from vault", async () => {
+      const {vault, usdtToken, ramToken, usdcToken, arbToken, lpToken} = await loadFixture(setupFixture);
+      expect(await vault.lp0Token()).to.equal(arbToken.address);
+      expect(await vault.lp1Token()).to.equal(usdtToken.address);
+      expect(await vault.rewardToken()).to.equal(ramToken.address);
+      expect(await vault.feeToken()).to.equal(usdcToken.address);
+      expect(await vault.want()).to.equal(lpToken.address);
+    })
   })
 
-  it("Want is the LP token address", async () => {
-    const {vault, strategy, lpToken} = await loadFixture(setupFixture);
-    expect(await vault.want()).to.equal(lpToken.address);
-    expect(await strategy.want()).to.equal(lpToken.address);
-  })
-
-  it("Vault decimals is the same as the token decimals", async () => {
-    const {vault, lpToken} = await loadFixture(setupFixture);
-    expect(await vault.decimals()).to.equal(await lpToken.decimals());
-  })
 
   describe("Deposits", () => {
     describe("Single Token Deposit", () => {

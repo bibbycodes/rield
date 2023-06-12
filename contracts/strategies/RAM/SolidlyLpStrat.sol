@@ -21,8 +21,8 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
     address public feeToken; //eg WETH -  The token dev fees are received in
     address public rewardToken; //eg RAM - The token that is rewarded for providing liquidity
     address public wantToken; //LP Token - The token representing your liquidity in the farm
-    address public lpToken0; //eg WETH - The first token in the LP pair
-    address public lpToken1; //eg ARB - The second token in the LP pair
+    address public lp0Token; //eg WETH - The first token in the LP pair
+    address public lp1Token; //eg ARB - The second token in the LP pair
     address public inputToken; //eg WETH || USDC - The token used for single deposits
 
     // Third party contracts
@@ -116,8 +116,8 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
         rewardToken = rewardTokenToFeeTokenRoute[0].from;
         inputToken = _inputToken;
         feeToken = rewardTokenToFeeTokenRoute[rewardTokenToFeeTokenRoute.length - 1].to;
-        lpToken0 = rewardTokenToLp0TokenRoute[rewardTokenToLp0TokenRoute.length - 1].to;
-        lpToken1 = rewardTokenToLp1TokenRoute[rewardTokenToLp1TokenRoute.length - 1].to;
+        lp0Token = rewardTokenToLp0TokenRoute[rewardTokenToLp0TokenRoute.length - 1].to;
+        lp1Token = rewardTokenToLp1TokenRoute[rewardTokenToLp1TokenRoute.length - 1].to;
         rewards.push(rewardToken);
         _giveAllowances();
     }
@@ -151,14 +151,14 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
         require(lp0Bal > 0, '!lp0Bal');
         require(lp1Bal > 0, '!lp1Bal');
         // TODO, do we to get a quote for this?
-        ISolidlyRouter(router).addLiquidity(lpToken0, lpToken1, isStable, lp0Bal, lp1Bal, 1, 1, address(this), block.timestamp);
+        ISolidlyRouter(router).addLiquidity(lp0Token, lp1Token, isStable, lp0Bal, lp1Bal, 1, 1, address(this), block.timestamp);
         depositWant();
     }
 
     function startWithdraw(uint256 amount) internal returns (uint256, uint256, uint256) {
         uint256 wantBal = IERC20(wantToken).balanceOf(address(this));
-        uint256 lp0BalBefore = IERC20(lpToken0).balanceOf(address(this));
-        uint256 lp1BalBefore = IERC20(lpToken1).balanceOf(address(this));
+        uint256 lp0BalBefore = IERC20(lp0Token).balanceOf(address(this));
+        uint256 lp1BalBefore = IERC20(lp1Token).balanceOf(address(this));
 
         if (wantBal < amount) {
             IGauge(gauge).withdraw(amount - wantBal);
@@ -169,9 +169,9 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
             wantBal = amount;
         }
 
-        removeLiquidity(lpToken0, lpToken1, isStable, amount, 0, 0, 0);
-        uint256 lp0BalAfter = IERC20(lpToken0).balanceOf(address(this));
-        uint256 lp1BalAfter = IERC20(lpToken1).balanceOf(address(this));
+        removeLiquidity(lp0Token, lp1Token, isStable, amount, 0, 0, 0);
+        uint256 lp0BalAfter = IERC20(lp0Token).balanceOf(address(this));
+        uint256 lp1BalAfter = IERC20(lp1Token).balanceOf(address(this));
 
         // Don't distribute any tokens that were sent to the contract by accident
         uint256 lp0TransferAmount = lp0BalAfter - lp0BalBefore;
@@ -193,8 +193,8 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
 
     function withdrawAsLpTokens(uint256 wantAmount) external onlyVault {
         (uint256 lp0TransferAmount, uint256 lp1TransferAmount, uint256 wantBal) = startWithdraw(wantAmount);
-        IERC20(lpToken0).safeTransfer(vault, lp0TransferAmount);
-        IERC20(lpToken1).safeTransfer(vault, lp1TransferAmount);
+        IERC20(lp0Token).safeTransfer(vault, lp0TransferAmount);
+        IERC20(lp1Token).safeTransfer(vault, lp1TransferAmount);
         emit Withdraw(wantBal);
     }
 
@@ -253,11 +253,11 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
 
         // NB stable pools use a different model for LP compared to volatile
         if (isStable) {
-            uint256 lp0Decimals = 10 ** ERC20(lpToken0).decimals();
-            uint256 lp1Decimals = 10 ** ERC20(lpToken1).decimals();
+            uint256 lp0Decimals = 10 ** ERC20(lp0Token).decimals();
+            uint256 lp1Decimals = 10 ** ERC20(lp1Token).decimals();
             uint256 out0 = ISolidlyRouter(router).getAmountsOut(lp0Amt, tokenToLp0Route)[tokenToLp0Route.length] * 1e18 / lp0Decimals;
             uint256 out1 = ISolidlyRouter(router).getAmountsOut(lp1Amt, tokenToLp1Route)[tokenToLp1Route.length] * 1e18 / lp1Decimals;
-            (uint256 amountA, uint256 amountB,) = ISolidlyRouter(router).quoteAddLiquidity(lpToken0, lpToken1, isStable, out0, out1);
+            (uint256 amountA, uint256 amountB,) = ISolidlyRouter(router).quoteAddLiquidity(lp0Token, lp1Token, isStable, out0, out1);
             amountA = amountA * 1e18 / lp0Decimals;
             amountB = amountB * 1e18 / lp1Decimals;
             uint256 ratio = out0 * 1e18 / out1 * amountB / amountA;
@@ -266,19 +266,19 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
         }
 
         // Swap reward token for lp0 token
-        if (lpToken0 != rewardToken) {
+        if (lp0Token != rewardToken) {
             swapToken(lp0Amt, tokenToLp0Route);
         }
 
         // Swap reward token for lp1 token
-        if (lpToken1 != rewardToken) {
+        if (lp1Token != rewardToken) {
             swapToken(lp1Amt, tokenToLp1Route);
         }
 
-        uint256 lp0Bal = IERC20(lpToken0).balanceOf(address(this));
-        uint256 lp1Bal = IERC20(lpToken1).balanceOf(address(this));
+        uint256 lp0Bal = IERC20(lp0Token).balanceOf(address(this));
+        uint256 lp1Bal = IERC20(lp1Token).balanceOf(address(this));
         // Add liquidity for lp tokens
-        addLiquidity(lpToken0, lpToken1, isStable, lp0Bal, lp1Bal, 1, 1, block.timestamp);
+        addLiquidity(lp0Token, lp1Token, isStable, lp0Bal, lp1Bal, 1, 1, block.timestamp);
     }
 
     // calculate the total underlying 'want' held by the strat.
@@ -298,7 +298,7 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
     }
 
     function lpTokenBalances() public view returns (uint256, uint256) {
-        return (IERC20(lpToken0).balanceOf(address(this)), IERC20(lpToken1).balanceOf(address(this)));
+        return (IERC20(lp0Token).balanceOf(address(this)), IERC20(lp1Token).balanceOf(address(this)));
     }
 
     // returns rewards unharvested
@@ -350,17 +350,16 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
         IERC20(wantToken).safeApprove(router, type(uint).max);
         IERC20(feeToken).safeApprove(router, 0);
         IERC20(feeToken).safeApprove(router, type(uint).max);
-        IERC20(lpToken0).safeApprove(router, 0);
-        IERC20(lpToken0).safeApprove(router, type(uint).max);
-
-        IERC20(lpToken1).safeApprove(router, 0);
-        IERC20(lpToken1).safeApprove(router, type(uint).max);
+        IERC20(lp0Token).safeApprove(router, 0);
+        IERC20(lp0Token).safeApprove(router, type(uint).max);
+        IERC20(lp1Token).safeApprove(router, 0);
+        IERC20(lp1Token).safeApprove(router, type(uint).max);
     }
 
     function _removeAllowances() internal {
         IERC20(rewardToken).safeApprove(router, 0);
-        IERC20(lpToken0).safeApprove(router, 0);
-        IERC20(lpToken1).safeApprove(router, 0);
+        IERC20(lp0Token).safeApprove(router, 0);
+        IERC20(lp1Token).safeApprove(router, 0);
         IERC20(inputToken).safeApprove(router, 0);
         IERC20(feeToken).safeApprove(router, 0);
         IERC20(wantToken).safeApprove(gauge, 0);
@@ -384,6 +383,30 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
 
     function setTokenId(uint256 _tokenId) external onlyOwner {
         tokenId = _tokenId;
+    }
+
+    function want() external view returns (address) {
+        return wantToken;
+    }
+
+    function reward() external view returns (address) {
+        return rewardToken;
+    }
+
+    function lp0() external view returns (address) {
+        return lp0Token;
+    }
+
+    function lp1() external view returns (address) {
+        return lp1Token;
+    }
+
+    function input() external view returns (address) {
+        return inputToken;
+    }
+    
+    function fee() external view returns (address) {
+        return feeToken;
     }
 
     function stop() public onlyOwner {
