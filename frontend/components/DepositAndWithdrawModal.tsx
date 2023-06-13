@@ -23,7 +23,7 @@ import { useApproveToken } from '../hooks/useApproveToken';
 import { bgColor } from "../pages";
 import LoadingButton from './LoadingButton';
 import { ZERO_ADDRESS } from '../model/strategy';
-import {usePostHog} from "posthog-js/react";
+import { usePostHog } from "posthog-js/react";
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -60,7 +60,12 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
   const {
     approve,
     isLoading: approveLoading
-  } = useApproveToken(tokenAddress, vaultAddress, userAddress, selectedStrategy, refetchForStrategy);
+  } = useApproveToken(tokenAddress, vaultAddress, async () => {
+    if (userAddress) {
+      await refetchForStrategy(selectedStrategy, userAddress)
+    }
+    posthog?.capture('TX_MODAL:APPROVE', {strategy: selectedStrategy.name})
+  });
   const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedStrategy)
   const {apys, isLoading} = useContext(APYsContext)
   const apy = apys?.[strategyAddress]

@@ -1,4 +1,12 @@
 {
   "vaultAddress": "0x5227db0d58ddA6d621104F5f08004B98792710c1",
-  "tokenAddress": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
+  "tokenAddress": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+  "ygiComponents": [
+    {
+      "vault": "0x017E26857dE7dF6De1702230187526D00860D428"
+    },
+    {
+      "vault": "0xCFF2cE558cb4098019788C28F54AA272dBE62FBE"
+    }
+  ]
 }

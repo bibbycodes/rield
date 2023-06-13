@@ -7,17 +7,26 @@ import { ConnectKitButton } from 'connectkit';
 import NonSSRWrapper from './NonSSRWrapper';
 import posthog from 'posthog-js';
 import { SelectedYgiContext, TransactionAction } from '../contexts/SelectedYgiContext';
+import { useGetUserDepositedInYgi } from '../hooks/useGetUserDepositedInYgi';
+import { BigNumber, ethers } from 'ethers';
+import { formatDollarAmount } from '../utils/formatters';
 
 export default function YgiCard({ygi, openModal}: { ygi: Ygi, openModal: (isOpen: boolean) => void }) {
   const {isConnected} = useAccount()
   const {setAction, setSelectedYgi} = useContext(SelectedYgiContext)
   const totalAllocation = ygi.components.reduce((acc, component) => acc + component.allocation, 0);
+  const {userStaked} = useGetUserDepositedInYgi(ygi)
 
   const handleClick = (action: TransactionAction) => {
     setAction(action)
     setSelectedYgi(ygi)
     posthog?.capture(`STRATEGY_CARD:${action}`, {action, ygi: ygi.name})
     openModal(true)
+  }
+
+  const getUserStakedInDollars = (amount: BigNumber) => {
+    const balanceInUsd = ethers.utils.formatUnits(amount, 18);
+    return formatDollarAmount(+balanceInUsd, 2)
   }
 
   const handleConnect = (show: any) => {
@@ -42,7 +51,7 @@ export default function YgiCard({ygi, openModal}: { ygi: Ygi, openModal: (isOpen
       <div className="flex">
         <div className="flex flex-col my-6 flex-grow">
           <p className="text-xs text-tSecondary">Staked</p>
-          <p className={`text-2xl text-tPrimary`}>{ygi.status === 'ACTIVE' ? `$${1000}` : '-'}</p>
+          <p className={`text-2xl text-tPrimary`}>{ygi.status === 'ACTIVE' ? `$${getUserStakedInDollars(userStaked)}` : '-'}</p>
         </div>
 
         <div className="flex flex-col my-6">

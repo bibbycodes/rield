@@ -49,10 +49,10 @@ export const Providers = ({children}: { children: ReactNode }) => {
       <WagmiConfig client={client}>
         <ConnectKitProvider>
           <ThemeProvider theme={muiTheme}>
-            <VaultDataContextProvider>
-              <YgiDataContextProvider>
-                <ToastContextProvider>
-                  <TokenPricesContextProvider>
+            <ToastContextProvider>
+              <TokenPricesContextProvider>
+                <VaultDataContextProvider>
+                  <YgiDataContextProvider>
                     <APYsContextProvider>
                       <SelectedStrategyContextProvider>
                         <SelectedYgiContextProvider>
@@ -60,10 +60,10 @@ export const Providers = ({children}: { children: ReactNode }) => {
                         </SelectedYgiContextProvider>
                       </SelectedStrategyContextProvider>
                     </APYsContextProvider>
-                  </TokenPricesContextProvider>
-                </ToastContextProvider>
-              </YgiDataContextProvider>
-            </VaultDataContextProvider>
+                  </YgiDataContextProvider>
+                </VaultDataContextProvider>
+              </TokenPricesContextProvider>
+            </ToastContextProvider>
           </ThemeProvider>
         </ConnectKitProvider>
       </WagmiConfig>

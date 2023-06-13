@@ -8,6 +8,7 @@ import * as hopUsdc from "../resources/vault-details/deploy_hop_usdc-output.json
 import * as hopUsdt from "../resources/vault-details/deploy_hop_usdt-output.json";
 import * as hopEth from "../resources/vault-details/deploy_hop_eth-output.json";
 import * as hopDai from "../resources/vault-details/deploy_hop_dai-output.json";
+import * as perpetualYgi from "../resources/vault-details/deploy_ygi_perps-output.json";
 import {abi} from '../resources/abis/RldTokenVault.json';
 import {abi as ethVaultAbi} from '../resources/abis/BeefyETHVault.json';
 import {Address} from "wagmi";
@@ -256,6 +257,50 @@ export const strategies: Strategy[] = [
     type: "Auto Compound",
     performanceFee: 5
   },
+
+  {
+    id: 10,
+    name: "RLD-GMX",
+    tokenSymbol: "GMX",
+    tokenAddress: gmx.tokenAddress as Address,
+    vaultAddress: perpetualYgi.ygiComponents[0].vault as Address,
+    protocol: "GMX.io",
+    strategyAddress: gmx.strategyAddress as Address,
+    protocolLogoUrl: "/gmx-logo.svg",
+    tokenLogoUrl: "/gmx-logo.svg",
+    description: "GMX Token is a governance token for the GMD protocol. It is used to vote on protocol changes and to earn rewards from the GMD protocol.",
+    protocolUrl: "https://gmx.io/#/",
+    tokenUrl: `https://app.gmx.io/#/buy_gmx`,
+    decimals: 18,
+    status: 'HIDDEN',
+    abi: abi,
+    coinGeckoId: "gmx",
+    type: "Autocompound",
+    performanceFee: 5,
+    coolDownPeriod: 0
+  },
+  {
+    id: 11,
+    name: "GNS",
+    protocol: "Gains Network",
+    tokenSymbol: "GNS",
+    tokenAddress: gns.tokenAddress as Address,
+    vaultAddress: perpetualYgi.ygiComponents[1].vault as Address,
+    strategyAddress: gns.strategyAddress as Address,
+    protocolLogoUrl: "/gns-logo.png",
+    tokenLogoUrl: "/gns-logo.png",
+    description: "Gains network is a decentralized perpetual platform built on arbitrum.",
+    protocolUrl: "https://gains.trade/",
+    tokenUrl: `https://traderjoexyz.com/arbitrum/trade?inputCurrency=ETH&outputCurrency=0x18c11fd286c5ec11c3b683caa813b77f5163a122`,
+    decimals: 18,
+    status: 'HIDDEN',
+    abi: abi,
+    coinGeckoId: "gains-network",
+    type: "Auto Compound",
+    performanceFee: 5,
+    coolDownPeriod: 0
+  }
+
 ]
 export const erc20Strategies = strategies
   .filter(strategy => strategy.tokenAddress !== ADDRESS_ZERO)

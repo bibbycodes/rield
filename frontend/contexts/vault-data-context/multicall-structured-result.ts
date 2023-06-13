@@ -1,8 +1,9 @@
-import {multicall} from '@wagmi/core';
-import {Abi} from 'abitype';
-import {Address} from 'wagmi';
-import {Strategy} from "../../model/strategy";
-import {extractStrategySpecificData} from "./utils";
+import { multicall } from '@wagmi/core';
+import { Abi } from 'abitype';
+import { Address } from 'wagmi';
+import { Strategy } from "../../model/strategy";
+import { extractStrategySpecificData } from "./utils";
+import { Ygi } from '../../model/ygi';
 
 export type StructuredMulticallResult = {
   [address: Address]: {
@@ -17,12 +18,24 @@ export async function structuredMulticall<TAbi extends Abi | readonly unknown[],
 }[]>(prefix: Address, contracts: any): Promise<StructuredMulticallResult> {
   const data = await multicall({contracts} as any)
 
+  let collisionObjects: any = {}
   let i = 0
   return contracts.reduce((acc: any, contract: any) => {
     if (!acc[prefix][contract.address]) {
       acc[prefix][contract.address] = {}
     }
-    acc[prefix][contract.address][contract.functionName] = data[i]
+    if (acc[prefix][contract.address][contract.functionName]) {
+      if (collisionObjects[prefix + contract.address + contract.functionName]) {
+        acc[prefix][contract.address][contract.functionName] =
+          [...acc[prefix][contract.address][contract.functionName] as any, data[i]]
+      } else {
+        acc[prefix][contract.address][contract.functionName] =
+          [acc[prefix][contract.address][contract.functionName], data[i]]
+        collisionObjects[prefix + contract.address + contract.functionName] = true
+      }
+    } else {
+      acc[prefix][contract.address][contract.functionName] = data[i]
+    }
     i++
     return acc
   }, {[prefix]: {}} as StructuredMulticallResult)
@@ -39,6 +52,7 @@ export async function structuredMulticallFromCallInfo<TAbi extends Abi | readonl
     }
   );
 
+  let collisionObjects: any = {}
   let i = 0
   return Array.from(callInfos.entries())
     .reduce((acc: StructuredMulticallResult, callInfo) => {
@@ -51,14 +65,25 @@ export async function structuredMulticallFromCallInfo<TAbi extends Abi | readonl
         if (!acc[strategyAddr][contract.address]) {
           acc[strategyAddr][contract.address] = {}
         }
-        acc[strategyAddr][contract.address][contract.functionName] = data[i]
+        if (acc[strategyAddr][contract.address][contract.functionName]) {
+          if (collisionObjects[strategyAddr + contract.address + contract.functionName]) {
+            acc[strategyAddr][contract.address][contract.functionName] =
+              [...acc[strategyAddr][contract.address][contract.functionName] as any, data[i]]
+          } else {
+            acc[strategyAddr][contract.address][contract.functionName] =
+              [acc[strategyAddr][contract.address][contract.functionName], data[i]]
+            collisionObjects[strategyAddr + contract.address + contract.functionName] = true
+          }
+        } else {
+          acc[strategyAddr][contract.address][contract.functionName] = data[i]
+        }
         i++
       });
       return acc;
     }, {} as StructuredMulticallResult)
 }
 
-export const transformMultiCallData = (data: any, strategies: Strategy[]) => {
+export const transformStrategyMultiCallData = (data: any, strategies: Strategy[]) => {
   return strategies.reduce((acc, strategy) => {
     return {
       ...acc,
@@ -75,6 +100,20 @@ export const transformMultiCallData = (data: any, strategies: Strategy[]) => {
         lastPoolDepositTime: data[strategy.strategyAddress][strategy.strategyAddress]['lastDepositTime'],
         lastPauseTime: data[strategy.strategyAddress][strategy.strategyAddress]['lastPauseTime'],
         additionalData: extractStrategySpecificData(strategy, data)
+      }
+    }
+  }, {} as any)
+}
+
+export const transformYgiMultiCallData = (data: any, ygis: Ygi[]) => {
+  return ygis.reduce((acc, ygi) => {
+    return {
+      ...acc,
+      [ygi.vaultAddress]: {
+        ...ygi,
+        inputToken: data[ygi.vaultAddress][ygi.vaultAddress]['ygiInputToken'],
+        ygiComponents: data[ygi.vaultAddress][ygi.vaultAddress]['ygiComponents'],
+        allowance: data[ygi.vaultAddress]?.[ygi.tokenAddress]?.['allowance'],
       }
     }
   }, {} as any)

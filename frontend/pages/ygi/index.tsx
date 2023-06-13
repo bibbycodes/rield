@@ -1,13 +1,10 @@
 import { ygis } from '../../model/ygi';
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import YgiCard from '../../components/YgiCard';
 import DepositAndWithdrawModal from '../../components/ygi/DepositAndWithdrawModal';
-import { YgiDataContext } from '../../contexts/vault-data-context/YgiDataContext';
 
 export default function () {
   const [isStrategyDetailsModalOpen, setIsStrategyDetailsModalOpen] = useState<boolean>(false);
-  const {refetchAll} = useContext(YgiDataContext)
-  refetchAll()
 
   return <>
     {ygis

@@ -23,6 +23,7 @@ import { ZERO_ADDRESS } from '../../model/strategy';
 import { usePostHog } from "posthog-js/react";
 import { SelectedYgiContext } from '../../contexts/SelectedYgiContext';
 import { useGetUserDepositedInYgi } from '../../hooks/useGetUserDepositedInYgi';
+import { YgiDataContext } from '../../contexts/vault-data-context/YgiDataContext';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -55,15 +56,17 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: YgiModalPro
   const tokenBalanceBN = tokenBalanceData?.value
   const vaultTokenBalanceBn = vaultTokenBalanceData?.value
   const [visibleAmount, setVisibleAmount] = useState<string>('0')
-  const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
-  // const {
-  //   approve,
-  //   isLoading: approveLoading
-  // } = useApproveToken(tokenAddress, vaultAddress, userAddress, selectedYgi, refetchForStrategy);
+  const {ygisData, refetchForYgi} = useContext(YgiDataContext)
+  const {
+    approve,
+    isLoading: approveLoading
+  } = useApproveToken(tokenAddress, vaultAddress, async () => {
+    // todo: refetchForYgi
+  })
   const {userStaked, fetchUserStaked} = useGetUserDepositedInYgi(selectedYgi)
   const {apys, isLoading} = useContext(APYsContext)
   // const apy = apys?.[strategyAddress]
-  const isApproved = visibleAmount < '0' || vaultsData[vaultAddress]?.allowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals))
+  const isApproved = visibleAmount < '0' || ygisData[vaultAddress]?.allowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals))
   const showApprove = action === 'deposit' && tokenAddress !== ZERO_ADDRESS && !isApproved
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
   const amount = useCalculateSendAmount(visibleAmount, action, decimals, userStaked, vaultTokenBalanceBn)
@@ -235,19 +238,19 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: YgiModalPro
           </Box>
 
           <Box className={`flex flex-row justify-between`}>
-            {/*{showApprove &&*/}
-            {/*    <LoadingButton loading={approveLoading}*/}
-            {/*                   className={`w-full h-16 mt-6 uppercase rounded-lg text-tPrimary w-full`}*/}
-            {/*                   onClick={() => approve()}>*/}
-            {/*        <button*/}
-            {/*            className={`bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient*/}
-            {/*            hover:from-accentSecondary hover:to-accentSecondaryGradient */}
-            {/*            rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}*/}
-            {/*            onClick={() => approve()}*/}
-            {/*        >Approve*/}
-            {/*        </button>*/}
-            {/*    </LoadingButton>*/}
-            {/*}*/}
+            {showApprove &&
+                <LoadingButton loading={approveLoading}
+                               className={`w-full h-16 mt-6 uppercase rounded-lg text-tPrimary w-full`}
+                               onClick={() => approve()}>
+                    <button
+                        className={`bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient
+                        hover:from-accentSecondary hover:to-accentSecondaryGradient 
+                        rounded-lg text-tPrimary w-full h-16 mt-6 hover:bg-accentSecondary uppercase`}
+                        onClick={() => approve()}
+                    >Approve
+                    </button>
+                </LoadingButton>
+            }
             {!showApprove &&
                 <button
                     className={`bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient

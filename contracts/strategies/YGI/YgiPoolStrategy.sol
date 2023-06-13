@@ -28,6 +28,7 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
     uint256 public totalAllocation;
 
     YgiComponent[] public ygiComponents;
+    address[] public vaultArchive;
 
     uint256 public lastPoolDepositTime;
     mapping(address => mapping(address => uint256)) public userToVaultToAmount;
@@ -109,8 +110,10 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
         );
         totalAllocation += allocation;
         ygiComponents.push(ygiComponent);
+        vaultArchive.push(vaultAddress);
         _giveAllowance(uniRouter, inputToken);
         _giveAllowance(vaultAddress, inputToken);
+        // todo: mint vault tokens (A+B+C)
     }
 
     function deregisterYgiComponent(
@@ -143,12 +146,46 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
         }
     }
 
+    function getSyncedBalances(address userAddress) public view returns (mapping(address => uint256)) {
+        mapping(address => uint256) syncedVaultAmounts;
+        uint256 runningTotal;
+        bool hasDeployedPrev;
+        for (uint i = 0; i < vaultArchive.length; i++) {
+            uint256 balance = userToVaultToAmount[userAddress][vaultArchive[i]];
+            if (balance > 0) {
+                hasDeployedPrev = true;
+                syncedVaultAmounts[vaultArchive[i]] = balance;
+                runningTotal += balance;
+            } else if (hasDeployedPrev && balance == 0) {
+                syncedVaultAmounts[vaultArchive[i]] = runningTotal;
+            }
+        }
+        return syncedVaultAmounts;
+    }
+
+    function syncBalances(address userAddress) public {
+        uint256 runningTotal;
+        bool hasDeployedPrev;
+        for (uint i = 0; i < vaultArchive.length; i++) {
+            uint256 balance = userToVaultToAmount[userAddress][vaultArchive[i]];
+            if (balance > 0) {
+                hasDeployedPrev = true;
+                runningTotal += balance;
+            } else if (hasDeployedPrev && balance == 0) {
+                userToVaultToAmount[userAddress] = runningTotal;
+            } else {
+                return;
+            }
+        }
+    }
+
     /**
      * @dev The entrypoint of funds into the system. People deposit with this function
      * into the vault. The vault is then in charge of sending funds into the strategy.
      */
     function deposit(uint _totalAmount) external nonReentrant whenNotStopped {
         IERC20(ygiInputToken).safeTransferFrom(msg.sender, address(this), _totalAmount);
+        syncBalances(msg.sender);
         for (uint i = 0; i < ygiComponents.length; i++) {
             uint256 allocation = ygiComponents[i].allocation;
             uint256 amount = (_totalAmount * (allocation * MULTIPLIER / totalAllocation)) / MULTIPLIER;
@@ -192,6 +229,7 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
      */
     function withdraw(uint256 _ratio, bool skipOnWithdrawFail, bool withdrawIndividual) external nonReentrant {
         require(_ratio <= DIVISOR, "Ratio too high");
+        syncBalances(msg.sender);
         uint256 withdrawnTotalAmount = 0;
         for (uint i = 0; i < ygiComponents.length; i++) {
             IRldBaseVault vault = IRldBaseVault(ygiComponents[i].vault);

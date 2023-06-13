@@ -3,6 +3,7 @@ import { Address } from "wagmi";
 import * as RldVault from "../../resources/abis/RldTokenVault.json";
 import { ADDRESS_ZERO } from "../../lib/apy-getter-functions/cap";
 import * as RldEthVault from "../../resources/abis/BeefyETHVault.json";
+import * as YgiPoolStrategy from "../../resources/abis/YgiPoolStrategy.json";
 import * as genericStrategy from "../../resources/abis/CapSingleStakeStrategy.json";
 import * as erc20 from "../../resources/abis/erc20.json";
 import * as hopUsdc from "../../resources/vault-details/deploy_hop_usdc-output.json";
@@ -31,7 +32,10 @@ export interface VaultData {
 }
 
 export interface YgiData {
-  ygiBalance: BigNumber
+  [vault: Address]: {
+    allowance: BigNumber
+    userDeposits: { [ygiVaultAddress: Address]: BigNumber }
+  }
 }
 
 export type MultiCallInput = {
@@ -233,11 +237,15 @@ export const getVaultMultiCallData = (strategies: Strategy[], userAddress: Addre
   }
 }
 
-export const getYgiMultiCallData = (ygis: Ygi[]) => {
+export const getYgiMultiCallData = (ygis: Ygi[], userAddress: Address) => {
   return ygis
-    .map((ygi) => {
-      return getMultiCallDataForYgi(ygi)
-    })
+    .reduce((acc, ygi) => {
+      if (!acc.has(ygi.vaultAddress)) {
+        acc.set(ygi.vaultAddress, []);
+      }
+      acc.set(ygi.vaultAddress, [...acc.get(ygi.vaultAddress)!, ...getMultiCallDataForYgi(ygi, userAddress)]);
+      return acc;
+    }, new Map<Address, any[]>());
 }
 
 
@@ -271,10 +279,15 @@ export const extractStrategySpecificData = (strategy: Strategy, data: Structured
   }
 }
 
-export const getMultiCallDataForYgi = (ygi: Ygi) => {
+export const getMultiCallDataForYgi = (ygi: Ygi, userAddress: Address): MultiCallInput[] => {
   const vault = {
-    abi: RldEthVault.abi,
+    abi: YgiPoolStrategy.abi,
     address: ygi.vaultAddress,
+  }
+
+  const erc20Contract = {
+    abi: erc20Abi,
+    address: ygi.tokenAddress,
   }
 
   const ygiInputToken = {
@@ -282,16 +295,60 @@ export const getMultiCallDataForYgi = (ygi: Ygi) => {
     functionName: 'ygiInputToken',
   }
 
-  const ygiComponents = {
+  const ygiTotalAllocation = {
     ...vault,
-    functionName: 'ygiComponents',
+    functionName: 'totalAllocation',
+  }
+
+  const ygiComponents: MultiCallInput[] = []
+  ygi.components.forEach((component, index) => {
+    ygiComponents.push({
+      ...vault,
+      functionName: 'ygiComponents',
+      args: [index]
+    })
+  })
+
+  const allowance = {
+    ...erc20Contract,
+    functionName: 'allowance',
+    args: [userAddress, ygi.vaultAddress]
   }
 
   return [
     ygiInputToken,
-    ygiComponents
+    ygiTotalAllocation,
+    ...ygiComponents,
+    allowance
   ]
 }
+
+export const getFollowUpMultiCallDataForYgi = (ygi: Ygi, userAddress: Address, vault: Address[]): MultiCallInput[] => {
+  const vaultMultiCallData = {
+    abi: YgiPoolStrategy.abi,
+    address: ygi.vaultAddress,
+  }
+
+  return [{
+    ...vaultMultiCallData,
+    functionName: 'userToVaultToAmount',
+    args: [userAddress, vault]
+  }]
+
+  // const userToVaultAmounts: MultiCallInput[] = []
+  // vaults.forEach(vault => {
+  //   userToVaultAmounts.push({
+  //     ...vaultMultiCallData,
+  //     functionName: 'userToVaultToAmount',
+  //     args: [userAddress, vault]
+  //   })
+  // })
+  //
+  // return [
+  //   ...userToVaultAmounts,
+  // ]
+}
+
 
 export const getUserToVaultToAmount = (ygi: Ygi, vaults: Address[], userAddress: Address) => {
   const vaultAbi = {

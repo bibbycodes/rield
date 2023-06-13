@@ -12,7 +12,7 @@ import {
 import {
   structuredMulticall,
   structuredMulticallFromCallInfo,
-  transformMultiCallData
+  transformStrategyMultiCallData
 } from './multicall-structured-result';
 
 export interface VaultsData { [vaultAddress: Address]: Strategy & VaultData }
@@ -41,7 +41,7 @@ const VaultDataContextProvider = ({children}: {
     const isEthVault = strategy.tokenAddress === ADDRESS_ZERO
     const multiCallData: MultiCallInput[] = isEthVault ? getMultiCallDataForEthVault(strategy, userAddress) : getMultiCallDataForErc20Vault(strategy, userAddress)
     const data = await structuredMulticall(strategy.strategyAddress, multiCallData)
-    const vaultDataForStrategy = transformMultiCallData(data, [strategy])[strategy.vaultAddress]
+    const vaultDataForStrategy = transformStrategyMultiCallData(data, [strategy])[strategy.vaultAddress]
     setVaultsData({
       ...vaultsData,
       [strategy.vaultAddress]: vaultDataForStrategy
@@ -59,8 +59,8 @@ const VaultDataContextProvider = ({children}: {
       const ethVaultDataCalls = structuredMulticallFromCallInfo(ethVaultCallData)
 
       Promise.all([erc20DVaultDataCalls, ethVaultDataCalls]).then(data => {
-        const erc20VaultData = transformMultiCallData(data[0], erc20Strategies)
-        const ethVaultData = transformMultiCallData(data[1], ethStrategies)
+        const erc20VaultData = transformStrategyMultiCallData(data[0], erc20Strategies)
+        const ethVaultData = transformStrategyMultiCallData(data[1], ethStrategies)
         setVaultsData({
           ...erc20VaultData,
           ...ethVaultData
