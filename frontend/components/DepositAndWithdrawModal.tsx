@@ -54,7 +54,8 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
     strategyAddress, 
     decimals,
     hasWithdrawalSchedule,
-    tokenSymbol
+    tokenSymbol,
+    name
   } = selectedStrategyAsSingleStakeVault;
 
   const {address: userAddress} = useAccount();
@@ -87,7 +88,6 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDet
     abi,
     decimals: selectedVault.decimals,
     tokenAddress,
-    name,
     isApproved: !showApprove
   })
 

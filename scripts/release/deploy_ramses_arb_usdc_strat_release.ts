@@ -1,8 +1,8 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers } from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
+import {ethers} from "hardhat";
 import fs from "fs";
-import { RldLpTokenVault, RLDSolidlyLpVault, SolidlyLpStrat } from '../../typechain-types';
-import { BigNumber } from 'ethers';
+import {RLDSolidlyLpVault, SolidlyLpStrat} from '../../typechain-types';
+import {BigNumber} from 'ethers';
 
 async function main() {
   const [deployer]: SignerWithAddress[] =
@@ -14,13 +14,13 @@ async function main() {
   const vault: RLDSolidlyLpVault = (await Vault.deploy("RLD_RAM_ARB_USDC", "RLD_RAM_ARB_USDC")) as RLDSolidlyLpVault;
   await vault.deployed();
 
-  const gauge = '0x2951ffb9e7d54c9ca547901d482f2896e7d9a0ed'
+  const gauge = '0xc43e8F9AE4c1Ef6b8b63CBFEfE8Fe90d375fe11C'
   const lp0 = '0x912ce59144191c1204e64559fe8253a0e49e6548'
   const lp1 = '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8'
   const WETH = '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1'
-  const router = '0xaaa87963efeb6f7e0a2711f397663105acb1805e'
-  const want = '0xba9f17ca67d1c8416bb9b132d50232191e27b45e'
-  const rewardToken = '0xAAA6C1E32C55A7Bfa8066A6FAE9b42650F262418'
+  const router = '0xf26515d5482e2c2fd237149bf6a653da4794b3d0'
+  const want = '0x9cB911Cbb270cAE0d132689cE11c2c52aB2DedBC'
+  const rewardToken = '0x463913D3a3D3D291667D53B8325c598Eb88D3B0e'
 
   const TokenRoutes = {
     rewardTokenToFeeTokenRoute: [
@@ -64,11 +64,19 @@ async function main() {
   console.log("Strategy address:", strategy.address);
 
   fs.writeFileSync(
-    "./resources/deploy_ram_arb_usdc-output.json",
+    "./resources/deploy_solid_lizard_arb_usdc-output.json",
     JSON.stringify({
       vaultAddress: vault.address,
       deployerAddress: deployer.address,
       strategyAddress: strategy.address,
+      lp0Address: lp0,
+      lp1Address: lp1,
+      rewardToken: rewardToken,
+      wantTokenAddress: want,
+      feeToken: WETH,
+      routerAddress: router,
+      gaugeAddress: gauge,
+      isStable: false
     })
   )
 }
