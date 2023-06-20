@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { VaultDataContext } from "../contexts/vault-data-context/VaultDataContext";
 import {RldVault} from "../lib/types/strategy-types";
+import {isSingleStakeStrategy} from "../lib/utils";
 
 export const useGetUserDepositedInVault = (strategy: RldVault) => {
   const [userStaked, setUserStaked] = useState<BigNumber>(BigNumber.from(0));
@@ -11,6 +12,14 @@ export const useGetUserDepositedInVault = (strategy: RldVault) => {
   const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
 
   const calculateUserStaked = (balance: BigNumber, pricePerShare: BigNumber) => {
+    if (isSingleStakeStrategy(strategy.type)) {
+      return calculateUserStakedForSingleDepositVault(balance, pricePerShare)
+    }
+    // TODO vault lp calculation
+    return BigNumber.from(0)
+  }
+  
+  const calculateUserStakedForSingleDepositVault = (balance: BigNumber, pricePerShare: BigNumber) => {
     return balance && pricePerShare && userAddress ?
       balance.mul(pricePerShare)
         .div(BigNumber.from(10).pow(decimals))

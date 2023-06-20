@@ -51,7 +51,8 @@ export const getSolidlyApr = async (provider: any, lp0Price: number, lp1Price: n
   const rewardTokenPriceBn = convertPriceToBigNumber(rewardTokenPrice)
 
   //  How many want tokens are staked in the gauge
-  const totalSupply = await guageContract.totalSupply();
+  const totalSupply = (await guageContract.totalSupply())
+    // .mul(BigNumber.from(10).pow(12));
   // how many of each token is in the Liquidity Pool
   const {lp0Reserves, lp1Reserves} = await getReserves(routerContract, lp0Address, lp1Address, getBool(isStable));
   // How much is the want token worth in USD
@@ -60,6 +61,14 @@ export const getSolidlyApr = async (provider: any, lp0Price: number, lp1Price: n
   const annualUsdRewards = await getRewardsPerYearInUsd(provider, rewardTokenAddress, rewardTokenPriceBn, guageContract, rewardTokenMultiplier);
   //  Total amount staked in the gauge contract
   const totalAmountStakedInUsd = totalSupply.mul(wantTokenPriceInUsd)
+  console.log({
+    totalSupply: ethers.utils.formatEther(totalSupply),
+    lp0Reserves: ethers.utils.formatEther(lp0Reserves),
+    lp1Reserves: ethers.utils.formatUnits(lp1Reserves, lp1Decimals),
+    wantTokenPriceInUsd: ethers.utils.formatEther(wantTokenPriceInUsd),
+    annualUsdRewards: ethers.utils.formatEther(annualUsdRewards),
+    totalAmountStakedInUsd: ethers.utils.formatEther(totalAmountStakedInUsd),
+  })
 
   const rewardsOverTotalStaked = ethers.utils.formatEther(annualUsdRewards.mul(TEN_POW_18).div(totalAmountStakedInUsd))
   return parseFloat(rewardsOverTotalStaked) * 100
@@ -82,6 +91,10 @@ const getWantTokenPrice = async (
   const wantTokenSupply = await wantTokenContract.totalSupply();
   const lp0Value = lp0Price.mul(lp0Reserves).div(lp0Multiplier)
   const lp1Value = lp1Price.mul(lp1Reserves).div(lp1Multiplier)
+  console.log({
+    lp0Value: ethers.utils.formatEther(lp0Value),
+    lp1Value: ethers.utils.formatEther(lp1Value),
+  })
   //  Total value staked in liquidity pool
   const totalValue = lp0Value.add(lp1Value)
   //  One want token is worth the total value in the pool divided by the total supply of want tokens
