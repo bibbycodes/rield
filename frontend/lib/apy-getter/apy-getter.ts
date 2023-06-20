@@ -46,7 +46,7 @@ export class ApyGetter {
       case hopDai.strategyAddress:
         return getHopApr('DAI', this.prices['hop-protocol'], this.prices['dai'], hopDai as any)
       case ramArbUsdc.strategyAddress:
-        return getSolidlyApr(this.provider, this.prices['usd-coin'], this.prices['arbitrum'], this.prices['ramses-exchange'], ramArbUsdc as any)
+        return getSolidlyApr(this.provider, this.prices['arbitrum'], this.prices['usd-coin'], this.prices['solidlizard'], ramArbUsdc as any)
       default:
         return 0
     }

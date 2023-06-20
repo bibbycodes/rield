@@ -243,7 +243,7 @@ export const LpStrategies: LpPoolVault[] = [
   {
     id: 10,
     name: "ARB_USDC",
-    protocol: "Ramses",
+    protocol: "Solidlizard",
     lp0TokenSymbol: "ARB",
     lp0TokenAddress: ramArbUsdc.lp0Address as Address,
     lp1TokenSymbol: "USDC",
@@ -266,7 +266,7 @@ export const LpStrategies: LpPoolVault[] = [
     status: StrategyStatus.ACTIVE,
     lp0CoinGeckoId: "arbitrum",
     lp1CoinGeckoId: "usd-coin",
-    rewardTokensCoinGeckoIds: ["ramses-exchange"],
+    rewardTokensCoinGeckoIds: ["solidlizard", "arbitrum", "usd-coin"],
     abi: solidlyLpVaultAbi,
     type: [StrategyType.AUTO_COMPOUND, StrategyType.LP_POOL],
     performanceFee: 2,

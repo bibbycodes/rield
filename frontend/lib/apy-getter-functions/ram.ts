@@ -2,6 +2,7 @@ import {getContract} from "./utils";
 import gauge from "../../resources/abis/ram/gauge.json";
 import router from "../../resources/abis/ram/router.json";
 import erc20Abi from "../../resources/abis/erc20.json";
+import solidlyPairAbi from "../../resources/abis/solidlyPair.json";
 import {Address} from "wagmi";
 import {BigNumber, ethers} from "ethers";
 
@@ -34,24 +35,34 @@ export const getSolidlyApr = async (provider: any, lp0Price: number, lp1Price: n
   } = vaultDetails;
   const guageContract = getContract(gaugeAddress, gauge.abi, provider)
   const routerContract = getContract(routerAddress, router.abi, provider)
-  const wantTokenContract = getContract(wantTokenAddress, erc20Abi, provider)
+  const wantTokenContract = getContract(wantTokenAddress, solidlyPairAbi, provider)
   const lp0Contract = getContract(lp0Address, erc20Abi, provider)
   const lp1Contract = getContract(lp1Address, erc20Abi, provider)
   const rewardTokenContract = getContract(rewardTokenAddress, erc20Abi, provider)
 
   const lp0Decimals = await lp0Contract.decimals();
   const lp1Decimals = await lp1Contract.decimals();
+  const decimalDifference = Math.abs(lp0Decimals - lp1Decimals);
   const rewardTokenDecimals = await rewardTokenContract.decimals();
   const lp0Multiplier = BigNumber.from(10).pow(lp0Decimals);
   const lp1Multiplier = BigNumber.from(10).pow(lp1Decimals);
+  const decimalDifferenceMultiplier = BigNumber.from(10).pow(decimalDifference);
   const rewardTokenMultiplier = BigNumber.from(10).pow(rewardTokenDecimals);
 
-  const lp0PriceBn = convertPriceToBigNumber(lp0Price)
-  const lp1PriceBn = convertPriceToBigNumber(lp1Price)
+  const lp0PriceBn = convertPriceToBigNumber(lp0Price, lp0Decimals);
+  const lp1PriceBn = convertPriceToBigNumber(lp1Price, lp1Decimals)
   const rewardTokenPriceBn = convertPriceToBigNumber(rewardTokenPrice)
 
   //  How many want tokens are staked in the gauge
-  const totalSupply = (await guageContract.totalSupply())
+  const totalSupplyGauge = (await guageContract.totalSupply())
+
+  const totalSupplyUnderlying = (await wantTokenContract.totalSupply())
+  const reserve0 = (await wantTokenContract.reserve0())
+  const reserve1 = (await wantTokenContract.reserve1())
+
+  const reserve0ForGauge = reserve0.mul(totalSupplyGauge).div(totalSupplyUnderlying)
+  const reserve1ForGauge = reserve1.mul(totalSupplyGauge).div(totalSupplyUnderlying)
+
     // .mul(BigNumber.from(10).pow(12));
   // how many of each token is in the Liquidity Pool
   const {lp0Reserves, lp1Reserves} = await getReserves(routerContract, lp0Address, lp1Address, getBool(isStable));
@@ -60,9 +71,16 @@ export const getSolidlyApr = async (provider: any, lp0Price: number, lp1Price: n
   // How many rewards are distributed per year in USD based on the current reward rate
   const annualUsdRewards = await getRewardsPerYearInUsd(provider, rewardTokenAddress, rewardTokenPriceBn, guageContract, rewardTokenMultiplier);
   //  Total amount staked in the gauge contract
-  const totalAmountStakedInUsd = totalSupply.mul(wantTokenPriceInUsd)
+  const reserve0ValueInUsd = reserve0ForGauge.mul(lp0PriceBn).div(lp0Multiplier)
+  const reserve1ValueInUsd = reserve1ForGauge.mul(lp1PriceBn).div(lp1Multiplier)
+  let totalAmountStakedInUsd;
+  if (lp0Decimals < lp1Decimals) {
+    totalAmountStakedInUsd = reserve0ValueInUsd.mul(decimalDifferenceMultiplier).add(reserve1ValueInUsd)
+  } else {
+    totalAmountStakedInUsd = reserve1ValueInUsd.mul(decimalDifferenceMultiplier).add(reserve0ValueInUsd)
+  }
+
   console.log({
-    totalSupply: ethers.utils.formatEther(totalSupply),
     lp0Reserves: ethers.utils.formatEther(lp0Reserves),
     lp1Reserves: ethers.utils.formatUnits(lp1Reserves, lp1Decimals),
     wantTokenPriceInUsd: ethers.utils.formatEther(wantTokenPriceInUsd),
@@ -70,7 +88,7 @@ export const getSolidlyApr = async (provider: any, lp0Price: number, lp1Price: n
     totalAmountStakedInUsd: ethers.utils.formatEther(totalAmountStakedInUsd),
   })
 
-  const rewardsOverTotalStaked = ethers.utils.formatEther(annualUsdRewards.mul(TEN_POW_18).div(totalAmountStakedInUsd))
+  const rewardsOverTotalStaked = ethers.utils.formatEther(annualUsdRewards.div(totalAmountStakedInUsd))
   return parseFloat(rewardsOverTotalStaked) * 100
 }
 
@@ -80,11 +98,11 @@ const getRewardsPerYearInUsd = async (provider: any, rewardTokenAddress: Address
 }
 
 const getWantTokenPrice = async (
-  wantTokenContract: any, 
-  lp0Price: BigNumber, 
-  lp1Price: BigNumber, 
-  lp0Reserves: BigNumber, 
-  lp1Reserves: BigNumber, 
+  wantTokenContract: any,
+  lp0Price: BigNumber,
+  lp1Price: BigNumber,
+  lp0Reserves: BigNumber,
+  lp1Reserves: BigNumber,
   lp0Multiplier: BigNumber,
   lp1Multiplier: BigNumber
 ): Promise<BigNumber> => {
