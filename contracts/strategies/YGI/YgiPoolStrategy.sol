@@ -49,14 +49,21 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
         _giveAllowance(uniRouter, ygiInputToken);
     }
 
-    function rebalance(address _vault, uint256 amount) public onlyOwner {
+    function rebalance(address _vault, uint256 amount, bool reinvest) public onlyOwner {
+        _rebalance(_vault, amount, true);
+    }
+
+    function _rebalance(address _vault, uint256 amount, bool reinvest) internal {
         YgiComponent storage componentToRebalance = ygiComponents[getIndex(_vault)];
         IBaseStrategy(IRldBaseVault(componentToRebalance.vault).strategy()).withdraw(amount);
         uint256 withdrawnBalance = IERC20(componentToRebalance.inputToken).balanceOf(address(this));
         if (withdrawnBalance > 0) {
             swapTokens(withdrawnBalance, componentToRebalance.backRoute);
         }
-        depositLeftOverInputTokens();
+
+        if (reinvest) {
+            depositLeftOverInputTokens();
+        }
     }
 
     function depositLeftOverInputTokens() internal {
@@ -97,8 +104,11 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
         address[] memory _route,
         uint24[] memory _fee,
         address[] memory _backRoute,
-        uint24[] memory _backFee
+        uint24[] memory _backFee,
+        address[] rebalanceVaults,
+        uint256[] rebalanceAmounts
     ) public onlyOwner {
+        require(rebalanceVaults.length == rebalanceAmounts.length, "Invalid rebalance vaults/amounts");
         Route memory route = Route(_route, _fee, UniswapV3Utils.routeToPath(_route, _fee));
         Route memory backRoute = Route(_backRoute, _backFee, UniswapV3Utils.routeToPath(_backRoute, _backFee));
         YgiComponent memory ygiComponent = YgiComponent(
@@ -113,7 +123,22 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
         vaultArchive.push(vaultAddress);
         _giveAllowance(uniRouter, inputToken);
         _giveAllowance(vaultAddress, inputToken);
-        // todo: mint vault tokens (A+B+C)
+
+        for (uint i = 0; i < rebalanceVaults.length; i++) {
+            _rebalance(rebalanceVaults[i], rebalanceAmounts[i], false);
+        }
+
+        uint256 inputAmountPortion = IERC20(inputToken).balanceOf(address(this));
+        uint256 runningTotal;
+        for (uint i = 0; i < vaultArchive.length; i++) {
+            runningTotal += IERC20(vaultArchive[i]).totalSupply();
+        }
+        if (inputToken == address(0)) {
+            IWETH(weth).withdraw(inputAmountPortion);
+            IRLDYgiEthVault(vaultAddress).init{value: inputAmountPortion}(runningTotal);
+        } else {
+            IRLDYgiEthVault(vaultAddress).init(runningTotal, inputAmountPortion);
+        }
     }
 
     function deregisterYgiComponent(
@@ -158,6 +183,8 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
                 runningTotal += balance;
             } else if (hasDeployedPrev && balance == 0) {
                 syncedVaultAmounts[vaultArchive[i]] = runningTotal;
+            } else {
+                return syncedVaultAmounts;
             }
         }
         return syncedVaultAmounts;
@@ -172,7 +199,7 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
                 hasDeployedPrev = true;
                 runningTotal += balance;
             } else if (hasDeployedPrev && balance == 0) {
-                userToVaultToAmount[userAddress] = runningTotal;
+                userToVaultToAmount[userAddress][vaultArchive[i]] = runningTotal;
             } else {
                 return;
             }
