@@ -6,6 +6,7 @@ export const useCalculateSendAmount = (visibleAmount: string, action: Transactio
   if (visibleAmount == null 
     || visibleAmount === '' 
     || visibleAmount === '0' 
+    || parseFloat(visibleAmount) === 0
     || (action === 'withdraw' && userStaked?.eq(BigNumber.from(0)))) {
     return BigNumber.from(0)
   }

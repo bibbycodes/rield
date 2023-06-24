@@ -26,11 +26,14 @@ const config: HardhatUserConfig = {
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     hardhat: {
+      allowUnlimitedContractSize: true,
       accounts: {
         count: 20,
         accountsBalance: "10000000000000000000000", // 10ETH (Default)
       },
-      allowUnlimitedContractSize: true
+      forking: {
+        url: `https://arbitrum-mainnet.infura.io/v3/10e715f1459940bd937fb457b795afed`
+      },
     },
     localhost: {
       allowUnlimitedContractSize: true

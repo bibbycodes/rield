@@ -13,6 +13,7 @@ import "../../interfaces/ram/IGauge.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "../../utils/FeeUtils.sol";
 import "../../utils/SolidlyRoutes.sol";
+import "hardhat/console.sol";
 
 contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, Pausable {
     using SafeERC20 for IERC20;
@@ -278,7 +279,9 @@ contract SolidlyLpStrat is FeeUtils, SolidlyRoutes, GasFeeThrottler, Stoppable, 
         uint256 lp0Bal = IERC20(lp0Token).balanceOf(address(this));
         uint256 lp1Bal = IERC20(lp1Token).balanceOf(address(this));
         // Add liquidity for lp tokens
+        console.log("Before: lp0Bal: %s, lp1Bal: %s", lp0Bal, lp1Bal);
         addLiquidity(lp0Token, lp1Token, isStable, lp0Bal, lp1Bal, 1, 1, block.timestamp);
+        console.log("After: lp0Bal: %s, lp1Bal: %s", IERC20(lp0Token).balanceOf(address(this)), IERC20(lp1Token).balanceOf(address(this)));
     }
 
     // calculate the total underlying 'want' held by the strat.

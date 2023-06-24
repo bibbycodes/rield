@@ -217,7 +217,8 @@ export const useLpDepositAndWithdrawModal = () => {
     } else {
       showToast(`Amount must be greater than 0`, 'error')
     }
-    postHog?.capture(`TX_MODAL:${action}`, {action, strategy: selectedVault.name, amount: visibleAmount})
+    // TODO capture amounts based on single or multiple token deposit
+    postHog?.capture(`TX_MODAL:${action}`, {action, strategy: selectedVault.name, amount: visibleAmounts[currentToken]})
   }
 
   function showToast(msg: string, severity: ToastSeverity) {

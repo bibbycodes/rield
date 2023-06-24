@@ -41,14 +41,14 @@ export const getHopApr = async (token: string,
 }
 
 async function getHopPoolStats() {
+  const ttlInMillis = 10 * 60 * 1000
   const cacheKey = 'poolStats:v000'
   try {
     const cached = localStorage.getItem(cacheKey)
     if (cached) {
       const json = JSON.parse(cached)
-      if (json.timestamp > Date.now() - (10 * 60 * 1000)) {
+      if (json.timestamp > Date.now() - (ttlInMillis)) {
         if (json.data) {
-          console.log('returning cached poolStats')
           return json.data
         }
       }
