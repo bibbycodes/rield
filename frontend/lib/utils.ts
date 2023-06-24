@@ -46,18 +46,24 @@ export const isSingleStakeStrategy = (type: StrategyType[]) => {
 }
 
 export const isTokenApproved = (tokenKey: string, visibleAmount: string, vaultData: RldVault & VaultData, decimals: number): boolean => {
-  switch(tokenKey) {
+  if (visibleAmount === '' || visibleAmount === '0') {
+    return true
+  }
+  
+  const fixedVisibleAmount = ethers.utils.parseUnits(parseFloat(visibleAmount).toFixed(decimals - 1), decimals);
+  switch (tokenKey) {
     case 'inputTokenAddress':
     case 'tokenAddress':
-      return visibleAmount < '0' || (vaultData?.allowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals)) ?? false)
+      return fixedVisibleAmount.lt(0) || (vaultData?.allowance?.gte(fixedVisibleAmount) ?? false);
     case 'lp0TokenAddress':
-      return visibleAmount < '0' || (vaultData?.lp0TokenAllowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals)) ?? false)
+      return fixedVisibleAmount.lt(0) || (vaultData?.lp0TokenAllowance?.gte(fixedVisibleAmount) ?? false);
     case 'lp1TokenAddress':
-      return visibleAmount < '0' || (vaultData?.lp1TokenAllowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals)) ?? false)
+      return fixedVisibleAmount.lt(0) || (vaultData?.lp1TokenAllowance?.gte(fixedVisibleAmount) ?? false);
     default:
-      return false
+      return false;
   }
-}
+};
+
 
 export const isLpPoolStrategy = (type: StrategyType[]) => {
   return type.includes(StrategyType.LP_POOL);

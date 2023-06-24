@@ -25,7 +25,7 @@ export interface StrategyDetailsModalProps {
   setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function LpDepositAndWithdrawModal({isOpen, setIsOpen}: StrategyDetailsModalProps) {
+export default function LpDepositAndWithdrawModal({isOpen}: StrategyDetailsModalProps) {
   const {
     handleAmountChange,
     handleSetMax,
@@ -34,10 +34,9 @@ export default function LpDepositAndWithdrawModal({isOpen, setIsOpen}: StrategyD
     isBalanceLessThanAmount,
     truncateAmount,
     hasWithdrawalSchedule,
-    formattedToken1Balance,
     userStaked,
     action,
-    tokens,
+    tokensByKey,
     visibleAmounts,
     handleSetDepositAs,
     depositAs,
@@ -45,7 +44,7 @@ export default function LpDepositAndWithdrawModal({isOpen, setIsOpen}: StrategyD
     handleSetAction,
     getActionVerb,
   } = useLpDepositAndWithdrawModal()
-  const {lp0Token, lp1Token, inputToken} = tokens
+  const {lp0Token, lp1Token, inputToken} = tokensByKey
   return (
     <div>
       <Modal
@@ -119,7 +118,7 @@ export default function LpDepositAndWithdrawModal({isOpen, setIsOpen}: StrategyD
                   tokenLogoUrl={lp1Token.logoUrl}
                   tokenSymbol={lp1Token.symbol}
                   action={action}
-                  formattedTokenBalance={formattedToken1Balance || '0'}
+                  formattedTokenBalance={lp1Token.balances.formatted || '0'}
                   userStaked={userStaked}
                   decimals={lp1Token.decimals}
                   handleSetMax={handleSetMax}
@@ -138,7 +137,7 @@ export default function LpDepositAndWithdrawModal({isOpen, setIsOpen}: StrategyD
           )}
 
           <Box className={`flex flex-row justify-between`}>
-            {showApprove() && <Approvals depositAs={depositAs} tokens={tokens}/>}
+            {showApprove() && <Approvals depositAs={depositAs} tokens={tokensByKey}/>}
             {!showApprove() &&
               <button
                 className={`bg-gradient-to-r from-accentPrimary to-accentPrimaryGradient

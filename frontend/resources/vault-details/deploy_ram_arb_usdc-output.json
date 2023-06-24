@@ -10,5 +10,10 @@
   "gaugeAddress": "0xc43e8F9AE4c1Ef6b8b63CBFEfE8Fe90d375fe11C",
   "deployerAddress": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
   "strategyAddress": "0xAc4D1Ed3c2fd0fF92566F026d6b45C0AF8E15bD0",
+  "rewardTokenAddresses": [
+    "0x463913D3a3D3D291667D53B8325c598Eb88D3B0e",
+    "0x912ce59144191c1204e64559fe8253a0e49e6548",
+    "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8"
+  ],
   "isStable": false
 }

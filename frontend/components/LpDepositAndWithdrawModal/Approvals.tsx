@@ -1,10 +1,10 @@
 import LoadingButton from "../LoadingButton";
 import * as React from "react";
-import {DepositModalTokenDetails} from "./useLpDepositAndWithdrawModal";
+import {TokensByKey} from "./useLpDepositAndWithdrawModal";
 
 export interface ApprovalsInputProps {
   depositAs: string;
-  tokens: DepositModalTokenDetails;
+  tokens: TokensByKey;
 }
 
 export const Approvals = ({depositAs, tokens}: ApprovalsInputProps) => {

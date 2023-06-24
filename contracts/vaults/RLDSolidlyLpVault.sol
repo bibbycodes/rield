@@ -184,7 +184,7 @@ contract RLDSolidlyLpVault is ERC20, Ownable, ReentrancyGuard {
      * from the strategy and pay up the token holder. A proportional number of IOU
      * tokens are burned in the process.
      */
-    function _withdraw(uint256 _shares, bool asInputToken) public virtual {
+    function _withdraw(uint256 _shares, bool asInputToken) internal virtual {
         uint256 userOwedWant = (balance() * _shares) / totalSupply();
         _burn(msg.sender, _shares);
         if (asInputToken) {

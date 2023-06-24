@@ -13,7 +13,7 @@ import {useRouter} from "next/router";
 import posthog from "posthog-js";
 import {PostHogProvider} from "posthog-js/react";
 
-let chains = process.env.ENV === 'dev' ? [arbitrum, hardhat] : [arbitrum, hardhat];
+let chains = process.env.ENV === 'dev' ? [arbitrum, hardhat] : [arbitrum];
 
 export const client = createClient(
   getDefaultClient({

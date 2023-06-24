@@ -1,10 +1,12 @@
 import {getContract} from "./utils";
 import gauge from "../../resources/abis/ram/gauge.json";
-import router from "../../resources/abis/ram/router.json";
 import erc20Abi from "../../resources/abis/erc20.json";
 import solidlyPairAbi from "../../resources/abis/solidlyPair.json";
 import {Address} from "wagmi";
 import {BigNumber, ethers} from "ethers";
+import {LpPoolVault} from "../types/strategy-types";
+import {Prices} from "../../contexts/TokenPricesContext";
+import {vaultAddressToRldVault} from "../../model/strategy";
 
 export const SECONDS_PER_YEAR = '31536000';
 export const TEN_POW_18 = BigNumber.from(10).pow(18);
@@ -20,21 +22,28 @@ export interface SolidlyPoolVaultDetails {
   wantTokenAddress: Address;
   rewardTokenAddress: Address;
   isStable: string;
+  rewardTokenAddresses: Address[];
 }
 
 
-export const getSolidlyApr = async (provider: any, lp0Price: number, lp1Price: number, rewardTokenPrice: number, vaultDetails: SolidlyPoolVaultDetails) => {
+export const  getSolidlyApr = async (provider: any, prices: Prices, vaultDetails: SolidlyPoolVaultDetails) => {
   const {
     rewardTokenAddress,
     gaugeAddress,
-    routerAddress,
-    isStable,
     lp1Address,
     lp0Address,
     wantTokenAddress
   } = vaultDetails;
+  const lpVault = vaultAddressToRldVault[vaultDetails.vaultAddress] as LpPoolVault;
+  
+  if (!lpVault) {
+    return 0;
+  }
+  
+  const lp0Price = prices[lpVault.lp0CoinGeckoId as string];
+  const lp1Price = prices[lpVault.lp1CoinGeckoId as string];
+  
   const guageContract = getContract(gaugeAddress, gauge.abi, provider)
-  const routerContract = getContract(routerAddress, router.abi, provider)
   const wantTokenContract = getContract(wantTokenAddress, solidlyPairAbi, provider)
   const lp0Contract = getContract(lp0Address, erc20Abi, provider)
   const lp1Contract = getContract(lp1Address, erc20Abi, provider)
@@ -51,50 +60,50 @@ export const getSolidlyApr = async (provider: any, lp0Price: number, lp1Price: n
 
   const lp0PriceBn = convertPriceToBigNumber(lp0Price, lp0Decimals);
   const lp1PriceBn = convertPriceToBigNumber(lp1Price, lp1Decimals)
-  const rewardTokenPriceBn = convertPriceToBigNumber(rewardTokenPrice)
 
   //  How many want tokens are staked in the gauge
   const totalSupplyGauge = (await guageContract.totalSupply())
-
+  // How many want tokens are in circulation
   const totalSupplyUnderlying = (await wantTokenContract.totalSupply())
+  // How much of each token is in the liquidity pool
   const reserve0 = (await wantTokenContract.reserve0())
   const reserve1 = (await wantTokenContract.reserve1())
 
+  // Hoe much of each token is staked in the gauge
   const reserve0ForGauge = reserve0.mul(totalSupplyGauge).div(totalSupplyUnderlying)
   const reserve1ForGauge = reserve1.mul(totalSupplyGauge).div(totalSupplyUnderlying)
 
-    // .mul(BigNumber.from(10).pow(12));
-  // how many of each token is in the Liquidity Pool
-  const {lp0Reserves, lp1Reserves} = await getReserves(routerContract, lp0Address, lp1Address, getBool(isStable));
   // How much is the want token worth in USD
-  const wantTokenPriceInUsd = await getWantTokenPrice(wantTokenContract, lp0PriceBn, lp1PriceBn, lp0Reserves, lp1Reserves, lp0Multiplier, lp1Multiplier);
   // How many rewards are distributed per year in USD based on the current reward rate
-  const annualUsdRewards = await getRewardsPerYearInUsd(provider, rewardTokenAddress, rewardTokenPriceBn, guageContract, rewardTokenMultiplier);
+  const annualUsdRewards = await getRewardsPerYearInUsd(provider, lpVault, guageContract, prices);
   //  Total amount staked in the gauge contract
   const reserve0ValueInUsd = reserve0ForGauge.mul(lp0PriceBn).div(lp0Multiplier)
   const reserve1ValueInUsd = reserve1ForGauge.mul(lp1PriceBn).div(lp1Multiplier)
   let totalAmountStakedInUsd;
+  
   if (lp0Decimals < lp1Decimals) {
     totalAmountStakedInUsd = reserve0ValueInUsd.mul(decimalDifferenceMultiplier).add(reserve1ValueInUsd)
   } else {
     totalAmountStakedInUsd = reserve1ValueInUsd.mul(decimalDifferenceMultiplier).add(reserve0ValueInUsd)
   }
 
-  console.log({
-    lp0Reserves: ethers.utils.formatEther(lp0Reserves),
-    lp1Reserves: ethers.utils.formatUnits(lp1Reserves, lp1Decimals),
-    wantTokenPriceInUsd: ethers.utils.formatEther(wantTokenPriceInUsd),
-    annualUsdRewards: ethers.utils.formatEther(annualUsdRewards),
-    totalAmountStakedInUsd: ethers.utils.formatEther(totalAmountStakedInUsd),
-  })
-
   const rewardsOverTotalStaked = ethers.utils.formatEther(annualUsdRewards.div(totalAmountStakedInUsd))
   return parseFloat(rewardsOverTotalStaked) * 100
 }
 
-const getRewardsPerYearInUsd = async (provider: any, rewardTokenAddress: Address, rewardTokenPrice: BigNumber, contract: any, multiplier: BigNumber) => {
-  const rewardRate = await contract.rewardRate(rewardTokenAddress as string);
-  return rewardRate.mul(SECONDS_PER_YEAR).mul(rewardTokenPrice).div(multiplier)
+const getRewardsPerYearInUsd = async (provider: any, lpVault: LpPoolVault, contract: any, prices: Prices) => {
+  let runningTotal = BigNumber.from(0);
+  for (let i = 0; i < lpVault.rewardTokenAddresses.length; i++) {
+    const rewardTokenAddress = lpVault.rewardTokenAddresses[i];
+    const rewardTokenContract = getContract(rewardTokenAddress, erc20Abi, provider)
+    const rewardTokenDecimals = await rewardTokenContract.decimals();
+    const multiplier = BigNumber.from(10).pow(rewardTokenDecimals);
+    const coinGeckoId = lpVault.tokenAddressToCoinGeckoIdMap[rewardTokenAddress];
+    const rewardRate = await contract.rewardRate(rewardTokenAddress as string);
+    const rewardTokenPrice = convertPriceToBigNumber(prices[coinGeckoId as string])
+    runningTotal = runningTotal.add(rewardRate.mul(SECONDS_PER_YEAR).mul(rewardTokenPrice).div(multiplier))
+  }
+  return runningTotal
 }
 
 const getWantTokenPrice = async (

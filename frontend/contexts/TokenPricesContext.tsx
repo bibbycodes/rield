@@ -7,7 +7,7 @@ export type Prices = {
 
 interface TokenPrices {
   prices: Prices;
-  updatePrices: () => Promise<void>;
+  updatePrices: (ttlInMillis: number) => Promise<void>;
 }
 
 const TokenPricesContext = createContext<TokenPrices>({

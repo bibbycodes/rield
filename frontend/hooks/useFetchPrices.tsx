@@ -1,27 +1,28 @@
-import { Prices } from "../contexts/TokenPricesContext";
-import { useEffect, useState } from "react";
+import {Prices} from "../contexts/TokenPricesContext";
+import {useEffect, useState} from "react";
 import {LpStrategies, singleStakeStrategies} from "../model/strategy";
 import axios from "axios";
-import { getGlpPrice } from '../lib/apy-getter-functions/gmx';
-import { staticArbProvider } from '../utils/static-provider';
-import { isEmpty } from '../utils/formatters';
+import {getGlpPrice} from '../lib/apy-getter-functions/gmx';
+import {staticArbProvider} from '../utils/static-provider';
+import {isEmpty} from '../utils/formatters';
+import {StrategyStatus} from "../lib/types/strategy-types";
 
 export const useFetchPrices = () => {
   const [prices, setPrices] = useState<Prices>({});
-  const shouldUpdate = (priceData: {data: any, date: number} | null) => priceData == null || Date.now() - priceData.date > 5 * 60 * 1000 || isEmpty(priceData.data)
+  const shouldUpdate = (priceData: {data: any, date: number} | null, ttlInMillis = 5 * 60 * 1000) => priceData == null || Date.now() - priceData.date > ttlInMillis || isEmpty(priceData.data)
 
-  const updatePrices = async () => {
+  const updatePrices = async (ttlInMillis?: number) => {
     const priceData = readPricesFromLocalStorage();
-    if (shouldUpdate(priceData)) {
+    if (shouldUpdate(priceData, ttlInMillis)) {
       const glpPrice = await getGlpPrice(staticArbProvider)
       let coinGeckoIdsForSingleStakes = singleStakeStrategies
-        .filter(strategy => strategy.status !== 'DISABLED')
+        .filter(strategy => strategy.status !== StrategyStatus.DISABLED)
         .map(strategy => strategy.coinGeckoId)
       let coinGeckoIdsForLpPools = LpStrategies
-        .filter(strategy => strategy.status !== 'DISABLED')
+        .filter(strategy => strategy.status !== StrategyStatus.DISABLED)
         .map(strategy => {
-          const {lp0CoinGeckoId, lp1CoinGeckoId, rewardTokensCoinGeckoIds} = strategy
-          return [lp0CoinGeckoId, lp1CoinGeckoId, ...rewardTokensCoinGeckoIds]
+          const {tokenAddressToCoinGeckoIdMap} = strategy
+          return [...Object.values(tokenAddressToCoinGeckoIdMap)]
         }).flat()
       coinGeckoIdsForSingleStakes = [...coinGeckoIdsForSingleStakes, 'ethereum', 'hop-protocol']
       const allCoinGeckoIds = Array.from(new Set([...coinGeckoIdsForSingleStakes, ...coinGeckoIdsForLpPools]))

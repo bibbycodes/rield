@@ -251,7 +251,7 @@ export const LpStrategies: LpPoolVault[] = [
     inputTokenAddress: ramArbUsdc.inputTokenAddress as Address,
     vaultAddress: ramArbUsdc.vaultAddress as Address,
     strategyAddress: ramArbUsdc.strategyAddress as Address,
-    protocolLogoUrl: "/ramses-logo.png",
+    protocolLogoUrl: "/lizard.png",
     inputTokenSymbol: 'USDC',
     inputTokenLogoUrl: "/usdc-logo.svg",
     lp0TokenLogoUrl: "/arb-logo.png",
@@ -266,11 +266,16 @@ export const LpStrategies: LpPoolVault[] = [
     status: StrategyStatus.ACTIVE,
     lp0CoinGeckoId: "arbitrum",
     lp1CoinGeckoId: "usd-coin",
-    rewardTokensCoinGeckoIds: ["solidlizard", "arbitrum", "usd-coin"],
+    tokenAddressToCoinGeckoIdMap: {
+      [ramArbUsdc.lp0Address as Address]: "arbitrum",
+      [ramArbUsdc.lp1Address as Address]: "usd-coin",
+      [ramArbUsdc.rewardTokenAddress as Address]: "solidlizard"
+    },
+    rewardTokenAddresses: ramArbUsdc.rewardTokenAddresses as Address[],
     abi: solidlyLpVaultAbi,
     type: [StrategyType.AUTO_COMPOUND, StrategyType.LP_POOL],
     performanceFee: 2,
-    protocolUrl: "https://beta.ramses.exchange/swap",
+    protocolUrl: "https://solidlizard.finance/liquidity",
   }
 ]
 export const erc20Strategies = singleStakeStrategies
@@ -284,7 +289,6 @@ export const erc20LpStrategies = LpStrategies
   .filter(strategy => strategy.lp0TokenAddress !== ADDRESS_ZERO && strategy.lp1TokenAddress !== ADDRESS_ZERO)
   .filter(strategy => strategy.status !== StrategyStatus.DISABLED)
 
-console.log({erc20LpStrategies})
 export const ethLpStrategies = LpStrategies
   .filter(strategy => strategy.lp0TokenAddress === ADDRESS_ZERO || strategy.lp1TokenAddress === ADDRESS_ZERO)
   .filter(strategy => strategy.status !== StrategyStatus.DISABLED)
@@ -292,6 +296,11 @@ export const ethLpStrategies = LpStrategies
 export const allErc20Strategies: RldVault[] = [...erc20Strategies, ...erc20LpStrategies]
 
 export const allStrategies: RldVault[] = [...erc20Strategies, ...ethStrategies, ...erc20LpStrategies]
+
+export const vaultAddressToRldVault = allStrategies.reduce((acc, strategy) => {
+  acc[strategy.vaultAddress] = strategy
+  return acc
+}, {} as Record<string, RldVault>)
 
 singleStakeStrategies.reverse()
 

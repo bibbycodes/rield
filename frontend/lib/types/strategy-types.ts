@@ -38,6 +38,10 @@ export interface SingleStakeVault extends BaseVault {
   tokenSymbol: string;
 }
 
+export interface tokenAddressToCoinGeckoIdMap {
+  [tokenAddress: Address]: string;
+}
+
 export interface LpPoolVault extends BaseVault {
   inputTokenDecimals: number,
   lp0TokenDecimals: number,
@@ -45,6 +49,7 @@ export interface LpPoolVault extends BaseVault {
   lp0TokenAddress: Address;
   lp1TokenAddress: Address;
   inputTokenAddress: Address;
+  rewardTokenAddresses: Address[];
   inputTokenSymbol: string;
   inputTokenLogoUrl: string;
   inputTokenUrl: string;
@@ -56,7 +61,7 @@ export interface LpPoolVault extends BaseVault {
   lp1TokenUrl: string;
   lp0CoinGeckoId: string;
   lp1CoinGeckoId: string;
-  rewardTokensCoinGeckoIds: string[];
+  tokenAddressToCoinGeckoIdMap: tokenAddressToCoinGeckoIdMap;
 }
 
 export type RldVault = SingleStakeVault | LpPoolVault

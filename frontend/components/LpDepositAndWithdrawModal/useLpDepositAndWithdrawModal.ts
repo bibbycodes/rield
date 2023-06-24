@@ -3,52 +3,51 @@ import {ToastContext, ToastSeverity} from "../../contexts/ToastContext";
 import {BigNumber, ethers} from "ethers";
 import * as React from "react";
 import {useContext, useState} from "react";
-import {Address, useAccount, useBalance} from "wagmi";
+import {Address, useAccount} from "wagmi";
 import {usePostHog} from "posthog-js/react";
-import {ADDRESS_ZERO} from "../../lib/apy-getter-functions/cap";
 import {VaultDataContext} from "../../contexts/vault-data-context/VaultDataContext";
-import {useApproveToken} from "../../hooks/useApproveToken";
 import {useGetUserDepositedInVault} from "../../hooks/useGetUserDepositedInVault";
 import {LpPoolVault} from "../../lib/types/strategy-types";
 import {LpStrategies} from "../../model/strategy";
-import {isTokenApproved} from "../../lib/utils";
 import {SelectChangeEvent} from "@mui/material";
 import {useLpVaultActions} from "../../hooks/useLpVaultActions";
 import {useCalculateSendAmount} from "../../hooks/useCalculateSendAmount";
 import {TokenPricesContext} from "../../contexts/TokenPricesContext";
+import {useLpPoolApprovals, useLpPoolTokensDetails, useLpTokenBalances} from "./utils";
 
-export interface DepositModalTokenDetails {
-  [tokenName: string]: {
-    address: Address;
-    approvals: {
-      approve: Function,
-      isLoading: boolean,
-      isApproved: boolean,
-    },
-    decimals: number;
-    symbol: string;
-    balances: {
-      value: BigNumber,
-      formatted: string
-    },
-    logoUrl: string
-  }
+export interface TokenValues {
+  address: Address;
+  approvals: {
+    approve: Function,
+    isLoading: boolean,
+    isApproved: boolean,
+  },
+  decimals: number;
+  symbol: string;
+  balances: {
+    value: BigNumber,
+    formatted: string
+  },
+  logoUrl: string
+}
+
+export interface TokensByKey {
+  [tokenName: string]: TokenValues
+}
+
+export interface TokensByAddress {
+  [tokenAddress: Address]: TokenValues
 }
 
 export const useLpDepositAndWithdrawModal = () => {
   const {action, setAction} = useContext(SelectedVaultContext)
-  const {prices} = useContext(TokenPricesContext)
+  const {prices, updatePrices} = useContext(TokenPricesContext)
   const selectedVault = LpStrategies[0]
   const {
     vaultAddress,
     inputTokenAddress,
     lp0TokenAddress,
     lp1TokenAddress,
-    lp0TokenSymbol,
-    lp1TokenSymbol,
-    lp0TokenLogoUrl,
-    lp1TokenLogoUrl,
-    inputTokenLogoUrl,
     hasWithdrawalSchedule,
     inputTokenSymbol,
     abi,
@@ -57,7 +56,6 @@ export const useLpDepositAndWithdrawModal = () => {
     lp1TokenDecimals,
     lp0CoinGeckoId,
     lp1CoinGeckoId,
-    type
   } = selectedVault as LpPoolVault;
 
   const {address: userAddress} = useAccount();
@@ -65,67 +63,35 @@ export const useLpDepositAndWithdrawModal = () => {
   const lp0Price = prices[lp0CoinGeckoId]
   const lp1Price = prices[lp1CoinGeckoId]
 
-  const {data: lp0TokenBalance} = useBalance({
-    token: lp0TokenAddress !== ADDRESS_ZERO ? lp0TokenAddress : undefined,
-    address: userAddress,
-    watch: true
+  const balances = useLpTokenBalances({
+    userAddress: userAddress as Address,
+    vaultAddress,
+    inputTokenAddress,
+    lp0TokenAddress,
+    lp1TokenAddress,
   })
 
-  const {data: lp1TokenBalance} = useBalance({
-    token: lp1TokenAddress !== ADDRESS_ZERO ? lp1TokenAddress : undefined,
-    address: userAddress,
-    watch: true
-  })
-
-  const {data: inputTokenBalance} = useBalance({
-    token: inputTokenAddress !== ADDRESS_ZERO ? inputTokenAddress : undefined,
-    address: userAddress,
-    watch: true
-  })
-
-  const {data: vaultTokenBalanceData} = useBalance({token: vaultAddress, address: userAddress, watch: true})
-  const formattedToken0Balance = lp0TokenBalance?.formatted
-  const formattedToken1Balance = lp1TokenBalance?.formatted
-  const formattedInputTokenBalance = inputTokenBalance?.formatted
-
-  const tokenBalances = {
-    [lp0TokenAddress]: lp0TokenBalance,
-    [lp1TokenAddress]: lp1TokenBalance,
-    [inputTokenAddress]: inputTokenBalance
-  }
-
-  const decimalsForTokensMap = {
-    [lp0TokenAddress]: lp0TokenDecimals,
-    [lp1TokenAddress]: lp1TokenDecimals,
-    [inputTokenAddress]: inputTokenDecimals,
-  }
-
-  const tokenBalanceBN = lp0TokenBalance?.value
-  const vaultTokenBalanceBn = vaultTokenBalanceData?.value
+  const vaultTokenBalanceBn = balances.vaultTokenBalance?.value
 
   const [visibleAmounts, setVisibleAmounts] = useState<{ [tokenAddress: Address]: string }>({
     [inputTokenAddress]: '0',
     [lp0TokenAddress]: '0',
     [lp1TokenAddress]: '0'
   })
+
   const [currentToken, setCurrentToken] = useState<Address>(inputTokenAddress)
   const [depositAs, setDepositAs] = useState<string>(inputTokenSymbol)
   const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
 
-  const {
-    approve: approveInputToken,
-    isLoading: approveInputTokenLoading
-  } = useApproveToken(inputTokenAddress, vaultAddress, userAddress, selectedVault, refetchForStrategy);
-
-  const {
-    approve: approveLp0Token,
-    isLoading: approveLp0TokenLoading
-  } = useApproveToken(lp0TokenAddress, vaultAddress, userAddress, selectedVault, refetchForStrategy);
-
-  const {
-    approve: approveLp1Token,
-    isLoading: approveLp1TokenLoading
-  } = useApproveToken(lp1TokenAddress, vaultAddress, userAddress, selectedVault, refetchForStrategy);
+  const approvals = useLpPoolApprovals({
+    inputTokenAddress,
+    lp0TokenAddress,
+    lp1TokenAddress,
+    vaultAddress,
+    userAddress: userAddress as Address,
+    selectedVault,
+    refetchForStrategy
+  })
 
   const {userStaked, fetchUserStaked} = useGetUserDepositedInVault(selectedVault)
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
@@ -133,59 +99,23 @@ export const useLpDepositAndWithdrawModal = () => {
   const lp0Amount = useCalculateSendAmount(visibleAmounts[lp0TokenAddress], action, lp0TokenDecimals, userStaked, vaultTokenBalanceBn)
   const lp1Amount = useCalculateSendAmount(visibleAmounts[lp1TokenAddress], action, lp1TokenDecimals, userStaked, vaultTokenBalanceBn)
 
-  const tokens = {
-    inputToken: {
-      address: inputTokenAddress,
-      approvals: {
-        approve: approveInputToken,
-        isLoading: approveInputTokenLoading,
-        isApproved: isTokenApproved('inputTokenAddress', visibleAmounts[lp0TokenAddress], vaultsData[vaultAddress], lp0TokenDecimals)
-      },
-      decimals: inputTokenDecimals,
-      symbol: inputTokenSymbol,
-      balances: {
-        value: inputTokenBalance?.value ?? BigNumber.from(0),
-        formatted: inputTokenBalance?.formatted ?? '0'
-      },
-      logoUrl: inputTokenLogoUrl
-    },
-    lp0Token: {
-      address: lp0TokenAddress,
-      approvals: {
-        approve: approveLp0Token,
-        isLoading: approveLp0TokenLoading,
-        isApproved: isTokenApproved('lp1TokenAddress', visibleAmounts[lp1TokenAddress], vaultsData[vaultAddress], lp1TokenDecimals)
-      },
-      decimals: lp0TokenDecimals,
-      symbol: lp0TokenSymbol,
-      balances: {
-        value: lp0TokenBalance?.value ?? BigNumber.from(0),
-        formatted: lp0TokenBalance?.formatted ?? '0'
-      },
-      logoUrl: lp0TokenLogoUrl
-    },
-    lp1Token: {
-      address: lp1TokenAddress,
-      approvals: {
-        approve: approveLp1Token,
-        isLoading: approveLp1TokenLoading,
-        isApproved: isTokenApproved('lp1TokenAddress', visibleAmounts[lp1TokenAddress], vaultsData[vaultAddress], lp1TokenDecimals)
-      },
-      decimals: lp1TokenDecimals,
-      symbol: lp1TokenSymbol,
-      balances: {
-        value: lp1TokenBalance?.value ?? BigNumber.from(0),
-        formatted: lp1TokenBalance?.formatted ?? '0'
-      },
-      logoUrl: lp1TokenLogoUrl
-    },
-  }
+  const {tokensByKey, tokensByAddress} = useLpPoolTokensDetails(
+    {
+      vault: selectedVault,
+      vaultsData,
+      balances,
+      approvals,
+      visibleAmounts
+    }
+  )
+
+  const isDeposit = (action: TransactionAction) => action === 'deposit' || action === 'depositLpTokens'
 
   const showApprove = () => {
     if (depositAs === inputTokenSymbol) {
-      return action.includes('deposit') && !tokens.inputToken.approvals.isApproved
+      return isDeposit(action) && !tokensByKey.inputToken.approvals.isApproved
     } else {
-      return action.includes('deposit') && !tokens.lp0Token.approvals.isApproved && !tokens.lp1Token.approvals.isApproved
+      return isDeposit(action) && !tokensByKey.lp0Token.approvals.isApproved && !tokensByKey.lp1Token.approvals.isApproved
     }
   }
   const handleSetAction = (onClickAction: 'deposit' | 'withdraw') => {
@@ -199,20 +129,23 @@ export const useLpDepositAndWithdrawModal = () => {
     }
   }
 
-  const getTokenVisibleAmount = (tokenAddress: Address, amount: string) => {
+  const setTokensVisibleAmounts = (tokenAddress: Address, amount: string) => {
     if (depositAs === inputTokenSymbol) {
-      handleSetVisibleAmountForToken(amount, tokenAddress)
-    } else if (tokenAddress === lp0TokenAddress) {
-      const lp0TokenPriceInDollars = lp0Price * parseFloat(amount)
-      const lp1TokVisibleAmount = lp0TokenPriceInDollars / lp1Price
-      handleSetVisibleAmountForToken(lp1TokVisibleAmount.toString(), lp1TokenAddress)
-      handleSetVisibleAmountForToken(amount, lp0TokenAddress)
-    } else if (tokenAddress === lp1TokenAddress) {
-      const lp1TokenPriceInDollars = lp1Price * parseFloat(amount)
-      const lp0TokVisibleAmount = lp1TokenPriceInDollars / lp0Price
-      handleSetVisibleAmountForToken(lp0TokVisibleAmount.toString(), lp0TokenAddress)
-      handleSetVisibleAmountForToken(amount, lp1TokenAddress)
+      return handleSetVisibleAmountForSingleToken(amount, tokenAddress)
     }
+    updatePrices(60 * 1000).then(() => {
+      if (tokenAddress === lp0TokenAddress) {
+        const lp0TokenPriceInDollars = lp0Price * parseFloat(amount)
+        const lp1TokVisibleAmount = lp0TokenPriceInDollars / lp1Price
+        return handleSetVisibleAmountForMultipleTokens(amount, lp0TokenAddress, lp1TokVisibleAmount.toString(), lp1TokenAddress)
+      }
+
+      if (tokenAddress === lp1TokenAddress) {
+        const lp1TokenPriceInDollars = lp1Price * parseFloat(amount)
+        const lp0TokVisibleAmount = lp1TokenPriceInDollars / lp0Price
+        return handleSetVisibleAmountForMultipleTokens(amount, lp1TokenAddress, lp0TokVisibleAmount.toString(), lp0TokenAddress)
+      }
+    })
   }
 
   const actions = useLpVaultActions({
@@ -221,9 +154,9 @@ export const useLpDepositAndWithdrawModal = () => {
     abi,
     inputTokenDecimals,
     inputTokenAddress,
-    isLp0TokenApproved: tokens.lp0Token.approvals.isApproved,
-    isLp1TokenApproved: tokens.lp1Token.approvals.isApproved,
-    isInputTokenApproved: tokens.inputToken.approvals.isApproved,
+    isLp0TokenApproved: tokensByKey.lp0Token.approvals.isApproved,
+    isLp1TokenApproved: tokensByKey.lp1Token.approvals.isApproved,
+    isInputTokenApproved: tokensByKey.inputToken.approvals.isApproved,
     lp0TokenAddress,
     lp1TokenAddress,
     lp0Amount,
@@ -234,9 +167,9 @@ export const useLpDepositAndWithdrawModal = () => {
     setDepositAs(event.target.value as string)
   }
 
-  const getFormattedBalanceForToken = (tokenAddress: Address) => tokenBalances[tokenAddress]?.formatted ?? '0'
-  const getTokenBalanceBn = (tokenAddress: Address) => tokenBalances[tokenAddress]?.value ?? BigNumber.from('0')
-  const getTokenDecimals = (tokenAddress: Address) => decimalsForTokensMap[tokenAddress] ?? 18
+  const getFormattedBalanceForToken = (tokenAddress: Address) => tokensByAddress[tokenAddress]?.balances.formatted ?? '0'
+  const getTokenBalanceBn = (tokenAddress: Address) => tokensByAddress[tokenAddress]?.balances.value ?? BigNumber.from('0')
+  const getTokenDecimals = (tokenAddress: Address) => tokensByAddress[tokenAddress]?.decimals ?? 18
 
   const getActionVerbForToast = (action: TransactionAction) => {
     switch (true) {
@@ -261,9 +194,7 @@ export const useLpDepositAndWithdrawModal = () => {
   }
 
   const performAction = async (action: TransactionAction) => {
-    console.log('performAction', action, inputTokenAmount)
-    // TODO fix visible amount
-    if (parseFloat(visibleAmount) > 0) {
+    if (parseFloat(visibleAmounts[currentToken]) > 0) {
       const actionVerb = getActionVerbForToast(action)
       const fn = actions[action]?.write
       console.log(fn, actions, action)
@@ -296,22 +227,23 @@ export const useLpDepositAndWithdrawModal = () => {
   }
 
   const handleSetMax = (tokenAddress: Address) => {
-    if (getTokenBalanceBn(tokenAddress) && formattedToken0Balance) {
-      const amountToSet = (action === 'deposit') ?
+    if (getTokenBalanceBn(tokenAddress) && tokensByAddress[tokenAddress]?.balances.formatted) {
+      const amountToSet = isDeposit(action) ?
         getFormattedBalanceForToken(tokenAddress) :
         (ethers.utils.formatUnits(userStaked, getTokenDecimals(tokenAddress)) ?? '0')
       if (parseFloat(amountToSet) == 0) {
-        handleSetVisibleAmountForToken('0.00')
+        setTokensVisibleAmounts(tokenAddress, '0.00')
         return
       }
-      handleSetVisibleAmountForToken(amountToSet, tokenAddress)
+      setTokensVisibleAmounts(tokenAddress, amountToSet)
     }
   }
 
   const isBalanceLessThanAmount = (value: number, tokenAddress: Address) => {
-    const balance = getTokenBalanceBn(tokenAddress)
+    const balance = getFormattedBalanceForToken(tokenAddress)
+    const formattedUserStaked = getFormattedBalanceForToken(tokensByAddress[vaultAddress]?.address)
     if (balance) {
-      const balanceToCheck = (action === 'deposit') ? +ethers.utils.formatUnits(balance, inputTokenDecimals) : +ethers.utils.formatUnits(userStaked, getTokenDecimals(tokenAddress))
+      const balanceToCheck = (action === 'deposit') ? parseFloat(balance) : parseFloat(formattedUserStaked)
       return !isNaN(value) && balanceToCheck < value
     }
     return false
@@ -326,28 +258,39 @@ export const useLpDepositAndWithdrawModal = () => {
     const isZero = value === '0';
 
     if (isNullOrUndefined || isZero) {
-      return '0.00'
+      return '0'
     }
 
     const commaIndex = value.indexOf('.');
     return commaIndex !== -1 ? value.slice(0, commaIndex + 6) : value;
   }
 
-  const handleSetVisibleAmountForToken = (value: string, token: Address = currentToken) => {
+  const handleSetVisibleAmountForSingleToken = (value: string, token: Address = currentToken) => {
     const currentVisibleAmounts = {...visibleAmounts}
     currentVisibleAmounts[token] = removeLeadingZeros(value)
     setVisibleAmounts(currentVisibleAmounts)
   }
 
+  const handleSetVisibleAmountForMultipleTokens = (
+    value0: string,
+    token0: Address,
+    value1: string,
+    token1: Address
+  ) => {
+    const currentVisibleAmounts = {...visibleAmounts}
+    currentVisibleAmounts[token0] = removeLeadingZeros(value0)
+    currentVisibleAmounts[token1] = removeLeadingZeros(value1)
+    setVisibleAmounts(currentVisibleAmounts)
+  }
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value.match(/^-{0,1}\d*\.?\d{0,18}/)?.join('')
     const isNullOrUndefined = value == null || value === '';
 
     if (isNullOrUndefined) {
-      handleSetVisibleAmountForToken('')
+      setTokensVisibleAmounts(currentToken, '0')
       return
     }
-    getTokenVisibleAmount(currentToken, value)
+    setTokensVisibleAmounts(currentToken, value)
   }
 
   return {
@@ -357,16 +300,11 @@ export const useLpDepositAndWithdrawModal = () => {
     showApprove,
     isBalanceLessThanAmount,
     truncateAmount,
-    selectedVault,
-    formattedToken0Balance,
-    formattedToken1Balance,
-    formattedInputTokenBalance,
     userStaked,
     action,
-    tokens,
+    tokensByKey,
     hasWithdrawalSchedule,
     visibleAmounts,
-    currentToken,
     setCurrentToken,
     handleSetDepositAs,
     depositAs,

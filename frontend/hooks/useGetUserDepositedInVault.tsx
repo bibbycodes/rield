@@ -2,24 +2,30 @@ import { BigNumber } from "ethers";
 import { useContext, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { VaultDataContext } from "../contexts/vault-data-context/VaultDataContext";
-import {RldVault} from "../lib/types/strategy-types";
-import {isSingleStakeStrategy} from "../lib/utils";
+import {LpPoolVault, RldVault, SingleStakeVault} from "../lib/types/strategy-types";
+import {isLpPoolStrategy, isSingleStakeStrategy} from "../lib/utils";
 
 export const useGetUserDepositedInVault = (strategy: RldVault) => {
   const [userStaked, setUserStaked] = useState<BigNumber>(BigNumber.from(0));
-  const {decimals} = strategy;
+
   const {address: userAddress} = useAccount();
   const {vaultsData, refetchForStrategy} = useContext(VaultDataContext)
 
   const calculateUserStaked = (balance: BigNumber, pricePerShare: BigNumber) => {
     if (isSingleStakeStrategy(strategy.type)) {
-      return calculateUserStakedForSingleDepositVault(balance, pricePerShare)
+      const {decimals} = strategy as SingleStakeVault;
+      return calculateUserStakedForSingleDepositVault(balance, pricePerShare, decimals)
     }
-    // TODO vault lp calculation
+    
+    if (isLpPoolStrategy(strategy.type)) {
+      const {lp0TokenDecimals, lp1TokenDecimals} = strategy as LpPoolVault;
+      return calculateUserStakedForSingleDepositVault(balance, pricePerShare, Math.max(lp0TokenDecimals, lp1TokenDecimals))
+    }
+    
     return BigNumber.from(0)
   }
   
-  const calculateUserStakedForSingleDepositVault = (balance: BigNumber, pricePerShare: BigNumber) => {
+  const calculateUserStakedForSingleDepositVault = (balance: BigNumber, pricePerShare: BigNumber, decimals: number) => {
     return balance && pricePerShare && userAddress ?
       balance.mul(pricePerShare)
         .div(BigNumber.from(10).pow(decimals))
