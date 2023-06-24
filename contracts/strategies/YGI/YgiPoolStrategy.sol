@@ -13,6 +13,9 @@ import "../../interfaces/strategy/IEthStrategy.sol";
 import "../../interfaces/vaults/IRldVault.sol";
 import "../../interfaces/vaults/IRldEthVault.sol";
 import "../../interfaces/vaults/IRldBaseVault.sol";
+import "../../interfaces/vaults/IRldYgiEthVault.sol";
+import "../../interfaces/vaults/IRldYgiVault.sol";
+import "../../interfaces/vaults/IRldYgiBaseVault.sol";
 import "../../interfaces/common/IWETH.sol";
 import "../../interfaces/strategy/IYgiPoolStrategy.sol";
 import "../Common/Stoppable.sol";
@@ -49,16 +52,16 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
         _giveAllowance(uniRouter, ygiInputToken);
     }
 
-    function rebalance(address _vault, uint256 amount, bool reinvest) public onlyOwner {
+    function rebalance(address _vault, uint256 amount) public onlyOwner {
         _rebalance(_vault, amount, true);
     }
 
     function _rebalance(address _vault, uint256 amount, bool reinvest) internal {
         YgiComponent storage componentToRebalance = ygiComponents[getIndex(_vault)];
-        IBaseStrategy(IRldBaseVault(componentToRebalance.vault).strategy()).withdraw(amount);
+        IRldYgiBaseVault(componentToRebalance.vault).directWithdraw(amount);
         uint256 withdrawnBalance = IERC20(componentToRebalance.inputToken).balanceOf(address(this));
         if (withdrawnBalance > 0) {
-            swapTokens(withdrawnBalance, componentToRebalance.backRoute);
+            uint result = swapTokens(withdrawnBalance, componentToRebalance.backRoute);
         }
 
         if (reinvest) {
@@ -105,8 +108,8 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
         uint24[] memory _fee,
         address[] memory _backRoute,
         uint24[] memory _backFee,
-        address[] rebalanceVaults,
-        uint256[] rebalanceAmounts
+        address[] memory rebalanceVaults,
+        uint256[] memory rebalanceAmounts
     ) public onlyOwner {
         require(rebalanceVaults.length == rebalanceAmounts.length, "Invalid rebalance vaults/amounts");
         Route memory route = Route(_route, _fee, UniswapV3Utils.routeToPath(_route, _fee));
@@ -128,16 +131,17 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
             _rebalance(rebalanceVaults[i], rebalanceAmounts[i], false);
         }
 
-        uint256 inputAmountPortion = IERC20(inputToken).balanceOf(address(this));
+        uint256 inputAmountPortion = IERC20(ygiInputToken).balanceOf(address(this));
         uint256 runningTotal;
         for (uint i = 0; i < vaultArchive.length; i++) {
             runningTotal += IERC20(vaultArchive[i]).totalSupply();
         }
+        uint256 swappedTokens = swapTokens(inputAmountPortion, route);
         if (inputToken == address(0)) {
-            IWETH(weth).withdraw(inputAmountPortion);
-            IRLDYgiEthVault(vaultAddress).init{value: inputAmountPortion}(runningTotal);
+            IWETH(weth).withdraw(swappedTokens);
+            IRldYgiEthVault(vaultAddress).init{value: swappedTokens}(runningTotal);
         } else {
-            IRLDYgiEthVault(vaultAddress).init(runningTotal, inputAmountPortion);
+            IRldYgiVault(vaultAddress).init(runningTotal, swappedTokens);
         }
     }
 
@@ -171,23 +175,23 @@ contract YgiPoolStrategy is Ownable, Stoppable, ReentrancyGuard, IYgiPoolStrateg
         }
     }
 
-    function getSyncedBalances(address userAddress) public view returns (mapping(address => uint256)) {
-        mapping(address => uint256) syncedVaultAmounts;
+    function getSyncedBalances(address userAddress) public view returns (uint256[] memory) {
+        uint256[] memory vaultAmounts = new uint256[](vaultArchive.length);
         uint256 runningTotal;
         bool hasDeployedPrev;
         for (uint i = 0; i < vaultArchive.length; i++) {
             uint256 balance = userToVaultToAmount[userAddress][vaultArchive[i]];
             if (balance > 0) {
                 hasDeployedPrev = true;
-                syncedVaultAmounts[vaultArchive[i]] = balance;
+                vaultAmounts[i] = balance;
                 runningTotal += balance;
             } else if (hasDeployedPrev && balance == 0) {
-                syncedVaultAmounts[vaultArchive[i]] = runningTotal;
+                vaultAmounts[i] = runningTotal;
             } else {
-                return syncedVaultAmounts;
+                return vaultAmounts;
             }
         }
-        return syncedVaultAmounts;
+        return vaultAmounts;
     }
 
     function syncBalances(address userAddress) public {

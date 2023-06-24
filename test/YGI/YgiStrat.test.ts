@@ -4,9 +4,12 @@ import { BigNumber, BigNumberish } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
+  BFRRouterMock,
   GMXRouterMock,
   GNSStakingMock,
   RldTokenVault,
+  BFRTrackerMock,
+  StrategyBFR,
   TokenMock,
   UniswapV3RouterMock,
   WETHMock,
@@ -65,12 +68,15 @@ describe.only("YGI Vault", () => {
       const daiToken = await Token.deploy("DAI", "DAI", 18);
       await daiToken.deployed();
 
+      const bfrToken = await Token.deploy("BFR", "BFR", 18) as TokenMock;
+      await bfrToken.deployed();
+
       const GNSStakingMock = await ethers.getContractFactory("GNSStakingMock");
       const gnsRouterMock: GNSStakingMock = (await GNSStakingMock.deploy(gnsToken.address, daiToken.address)) as GNSStakingMock;
       await gnsRouterMock.deployed();
 
-      const GnsVault = await ethers.getContractFactory("RldTokenVault");
-      const gnsVault: RldTokenVault = (await GnsVault.deploy("gns_AUTO_C", "gns_AUTO_C")) as RldTokenVault;
+      const GnsVault = await ethers.getContractFactory("RldYgiTokenVault");
+      const gnsVault: RldTokenVault = (await GnsVault.deploy("gns_AUTO_C", "gns_AUTO_C", masterVault.address)) as RldTokenVault;
       await gnsVault.deployed();
 
       const gnsCommonAddresses = {
@@ -79,17 +85,49 @@ describe.only("YGI Vault", () => {
         owner: deployer.address,
       }
 
-      const GnsStrategy = await ethers.getContractFactory("YgiStrategyGNS");
+      const GnsStrategy = await ethers.getContractFactory("StrategyGNS");
       const gnsStrategy = await GnsStrategy.deploy(
         gnsRouterMock.address,
         [daiToken.address, gnsToken.address],
         [3000],
-        gnsCommonAddresses,
-        masterVault.address
+        gnsCommonAddresses
       ) as StrategyGNS;
       await gnsStrategy.deployed();
 
       await gnsVault.initStrategy(gnsStrategy.address)
+
+      // BFR
+      const BfrVault = await ethers.getContractFactory("RldYgiTokenVault");
+      const bfrVault: RldTokenVault = (await BfrVault.deploy("bfr_AUTO_C", "bfr_AUTO_C", masterVault.address)) as RldTokenVault;
+      await bfrVault.deployed();
+
+      const BFRTrackerMock = await ethers.getContractFactory("BFRTrackerMock");
+      const bfrTracker = (await BFRTrackerMock.deploy(bfrToken.address, inputToken.address)) as BFRTrackerMock;
+      await bfrTracker.deployed();
+
+      // Deploy the MockRewardRouter
+      const BFRRouterMock = await ethers.getContractFactory("BFRRouterMock");
+      const mockRewardRouter = (await BFRRouterMock.deploy(
+        bfrToken.address,
+        bfrTracker.address,
+        bfrTracker.address,
+        bfrTracker.address,
+        bfrTracker.address,
+      )) as BFRRouterMock;
+      await mockRewardRouter.deployed();
+
+      const Strategy = await ethers.getContractFactory("StrategyBFR");
+      const bfrStrategy = await Strategy.deploy(
+        mockRewardRouter.address,
+        bfrVault.address,
+        uniSwapMock.address,
+        bfrToken.address,
+        inputToken.address,
+        inputToken.address,
+        wethToken.address
+      ) as StrategyBFR;
+
+      await bfrVault.initStrategy(bfrStrategy.address)
 
       // GMX
       const gmxToken: TokenMock = (await Token.deploy("GMX", "GMX", 18)) as TokenMock;
@@ -102,8 +140,8 @@ describe.only("YGI Vault", () => {
       const gmxRouterMock: GMXRouterMock = (await GMXRouterMock.deploy(gmxToken.address, ethToken.address)) as GMXRouterMock;
       await gmxRouterMock.deployed();
 
-      const GmxVault = await ethers.getContractFactory("RldTokenVault");
-      const gmxVault: RldTokenVault = (await GmxVault.deploy('GMX', 'GMX')) as RldTokenVault;
+      const GmxVault = await ethers.getContractFactory("RldYgiTokenVault");
+      const gmxVault: RldTokenVault = (await GmxVault.deploy('GMX', 'GMX', masterVault.address)) as RldTokenVault;
       await gmxVault.deployed();
 
       const gmxCommonAddresses = {
@@ -112,13 +150,12 @@ describe.only("YGI Vault", () => {
         owner: deployer.address,
       }
 
-      const GmxStrategy = await ethers.getContractFactory("YgiStrategyGMXUniV3");
+      const GmxStrategy = await ethers.getContractFactory("StrategyGMXUniV3");
       const gmxStrategy = await GmxStrategy.deploy(
         gmxRouterMock.address,
         [ethToken.address, gmxToken.address],
         [3000],
-        gmxCommonAddresses,
-        masterVault.address
+        gmxCommonAddresses
       );
       await gmxStrategy.deployed();
       await gmxVault.initStrategy(gmxStrategy.address)
@@ -139,6 +176,8 @@ describe.only("YGI Vault", () => {
 
       await gnsToken.mintFor(uniSwapMock.address, TEN_ETHER.mul(100));
 
+      await bfrToken.mintFor(uniSwapMock.address, TEN_ETHER.mul(100));
+
       await masterVault.registerYgiComponent(
         gnsToken.address,
         gnsVault.address,
@@ -146,7 +185,9 @@ describe.only("YGI Vault", () => {
         [inputToken.address, gnsToken.address],
         [3000],
         [gnsToken.address, inputToken.address],
-        [3000]
+        [3000],
+        [],
+        []
       );
 
       await masterVault.registerYgiComponent(
@@ -156,7 +197,9 @@ describe.only("YGI Vault", () => {
         [inputToken.address, gmxToken.address],
         [3000],
         [gmxToken.address, inputToken.address],
-        [3000]
+        [3000],
+        [],
+        []
       );
 
       return {
@@ -166,6 +209,8 @@ describe.only("YGI Vault", () => {
         usdcToken: inputToken,
         daiToken,
         uniSwapMock,
+        bfrToken,
+        bfrVault,
         gnsVault,
         gnsStrategy,
         gmxVault,
@@ -187,7 +232,7 @@ describe.only("YGI Vault", () => {
   })
 
   it("Should return the correct total value in the vault", async () => {
-    const { alice, bob, usdcToken, uniSwapMock, masterVault, gnsVault, gmxVault } = await getFixture(6);
+    const {alice, bob, usdcToken, uniSwapMock, masterVault, gnsVault, gmxVault} = await getFixture(6);
     const aliceDeposit = ONE_USDC.mul(1);
     const bobDeposit = ONE_USDC.mul(2);
     await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
@@ -199,7 +244,7 @@ describe.only("YGI Vault", () => {
   });
 
   it("Should emit a Deposit event with the correct amount", async () => {
-    const { alice, usdcToken, masterVault } = await getFixture(6);
+    const {alice, usdcToken, masterVault} = await getFixture(6);
     const amountToDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, amountToDeposit);
 
@@ -209,7 +254,7 @@ describe.only("YGI Vault", () => {
   });
 
   it("Should update the user's balance in the mapping", async () => {
-    const { alice, usdcToken, masterVault , gmxVault, gnsVault} = await getFixture(6);
+    const {alice, usdcToken, masterVault, gmxVault, gnsVault} = await getFixture(6);
     const amountToDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, amountToDeposit);
 
@@ -222,7 +267,7 @@ describe.only("YGI Vault", () => {
   });
 
   it("Should update the lastPoolDepositTime", async () => {
-    const { alice, usdcToken, masterVault } = await getFixture(6);
+    const {alice, usdcToken, masterVault} = await getFixture(6);
     const amountToDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, amountToDeposit);
 
@@ -233,7 +278,7 @@ describe.only("YGI Vault", () => {
   });
 
   it("Should revert if the user has not approved the transfer of tokens", async () => {
-    const { alice, usdcToken, masterVault } = await getFixture(6);
+    const {alice, usdcToken, masterVault} = await getFixture(6);
     const amountToDeposit = ONE_USDC.mul(10);
 
     await expect(masterVault.connect(alice).deposit(amountToDeposit)).to.be.revertedWith(
@@ -242,7 +287,7 @@ describe.only("YGI Vault", () => {
   });
 
   it("Should allow withdrawing", async () => {
-    const { alice, usdcToken, uniSwapMock, masterVault } = await getFixture(6);
+    const {alice, usdcToken, uniSwapMock, masterVault} = await getFixture(6);
     const aliceDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
     await masterVault.connect(alice).deposit(aliceDeposit);
@@ -251,7 +296,7 @@ describe.only("YGI Vault", () => {
   });
 
   it("Should allow withdrawing in individual assets", async () => {
-    const { alice, usdcToken, uniSwapMock, masterVault, gnsToken, gmxToken } = await getFixture(6);
+    const {alice, usdcToken, uniSwapMock, masterVault, gnsToken, gmxToken} = await getFixture(6);
     const aliceDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
     await masterVault.connect(alice).deposit(aliceDeposit);
@@ -262,7 +307,7 @@ describe.only("YGI Vault", () => {
   });
 
   it("Should not allow withdrawing more than deposited", async () => {
-    const { alice, usdcToken, uniSwapMock, masterVault } = await getFixture(6);
+    const {alice, usdcToken, uniSwapMock, masterVault} = await getFixture(6);
     const aliceDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
     await masterVault.connect(alice).deposit(aliceDeposit);
@@ -270,7 +315,7 @@ describe.only("YGI Vault", () => {
   });
 
   it("Should update the user's balance when depositing multiple times", async () => {
-    const { alice, usdcToken, masterVault, gnsVault, gmxVault } = await getFixture(6);
+    const {alice, usdcToken, masterVault, gnsVault, gmxVault} = await getFixture(6);
     const aliceFirstDeposit = ONE_USDC.mul(5);
     const aliceSecondDeposit = ONE_USDC.mul(3);
 
@@ -296,7 +341,7 @@ describe.only("YGI Vault", () => {
   });
 
   it("Should allow withdrawing multiple times with ratios", async () => {
-    const { alice, usdcToken, masterVault, gnsVault, gmxVault } = await getFixture(6);
+    const {alice, usdcToken, masterVault, gnsVault, gmxVault} = await getFixture(6);
     const aliceDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
     await masterVault.connect(alice).deposit(aliceDeposit);
@@ -312,7 +357,7 @@ describe.only("YGI Vault", () => {
   });
 
   it("Should allow rebalance with custom values and withdrawing gives rebalance values", async () => {
-    const { deployer, alice, usdcToken, masterVault, gnsVault, gmxVault, gnsToken, gmxToken } = await getFixture(6);
+    const {deployer, alice, usdcToken, masterVault, gnsVault, gmxVault, gnsToken, gmxToken} = await getFixture(6);
     const aliceDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
     await masterVault.connect(alice).deposit(aliceDeposit);
@@ -325,8 +370,50 @@ describe.only("YGI Vault", () => {
 
   });
 
+  it("Should allow rebalance into newly added vault", async () => {
+    const {
+      deployer,
+      alice,
+      usdcToken,
+      masterVault,
+      gnsVault,
+      gmxVault,
+      gnsToken,
+      gmxToken,
+      bfrToken,
+      bfrVault
+    } = await getFixture(6);
+    const aliceDeposit = ONE_USDC.mul(10);
+    await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
+    await masterVault.connect(alice).deposit(aliceDeposit);
+
+
+    await masterVault.registerYgiComponent(
+      bfrToken.address,
+      bfrVault.address,
+      ethers.utils.parseEther('30'),
+      [usdcToken.address, bfrToken.address],
+      [3000],
+      [bfrToken.address, usdcToken.address],
+      [3000],
+      [gnsVault.address, gmxVault.address],
+      [ONE_ETHER.mul(2), ONE_ETHER.mul(2)]
+    );
+
+    expect(await usdcToken.balanceOf(alice.address)).to.be.eq(0);
+    expect(await masterVault.userToVaultToAmount(alice.address, bfrVault.address)).to.be.eq(0);
+    expect(await masterVault.userToVaultToAmount(alice.address, gnsVault.address)).to.be.eq(ONE_ETHER.mul(7));
+    expect(await masterVault.userToVaultToAmount(alice.address, gmxVault.address)).to.be.eq(ONE_ETHER.mul(3));
+    expect(await masterVault.getSyncedBalances(alice.address)).to.deep.eq([ONE_ETHER.mul(7), ONE_ETHER.mul(3), ONE_ETHER.mul(10)]);
+
+    await masterVault.connect(alice).withdraw(ONE_USDC, false, true);
+    expect(await gnsToken.balanceOf(alice.address)).to.be.closeTo(ONE_ETHER.mul(5), ONE_ETHER.div(10));
+    expect(await gmxToken.balanceOf(alice.address)).to.be.closeTo(ONE_ETHER.mul(1), ONE_ETHER.div(10));
+    expect(await bfrToken.balanceOf(alice.address)).to.be.closeTo(ONE_ETHER.mul(4), ONE_ETHER.div(10));
+  });
+
   it("Should sunset strategy when deregister ygi", async () => {
-    const { deployer, alice, usdcToken, masterVault, gnsVault, gmxVault, gnsToken, gmxToken } = await getFixture(6);
+    const {deployer, alice, usdcToken, masterVault, gnsVault, gmxVault, gnsToken, gmxToken} = await getFixture(6);
     const aliceDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
     await masterVault.connect(alice).deposit(aliceDeposit);
@@ -339,7 +426,7 @@ describe.only("YGI Vault", () => {
   });
 
   it("Should revert if referencing unregistered vault", async () => {
-    const { deployer, alice, usdcToken, masterVault, gnsVault, gmxVault, gnsToken, gmxToken } = await getFixture(6);
+    const {deployer, alice, usdcToken, masterVault, gnsVault, gmxVault, gnsToken, gmxToken} = await getFixture(6);
     const aliceDeposit = ONE_USDC.mul(10);
     await usdcToken.connect(alice).approve(masterVault.address, aliceDeposit);
     await masterVault.connect(alice).deposit(aliceDeposit);
