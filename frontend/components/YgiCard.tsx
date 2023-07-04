@@ -1,21 +1,28 @@
-import { Ygi } from '../model/ygi';
-import React, { useContext } from 'react';
+import {Ygi} from '../model/ygi';
+import React, {useContext} from 'react';
 import Image from "next/image"
-import { WithLoader } from './WithLoader';
-import { useAccount } from 'wagmi';
-import { ConnectKitButton } from 'connectkit';
+import {WithLoader} from './WithLoader';
+import {useAccount} from 'wagmi';
+import {ConnectKitButton} from 'connectkit';
 import NonSSRWrapper from './NonSSRWrapper';
 import posthog from 'posthog-js';
-import { SelectedYgiContext, TransactionAction } from '../contexts/SelectedYgiContext';
-import { useGetUserDepositedInYgi } from '../hooks/useGetUserDepositedInYgi';
-import { BigNumber, ethers } from 'ethers';
-import { formatDollarAmount } from '../utils/formatters';
+import {SelectedYgiContext, TransactionAction} from '../contexts/SelectedYgiContext';
+import {useGetUserDepositedInYgi} from '../hooks/useGetUserDepositedInYgi';
+import {BigNumber, ethers} from 'ethers';
+import {formatDollarAmount} from '../utils/formatters';
+import {APYsContext} from "../contexts/ApyContext";
 
 export default function YgiCard({ygi, openModal}: { ygi: Ygi, openModal: (isOpen: boolean) => void }) {
   const {isConnected} = useAccount()
   const {setAction, setSelectedYgi} = useContext(SelectedYgiContext)
   const totalAllocation = ygi.components.reduce((acc, component) => acc + component.allocation, 0);
-  const {userStaked} = useGetUserDepositedInYgi(ygi)
+  const {userStakedUsd} = useGetUserDepositedInYgi(ygi)
+  const {apys, isLoading} = useContext(APYsContext)
+
+  const getYgiApy = () => {
+    return ygi.components.reduce((acc, component) =>
+      component.allocation / totalAllocation * apys[component.strategyAddress] + acc, 0).toFixed(2);
+  }
 
   const handleClick = (action: TransactionAction) => {
     setAction(action)
@@ -43,22 +50,37 @@ export default function YgiCard({ygi, openModal}: { ygi: Ygi, openModal: (isOpen
       border-solid border-2 rounded-2xl max-w-md
       p-6 ${ygi.status === 'HIDDEN' ? 'hidden' : ''}`}>
       <div className="flex justify-between">
-        <div>{ygi.name}</div>
-        <Image alt={'Ygi Logo'} width={25} height={25} src={ygi.ygiLogoUrl} className="font-thin	mr-3"/>
+        <div className="text-xl">{ygi.name}</div>
+        <div className="flex h-[25px]">
+          {ygi.components.map((component) =>
+            <>
+              <Image alt={'Logo'} width={25} height={25} src={component.tokenLogoUrl} className="font-thin mr-3"/>
+            </>
+          )}
+        </div>
       </div>
-
+      <div className="flex mt-3">
+        {ygi.components.map((component) =>
+          <div className={`h-1`}
+               style={{
+                 background: component.color,
+                 width: (component.allocation / totalAllocation * 100).toFixed(0) + '%'
+               }}></div>
+        )}
+      </div>
 
       <div className="flex">
         <div className="flex flex-col my-6 flex-grow">
           <p className="text-xs text-tSecondary">Staked</p>
-          <p className={`text-2xl text-tPrimary`}>{ygi.status === 'ACTIVE' ? `$${getUserStakedInDollars(userStaked)}` : '-'}</p>
+          <p
+            className={`text-2xl text-tPrimary`}>{ygi.status === 'ACTIVE' ? `$${getUserStakedInDollars(userStakedUsd)}` : '-'}</p>
         </div>
 
         <div className="flex flex-col my-6">
           <p className="text-xs text-tSecondary">APY</p>
           {ygi.status === 'ACTIVE' ? (
-            <WithLoader className={`min-w-[5rem]`} type={`text`} isLoading={false}>
-              <p className={`text-2xl text-tPrimary`}>{17}%</p>
+            <WithLoader className={`min-w-[5rem]`} type={`text`} isLoading={isLoading}>
+              <p className={`text-2xl text-tPrimary`}>{getYgiApy()}%</p>
             </WithLoader>
           ) : (
             <p className={`text-2xl text-tPrimary`}>-</p>
@@ -103,25 +125,6 @@ export default function YgiCard({ygi, openModal}: { ygi: Ygi, openModal: (isOpen
           }
         </div>
       </NonSSRWrapper>
-
-      <div className="flex my-5">
-        {ygi.components.map((component) =>
-          <div className={`h-1`}
-               style={{
-                 background: component.color,
-                 width: (component.allocation / totalAllocation * 100).toFixed(0) + '%'
-               }}></div>
-        )}
-      </div>
-
-
-      <div className="flex">
-        {ygi.components.map((component) =>
-          <>
-            <Image alt={'Logo'} width={25} height={25} src={component.tokenLogoUrl} className="font-thin mr-3"/>
-          </>
-        )}
-      </div>
 
     </div>
   )

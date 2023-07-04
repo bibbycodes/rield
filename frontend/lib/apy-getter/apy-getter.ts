@@ -15,6 +15,7 @@ import {Prices} from "../../contexts/TokenPricesContext";
 import {getGainsApr} from "../apy-getter-functions/gains";
 import { getBfrBlpApr } from '../apy-getter-functions/bfr';
 import { getHopApr } from '../apy-getter-functions/hop';
+import * as perpetualYgi from "../../resources/vault-details/deploy_ygi_perps-output.json";
 
 export class ApyGetter {
   constructor(private provider: any, private prices: Prices) {
@@ -60,6 +61,8 @@ export class ApyGetter {
       [hopUsdt.strategyAddress]: await this.getApy(hopUsdt.strategyAddress as Address),
       [hopEth.strategyAddress]: await this.getApy(hopEth.strategyAddress as Address),
       [hopDai.strategyAddress]: await this.getApy(hopDai.strategyAddress as Address),
+      [perpetualYgi.ygiComponents[0].strategy]: await this.getApy(gmx.strategyAddress as Address),
+      [perpetualYgi.ygiComponents[1].strategy]: await this.getApy(gns.strategyAddress as Address),
     }
   }
 }

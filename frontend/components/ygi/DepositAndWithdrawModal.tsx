@@ -24,6 +24,7 @@ import { usePostHog } from "posthog-js/react";
 import { SelectedYgiContext } from '../../contexts/SelectedYgiContext';
 import { useGetUserDepositedInYgi } from '../../hooks/useGetUserDepositedInYgi';
 import { YgiDataContext } from '../../contexts/vault-data-context/YgiDataContext';
+import { useCalculateSendAmountYgi } from '../../hooks/useCalculateSendAmountYgi';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -51,10 +52,8 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: YgiModalPro
     address: userAddress,
     watch: true
   })
-  const {data: vaultTokenBalanceData} = useBalance({token: vaultAddress, address: userAddress, watch: true})
   const formattedTokenBalance = tokenBalanceData?.formatted
   const tokenBalanceBN = tokenBalanceData?.value
-  const vaultTokenBalanceBn = vaultTokenBalanceData?.value
   const [visibleAmount, setVisibleAmount] = useState<string>('0')
   const {ygisData, refetchForYgi} = useContext(YgiDataContext)
   const {
@@ -69,15 +68,19 @@ export default function DepositAndWithdrawModal({isOpen, setIsOpen}: YgiModalPro
   const isApproved = visibleAmount < '0' || ygisData[vaultAddress]?.allowance?.gte(ethers.utils.parseUnits(visibleAmount, decimals))
   const showApprove = action === 'deposit' && tokenAddress !== ZERO_ADDRESS && !isApproved
   const {setOpen: setOpenToast, setMessage: setToastMessage, setSeverity} = useContext(ToastContext)
-  const amount = useCalculateSendAmount(visibleAmount, action, decimals, userStaked, vaultTokenBalanceBn)
+  const amount = useCalculateSendAmountYgi(visibleAmount, action, decimals, userStaked)
   const actions = useContractActions({
     vaultAddress,
     amount,
     abi,
     decimals: selectedYgi.decimals,
     tokenAddress,
-    isApproved: !showApprove
+    isApproved: !showApprove,
+    additionalArgs: action === 'deposit' ? [] : [false, false]
   })
+
+  const apyForYgi = () => {
+  }
 
   const handleClose = () => {
     setVisibleAmount('0')

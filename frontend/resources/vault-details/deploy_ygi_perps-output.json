@@ -1,12 +1,14 @@
 {
-  "vaultAddress": "0x5227db0d58ddA6d621104F5f08004B98792710c1",
+  "vaultAddress": "0xa61dB548EC834E1C74113Cd86Bd1F8f9fDd6EF22",
   "tokenAddress": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
   "ygiComponents": [
     {
-      "vault": "0x017E26857dE7dF6De1702230187526D00860D428"
+      "vault": "0xd5DAa7CE7E3e0094a97Ec811c4fB39570aec39Cd",
+      "strategy": "0xF374B6956AE526C0c87Bada37f3317299dA765A7"
     },
     {
-      "vault": "0xCFF2cE558cb4098019788C28F54AA272dBE62FBE"
+      "vault": "0x1AC65dF2A1d1aC5B66C32dAF500fE5218f6CeA7B",
+      "strategy": "0x87411145423fDf9123040799F9Ff894153339a75"
     }
   ]
 }

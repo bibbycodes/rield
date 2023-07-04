@@ -21,6 +21,8 @@ export interface YgiComponent {
   tokenLogoUrl: string;
   color: string;
   allocation: number;
+  vaultAddress: Address;
+  strategyAddress: Address;
 }
 
 export const ygis: Ygi[] = [
@@ -31,12 +33,16 @@ export const ygis: Ygi[] = [
       tokenLogoUrl: "/gmx-logo.svg",
       color: '#2d42fc',
       allocation: 100,
+      vaultAddress: perpetualYgi.ygiComponents[0].vault as Address,
+      strategyAddress: perpetualYgi.ygiComponents[0].strategy as Address,
     },
    {
       inputToken: "GNS",
       tokenLogoUrl: "/gns-logo.png",
       color: '#42f1a2',
       allocation: 100,
+     vaultAddress: perpetualYgi.ygiComponents[1].vault as Address,
+     strategyAddress: perpetualYgi.ygiComponents[1].strategy as Address,
     } ],
     tokenSymbol: "USDC",
     tokenAddress: perpetualYgi.tokenAddress as Address,

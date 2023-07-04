@@ -15,7 +15,6 @@ import {
   transformYgiMultiCallData
 } from './multicall-structured-result';
 import { Ygi, ygis } from '../../model/ygi';
-import ygi from '../../pages/ygi';
 
 export interface YgiContextData {
   ygisData: YgiData
@@ -99,7 +98,7 @@ const YgiDataContextProvider = ({children}: {
 
 
   return (
-    <YgiDataContext.Provider value={{ygisData, isLoading, refetchForYgi: refetchForYgi, refetchAll: getYgiData}}>
+    <YgiDataContext.Provider value={{ygisData, isLoading, refetchForYgi: getYgiData as any, refetchAll: getYgiData}}>
       {children}
     </YgiDataContext.Provider>
   )
